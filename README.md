@@ -129,17 +129,20 @@ The system requires a GitHub Personal Access Token to fetch PR data between rele
 #### **Testing GitHub Integration:**
 
 ```bash
-# Test GitHub authentication and PR fetching
-python test_github_integration.py --test-all
+# Test GitHub authentication and PR fetching  
+python run_tests.py --github
 
-# Test with your repository
-python test_github_integration.py \
+# Test with your repository (interactive)
+python tests/test_github/test_github_integration.py --test-all
+
+# Test with specific repository and tags
+python tests/test_github/test_github_integration.py \
   --repo your-org/your-repo \
   --old-tag v1.0.0 \
   --new-tag v1.1.0
 
 # List available tags in your repository
-python test_github_integration.py \
+python tests/test_github/test_github_integration.py \
   --list-tags \
   --repo your-org/your-repo
 ```
@@ -180,8 +183,15 @@ github:
 export GITHUB_TOKEN="your_token"
 python main.py --service-name your-service --prod-version v1.0.0 --new-version v1.1.0
 
-# Run comprehensive tests
-python test_cli.py --test-all
+# Run all tests
+python run_tests.py
+
+# Run specific test suites
+python run_tests.py --github          # GitHub integration only
+python run_tests.py --slack           # Slack integration only  
+python run_tests.py --cli             # CLI and core functionality
+python run_tests.py --unit            # Unit tests only
+python run_tests.py --integration     # Integration tests only
 
 # Test configuration
 python -c "from config.config import load_config; print('✅ Config loaded successfully')"
@@ -433,7 +443,7 @@ Test your custom template:
 
 ```bash
 # Test external template download
-python test_external_template.py
+python tests/test_external_template.py
 
 # Test with your template
 python main.py --test-mode --config-path config/settings.yaml
@@ -479,17 +489,22 @@ Each generated CRQ includes:
 ### **🔍 Test Your Configuration**
 
 ```bash
-# Test complete system
-python test_cli.py --test-all
+# Run all tests with the new test runner
+python run_tests.py
 
 # Test specific components
-python test_cli.py --test-config      # Configuration validation
-python test_cli.py --test-ai          # AI provider connectivity  
-python test_cli.py --test-github      # GitHub API integration
-python test_cli.py --test-templates   # Template processing
+python run_tests.py --github          # GitHub integration tests
+python run_tests.py --slack           # Slack integration tests  
+python run_tests.py --cli             # CLI and core functionality
+python run_tests.py --unit            # Unit tests only
+python run_tests.py --integration     # Integration tests only
+python run_tests.py --external        # External template tests
 
-# Test external features
-python test_external_template.py      # Dashboard and external templates
+# Individual test files (advanced usage)
+python tests/test_cli.py --test-config      # Configuration validation
+python tests/test_cli.py --test-ai          # AI provider connectivity  
+python tests/test_cli.py --test-github      # GitHub API integration
+python tests/test_cli.py --test-templates   # Template processing
 ```
 
 ### **📊 Mock Data Testing**
@@ -497,7 +512,7 @@ python test_external_template.py      # Dashboard and external templates
 The system includes comprehensive mock data for testing:
 
 ```bash
-# Test with 15 mock PRs (5 schema + 4 features + 5 bugfixes + 1 i18n)
+# Test with 25 mock PRs (5 schema + 10 features + 5 bugfixes + 5 i18n)
 python main.py --test-mode \
   --service-name test-service \
   --prod-version v1.0.0 \
@@ -512,237 +527,3 @@ python main.py --test-mode \
 - Bug fixes (critical and non-critical)
 - International/localization updates
 - Various label combinations for testing categorization
-
----
-
-## 🏢 **Enterprise Features**
-
-### **🤖 AI-Powered Content Generation**
-- **Smart PR Categorization** - Automatically detects schema, features, bugfixes, i18n
-- **Intelligent CRQ Generation** - AI-enhanced change request documents
-- **Multi-Provider Support** - OpenAI, Azure OpenAI, Anthropic with fallbacks
-- **Context-Aware Insights** - Understands technical impact and dependencies
-
-### **📋 Professional Documentation**
-- **15-Section Confluence Template** - Enterprise-grade release format
-- **Sign-off Tracking** - ✅/❌ checkboxes for all stakeholders
-- **Inline Panel Formatting** - Prevents table structure breaking
-- **Copy-Paste Ready** - Zero manual formatting required
-
-### **🔧 Flexible Integration**
-- **External Template Support** - Download from SharePoint, Word docs, etc.
-- **Configurable Dashboard URLs** - Integration with your monitoring systems
-- **Multiple Output Formats** - Confluence, Markdown, Plain text
-- **Cache Management** - Efficient template caching with configurable duration
-
-### **🚀 Deployment Options**
-- **Serverless Execution** - Zero infrastructure costs with GitHub Actions
-- **CLI Integration** - Perfect for CI/CD pipelines
-- **Slack Workflow Builder** - No app approval required
-- **Full Bot Integration** - Enterprise-grade interactive features
-
----
-
-## 🔧 **System Requirements**
-
-### **Core Requirements**
-- **Python 3.10+** 
-- **GitHub repository** with Actions enabled
-- **Internet connectivity** for GitHub/AI APIs
-
-### **Optional for Enhanced Features**
-- **OpenAI API key** (recommended for AI-powered content)
-- **Azure OpenAI** (enterprise alternative)
-- **Anthropic API key** (alternative AI provider)
-- **Slack workspace** (for workflow integration)
-
-### **Infrastructure**
-- **Zero servers required** - Uses GitHub Actions or runs locally
-- **No databases** - Stateless operation
-- **Minimal costs** - Only API usage
-
----
-
-## 🛠️ **Architecture**
-
-### **🔗 Component Breakdown**
-
-#### **🎯 Core Automation Engine**
-- **CLI Interface** - Full argument parsing with validation
-- **Configuration Management** - YAML-based with environment overrides
-- **Template Processing** - Jinja2 with custom filters and functions
-- **Error Handling** - Comprehensive logging and graceful failures
-
-#### **🤖 AI Integration Layer**
-- **Multi-Provider Support** - OpenAI → Azure → Anthropic fallback
-- **Smart Content Generation** - Context-aware CRQ and release notes
-- **Fallback Mechanisms** - Works without AI for basic functionality
-- **Caching & Optimization** - Efficient API usage
-
-#### **📄 Document Generation**
-- **Enterprise Templates** - Professional formatting
-- **External Template Support** - Word docs, SharePoint, etc.
-- **Multi-Format Output** - Confluence, Markdown, Plain text
-- **Dynamic Content** - AI-enhanced with PR analysis
-
-#### **🔗 Integration Capabilities**
-- **GitHub API** - PR fetching with comprehensive metadata
-- **Slack Integration** - Workflow Builder and full bot options
-- **Dashboard URLs** - Configurable monitoring system links
-- **External Templates** - Automatic download and conversion
-
----
-
-## 📚 **Advanced Configuration**
-
-### **🔧 Complete Configuration Example**
-
-```yaml
-# config/settings.yaml - Production Ready
-slack:
-  bot_token: "${SLACK_BOT_TOKEN}"
-  signing_secret: "${SLACK_SIGNING_SECRET}"
-  default_channels: ["#releases"]
-
-github:
-  token: "${GITHUB_TOKEN}"
-  repo: "your-org/your-repo"
-
-ai:
-  provider: "openai"
-  openai:
-    api_key: "${OPENAI_API_KEY}"
-    model: "gpt-4-1106-preview"
-    max_tokens: 1000
-
-organization:
-  name: "Your Company"
-  default_service: "your-service"
-  regions: ["EUS", "SCUS", "WUS"]
-  platform: "Glass"
-
-dashboard:
-  base_confluence_url: "https://confluence.yourcompany.com"
-  base_grafana_url: "https://grafana.yourcompany.com"
-  p0_dashboard_pattern: "{base_grafana_url}/d/{service_name}-p0"
-  l1_dashboard_pattern: "{base_grafana_url}/d/{service_name}-l1"
-
-external_template:
-  enabled: true
-  template_url: "https://sharepoint.company.com/CRQ_Template.docx"
-  cache_duration: 3600
-  fallback_to_builtin: true
-
-app:
-  environment: "production"
-  log_level: "INFO"
-  output_dir: "output"
-```
-
-### **🔐 Security Best Practices**
-
-```bash
-# Use environment variables for secrets
-export GITHUB_TOKEN="ghp_your_token"
-export OPENAI_API_KEY="sk_your_key"
-export SLACK_BOT_TOKEN="xoxb_your_token"
-
-# Or use .env file (not committed to git)
-echo "GITHUB_TOKEN=ghp_your_token" > .env
-echo "OPENAI_API_KEY=sk_your_key" >> .env
-
-# GitHub secrets for Actions
-gh secret set GITHUB_TOKEN --body "ghp_your_token"
-gh secret set OPENAI_API_KEY --body "sk_your_key"
-```
-
----
-
-## 🤝 **Community & Support**
-
-### **📞 Getting Help**
-
-1. **🐛 Bug Reports:** [GitHub Issues](https://github.com/ArnoldoM23/automated-release-rc/issues)
-2. **💡 Feature Requests:** [GitHub Discussions](https://github.com/ArnoldoM23/automated-release-rc/discussions)
-3. **📖 Documentation:** [GitHub Wiki](https://github.com/ArnoldoM23/automated-release-rc/wiki)
-4. **💬 Community Chat:** Join our Slack community
-
-### **🚀 Contributing**
-
-We welcome contributions! Areas where you can help:
-
-- **🔧 Code contributions** - New features and improvements
-- **📝 Documentation** - Improve guides and examples  
-- **🎨 Templates** - Share organization-specific templates
-- **🔗 Integrations** - Add support for new platforms (JIRA, ServiceNow, etc.)
-
-### **💼 Enterprise Support**
-
-For large-scale deployments:
-- **🏗️ Custom deployment assistance**
-- **🎓 Team training and workshops**
-- **🔧 Custom feature development**
-- **📞 Priority support channels**
-
----
-
-## 🏆 **Success Stories**
-
-### **Enterprise Results**
-> *"Reduced our release documentation time from 3 hours to 30 seconds. The Confluence output is better than what our team was creating manually."*  
-> — **Release Engineering Manager, Fortune 500 Company**
-
-### **Key Metrics**
-- **90%+ time reduction** in release documentation
-- **100% consistency** across all releases  
-- **Zero manual errors** in CRQ generation
-- **Professional output** that scales with team growth
-
----
-
-## 📄 **License & Legal**
-
-**MIT License** - Free for commercial and personal use
-
-**Privacy & Security:**
-- **No data collection** - Your PRs and docs stay in your environment
-- **API keys secured** - All credentials stored safely
-- **GDPR compliant** - No personal data retention
-- **Enterprise ready** - Meets corporate security standards
-
----
-
-## 🚀 **Ready to Transform Your Release Process?**
-
-### **🎯 Get Started Now:**
-
-```bash
-# 1. Clone and test immediately
-git clone https://github.com/ArnoldoM23/automated-release-rc.git
-cd automated-release-rc
-pip install -r requirements.txt
-
-# 2. Test with mock data (no tokens needed)
-python main.py --test-mode --service-name demo --prod-version v1.0.0 --new-version v1.1.0
-
-# 3. Configure for your organization
-cp config/settings.example.yaml config/settings.yaml
-# Edit config/settings.yaml with your details
-
-# 4. Test with real data
-export GITHUB_TOKEN="your_token"
-python main.py --service-name your-service --prod-version v1.0.0 --new-version v1.1.0
-
-# 5. Deploy to production (Slack integration)
-# Follow Slack Workflow Builder setup in docs/
-```
-
-### **📈 Next Steps:**
-
-1. **📋 Create your CRQ template** using the guidelines above
-2. **🔧 Configure dashboard URLs** for your monitoring systems  
-3. **🤖 Set up AI provider** for enhanced content generation
-4. **💬 Deploy Slack integration** for team workflow
-5. **🎉 Start generating professional documentation** in 30 seconds!
-
-**Questions? Need help?** Open an issue or start a discussion on GitHub! 
