@@ -142,31 +142,45 @@ def create_mock_prs():
     
     mock_prs = []
     
-    # Schema PRs
+    # Schema PRs (5 required)
     schema_prs_data = [
         {"number": 101, "title": "Add userProfile field to User type", "author": "alice", "labels": ["schema", "breaking"]},
         {"number": 102, "title": "Deprecate legacy payment fields", "author": "bob", "labels": ["schema", "deprecation"]},
         {"number": 103, "title": "Update GraphQL mutation signatures", "author": "carol", "labels": ["schema", "api"]},
+        {"number": 104, "title": "Add new Product schema fields for inventory", "author": "david", "labels": ["schema", "product"]},
+        {"number": 105, "title": "Migrate Order table to support multi-tenant", "author": "emma", "labels": ["schema", "migration"]},
     ]
     
-    # Feature PRs
+    # Feature PRs (10 required)
     feature_prs_data = [
         {"number": 201, "title": "Add express checkout flow", "author": "dave", "labels": ["feature", "checkout"]},
         {"number": 202, "title": "Implement search autocomplete", "author": "eve", "labels": ["feature", "search"]},
         {"number": 203, "title": "Add user dashboard analytics", "author": "frank", "labels": ["feature", "analytics"]},
+        {"number": 204, "title": "Implement real-time notifications", "author": "grace", "labels": ["feature", "notifications"]},
+        {"number": 205, "title": "Add advanced filtering for product catalog", "author": "henry", "labels": ["feature", "catalog"]},
+        {"number": 206, "title": "Implement OAuth2 social login", "author": "iris", "labels": ["feature", "auth"]},
+        {"number": 207, "title": "Add subscription management interface", "author": "jack", "labels": ["feature", "subscriptions"]},
+        {"number": 208, "title": "Implement wishlist functionality", "author": "kate", "labels": ["feature", "wishlist"]},
+        {"number": 209, "title": "Add multi-currency support for payments", "author": "liam", "labels": ["feature", "payments"]},
+        {"number": 210, "title": "Implement progressive web app features", "author": "maya", "labels": ["feature", "pwa"]},
     ]
     
-    # Bugfix PRs
+    # Bugfix PRs (keeping some for variety)
     bugfix_prs_data = [
-        {"number": 301, "title": "Fix cart total calculation edge case", "author": "grace", "labels": ["bug", "cart"]},
-        {"number": 302, "title": "Resolve memory leak in webhook processing", "author": "henry", "labels": ["bug", "performance"]},
-        {"number": 303, "title": "Fix timezone handling in reports", "author": "iris", "labels": ["bug", "timezone"]},
+        {"number": 301, "title": "Fix cart total calculation edge case", "author": "nick", "labels": ["bug", "cart"]},
+        {"number": 302, "title": "Resolve memory leak in webhook processing", "author": "olivia", "labels": ["bug", "performance"]},
+        {"number": 303, "title": "Fix timezone handling in reports", "author": "paul", "labels": ["bug", "timezone"]},
+        {"number": 304, "title": "Correct race condition in order processing", "author": "quinn", "labels": ["bug", "orders"]},
+        {"number": 305, "title": "Fix broken pagination in admin panel", "author": "ruby", "labels": ["bug", "admin"]},
     ]
     
-    # International PRs
+    # International PRs (5 required)
     international_prs_data = [
         {"number": 401, "title": "Add Spanish (Mexico) locale support", "author": "juan", "labels": ["i18n", "locale"]},
         {"number": 402, "title": "Update currency formatting for EUR", "author": "marie", "labels": ["i18n", "currency"]},
+        {"number": 403, "title": "Add Japanese translation for checkout flow", "author": "takeshi", "labels": ["i18n", "translation"]},
+        {"number": 404, "title": "Implement RTL layout support for Arabic", "author": "ahmed", "labels": ["i18n", "rtl"]},
+        {"number": 405, "title": "Add localized date/time formatting", "author": "sofia", "labels": ["i18n", "datetime"]},
     ]
     
     all_pr_data = schema_prs_data + feature_prs_data + bugfix_prs_data + international_prs_data
@@ -187,7 +201,7 @@ def create_mock_prs():
         mock_prs.append(pr)
     
     # Separate international PRs for special handling
-    international_prs = [pr for pr in mock_prs if any(label.name in ["i18n", "locale", "currency"] for label in pr.labels)]
+    international_prs = [pr for pr in mock_prs if any(label.name in ["i18n", "locale", "currency", "translation", "rtl", "datetime"] for label in pr.labels)]
     
     return mock_prs, international_prs
 
@@ -261,16 +275,16 @@ def main():
         
         # Generate release documentation
         logger.info("📝 Generating release documentation...")
-        confluence_file = render_release_notes(prs, params, output_dir)
+        confluence_file = render_release_notes(prs, params, output_dir, config)
         logger.info(f"✅ Confluence release notes: {confluence_file}")
         
         # Generate markdown version
-        markdown_file = render_release_notes_markdown(prs, params, output_dir)
+        markdown_file = render_release_notes_markdown(prs, params, output_dir, config)
         logger.info(f"✅ Markdown release notes: {markdown_file}")
         
         # Generate CRQ documents
         logger.info("📋 Generating CRQ documents...")
-        crq_files = generate_crqs(prs, params, output_dir)
+        crq_files = generate_crqs(prs, params, output_dir, config)
         logger.info(f"✅ CRQ documents generated: {len(crq_files)} files")
         
         # Validate generated files

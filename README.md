@@ -33,32 +33,412 @@ Stop spending **hours** manually creating release documentation. Our **Release A
 
 ---
 
-## ⚡ **Quick Start - 5 Minutes to Live Workflow**
+## ⚡ **Quick Start - Get Running in 10 Minutes**
 
-**🎯 Get your Slack `/run-release` command working in 5 minutes:**
+### **🎯 Prerequisites**
+- Python 3.10+ installed
+- GitHub account with repository access
+- Slack workspace (for integration)
+- Optional: OpenAI API key for enhanced AI features
 
-### **Option 1: Complete Slack Integration**
-1. **[📖 Follow Quick Start Guide](docs/quickstart.md)** - Step-by-step Slack Workflow Builder setup
-2. **Fork this repository** and configure GitHub secrets
-3. **Test with `/run-release`** in Slack
-4. **Download enterprise documentation** automatically
+### **📋 Step 1: Clone and Setup**
 
-### **Option 2: Direct CLI Usage**
 ```bash
-# Clone and test immediately
+# Clone the repository
 git clone https://github.com/ArnoldoM23/automated-release-rc.git
 cd automated-release-rc
+
+# Install dependencies
 pip install -r requirements.txt
 
-# Test with mock data (no tokens required)
-python main.py --test-mode --service-name test-service --prod-version v1.0.0 --new-version v1.1.0
-
-# Real usage with GitHub integration
-export GITHUB_TOKEN="your_token"
-python main.py --service-name cer-cart --prod-version v2.4.3 --new-version v2.5.0
+# Test without any tokens (uses mock data)
+python main.py --test-mode --service-name demo --prod-version v1.0.0 --new-version v1.1.0
 ```
 
-**🎉 You'll get professional release documentation in 30 seconds!**
+### **🔧 Step 2: Configuration Setup**
+
+```bash
+# Copy example configuration
+cp config/settings.example.yaml config/settings.yaml
+
+# Edit with your details
+nano config/settings.yaml  # or your preferred editor
+```
+
+**Essential configuration (minimum required):**
+
+```yaml
+# config/settings.yaml
+github:
+  token: "${GITHUB_TOKEN}"  # Set via environment variable
+  repo: "your-org/your-repo"
+
+ai:
+  provider: "openai"  # or "azure" or "anthropic"
+  openai:
+    api_key: "${OPENAI_API_KEY}"  # Optional but recommended
+
+organization:
+  name: "Your Company"
+  default_service: "your-service"
+  regions: ["EUS", "SCUS", "WUS"]  # Your deployment regions
+
+slack:
+  bot_token: "${SLACK_BOT_TOKEN}"  # Only if using Slack integration
+  signing_secret: "${SLACK_SIGNING_SECRET}"
+```
+
+### **🔑 Step 3: Environment Variables**
+
+Create a `.env` file or set environment variables:
+
+```bash
+# .env file (create in project root)
+GITHUB_TOKEN=ghp_your_github_token_here
+OPENAI_API_KEY=sk-your_openai_key_here
+SLACK_BOT_TOKEN=xoxb-your_slack_token_here
+SLACK_SIGNING_SECRET=your_slack_signing_secret
+```
+
+### **✅ Step 4: Test Your Setup**
+
+```bash
+# Test with real GitHub data
+export GITHUB_TOKEN="your_token"
+python main.py --service-name your-service --prod-version v1.0.0 --new-version v1.1.0
+
+# Run comprehensive tests
+python test_cli.py --test-all
+
+# Test configuration
+python -c "from config.config import load_config; print('✅ Config loaded successfully')"
+```
+
+---
+
+## 🏢 **Production Deployment Options**
+
+### **Option 1: Slack Workflow Builder (Recommended)**
+
+**✅ Pros:** No approvals needed, 5-minute setup, zero infrastructure  
+**❌ Cons:** Limited to basic notifications
+
+1. **Setup Slack Workflow:**
+   - Open Slack → Tools → Workflow Builder
+   - Create new workflow → "Shortcut" trigger
+   - Add webhook step pointing to your GitHub Actions
+
+2. **Configure GitHub Actions:**
+   ```yaml
+   # .github/workflows/run_release.yml
+   name: Release Automation
+   on:
+     repository_dispatch:
+       types: [slack_release_request]
+   ```
+
+### **Option 2: Full Slack Bot Integration**
+
+**✅ Pros:** Interactive approvals, real-time updates, enterprise features  
+**❌ Cons:** Requires app approval, hosting needed
+
+1. **Deploy Bot:**
+   ```bash
+   # Deploy to Railway/Heroku
+   cd slack_bot
+   railway up  # or git push heroku main
+   ```
+
+2. **Create Slack App:**
+   - Visit api.slack.com/apps
+   - Create new app → Enable Socket Mode
+   - Add bot scopes: chat:write, commands
+
+### **Option 3: CLI-Only Usage**
+
+Perfect for CI/CD integration or manual releases:
+
+```bash
+# Manual release generation
+python main.py \
+  --service-name cer-cart \
+  --prod-version v2.4.3 \
+  --new-version v2.5.0 \
+  --rc-name "Alice Johnson" \
+  --rc-manager "Bob Smith" \
+  --day1-date "2024-01-15" \
+  --day2-date "2024-01-16"
+
+# Integrate into CI/CD
+./scripts/generate_release_docs.sh $SERVICE_NAME $NEW_VERSION
+```
+
+---
+
+## 📋 **Creating Custom CRQ Templates**
+
+The system supports **external CRQ templates** from various sources. Here's how to create templates that work seamlessly with our tool:
+
+### **🎯 Template Structure**
+
+Your CRQ template should follow this structure for best results:
+
+```text
+**CHANGE REQUEST - DAY {day_number}**
+
+**Summary:** {service_name} Application Code deployment for {platform} ({regions}) - Day {day_number}
+
+**Service Information:**
+- Application Name: {service_name}
+- Namespace: {namespace}
+- Platform: {platform}
+- Regions: {regions}
+
+**Version Information:**
+- Current Version: {prod_version}
+- New Version: {new_version}
+- Rollback Version: {prod_version}
+
+**Release Details:**
+- Release Type: {release_type}
+- Release Coordinator: {rc_name}
+- Release Manager: {rc_manager}
+- Day 1 Date: {day1_date}
+- Day 2 Date: {day2_date}
+
+**Description Section:**
+1. What is the business reason for this change?
+2. What is the technical summary?
+3. What testing has been performed?
+4. What is the risk assessment?
+
+**Implementation Plan:**
+{implementation_plan}
+
+**Validation Plan:**
+- P0 Dashboard: {p0_dashboard_url}
+- L1 Dashboard: {l1_dashboard_url}
+- Services Dashboard: {services_dashboard_url}
+
+**Backout Plan:**
+{backout_plan}
+```
+
+### **📝 Supported Template Formats**
+
+#### **1. Microsoft Word Documents (.docx)**
+
+```yaml
+# config/settings.yaml
+external_template:
+  enabled: true
+  template_url: "https://sharepoint.company.com/sites/IT/CRQ_Template.docx"
+  template_type: "word"
+```
+
+**Word Template Example:**
+```
+CHANGE REQUEST TEMPLATE
+
+Service: {service_name}
+Version: {prod_version} → {new_version}
+
+Day 1 Activities:
+- Preparation steps
+- Environment validation
+
+Day 2 Activities:  
+- Production deployment
+- Post-deployment monitoring
+```
+
+#### **2. Text Files (.txt)**
+
+```yaml
+external_template:
+  enabled: true
+  template_url: "https://company.com/templates/crq_template.txt"
+  template_type: "text"
+```
+
+#### **3. Markdown Files (.md)**
+
+```yaml
+external_template:
+  enabled: true
+  template_url: "https://github.com/company/templates/crq.md"
+  template_type: "markdown"
+```
+
+### **🔧 Variable Placeholders**
+
+The tool automatically converts these placeholders to Jinja2 variables:
+
+| Placeholder | Converts To | Description |
+|-------------|-------------|-------------|
+| `{service_name}` | `{{ service_name }}` | Service being deployed |
+| `{new_version}` | `{{ new_version }}` | Target version |
+| `{prod_version}` | `{{ prod_version }}` | Current production version |
+| `{platform}` | `{{ platform }}` | Deployment platform (Glass/Store) |
+| `{regions}` | `{{ regions \| join(", ") }}` | Deployment regions |
+| `{day_number}` | `{{ day_number }}` | Day 1 or Day 2 |
+| `{rc_name}` | `{{ rc_name }}` | Release coordinator name |
+| `{rc_manager}` | `{{ rc_manager }}` | Release manager name |
+| `{confluence_link}` | `{{ confluence_link }}` | Generated Confluence URL |
+| `{p0_dashboard_url}` | `{{ p0_dashboard_url }}` | P0 dashboard URL |
+| `{l1_dashboard_url}` | `{{ l1_dashboard_url }}` | L1 dashboard URL |
+| `{services_dashboard_url}` | `{{ services_dashboard_url }}` | Services dashboard URL |
+| `{wcnp_dashboard_url}` | `{{ wcnp_dashboard_url }}` | WCNP dashboard URL |
+| `{istio_dashboard_url}` | `{{ istio_dashboard_url }}` | Istio dashboard URL |
+
+### **📊 Dashboard URL Configuration**
+
+Configure your monitoring dashboard URLs directly - no patterns needed:
+
+```yaml
+# config/settings.yaml
+dashboard:
+  # Direct URLs - specify exactly what you want
+  confluence_dashboard_url: "https://confluence.yourcompany.com/display/YOUR_SERVICE/Dashboards"
+  p0_dashboard_url: "https://grafana.yourcompany.com/d/your-service-p0-dashboard"
+  l1_dashboard_url: "https://grafana.yourcompany.com/d/your-service-l1-dashboard"
+  services_dashboard_url: "https://grafana.yourcompany.com/d/your-service-overview"
+  wcnp_dashboard_url: "https://grafana.yourcompany.com/d/your-service-wcnp"
+  istio_dashboard_url: "https://grafana.yourcompany.com/d/your-service-istio"
+```
+
+**Why direct URLs?** Every organization has different dashboard naming conventions. Instead of trying to guess patterns, just specify your exact URLs.
+
+### **🎨 Advanced Template Features**
+
+#### **Conditional Content (Day 1 vs Day 2)**
+
+```text
+Summary: {service_name} deployment - Day {day_number}
+
+{% if day_number == "1" %}
+**DAY 1 PREPARATION ACTIVITIES:**
+- Environment validation
+- Artifact preparation
+- Team coordination
+{% else %}
+**DAY 2 DEPLOYMENT ACTIVITIES:**
+- Production deployment
+- Monitoring and validation
+- Post-deployment verification
+{% endif %}
+```
+
+#### **AI-Enhanced Content Integration**
+
+```text
+**Risk Assessment:**
+{{ ai_analysis.get('RISK_ASSESSMENT', 'Standard deployment with established procedures') }}
+
+**Technical Summary:**
+{{ ai_analysis.get('TECHNICAL_SUMMARY', 'Code deployment with ' + total_prs|string + ' changes') }}
+
+**Validation Steps:**
+{{ ai_analysis.get('VALIDATION_STEPS', 'Standard post-deployment validation procedures') }}
+```
+
+#### **PR List Integration**
+
+```text
+**Changes Included:**
+{% for pr in prs %}
+- PR #{{ pr.number }}: {{ pr.title }} (@{{ pr.user.login }})
+  Labels: {{ pr.labels | map(attribute='name') | join(', ') }}
+{% endfor %}
+
+**Total Changes:** {{ total_prs }} pull requests
+```
+
+### **✅ Template Validation**
+
+Test your custom template:
+
+```bash
+# Test external template download
+python test_external_template.py
+
+# Test with your template
+python main.py --test-mode --config-path config/settings.yaml
+
+# Validate template conversion
+python -c "
+from crq.external_template import ExternalTemplateManager
+from config.config import load_config
+manager = ExternalTemplateManager(load_config())
+result = manager.get_external_template()
+print('✅ Template loaded successfully' if result else '❌ Template failed')
+"
+```
+
+---
+
+## 📁 **Generated Output Files**
+
+When you run the automation, you get these professional documents:
+
+| File | Size | Purpose | Format |
+|------|------|---------|---------|
+| `release_notes.txt` | 6,000+ bytes | **Confluence-ready** release notes with 15 sections | Confluence markup |
+| `crq_day1.txt` | 4,500+ bytes | **Day 1 preparation** CRQ with detailed steps | Plain text |
+| `crq_day2.txt` | 4,600+ bytes | **Day 2 deployment** CRQ with rollback plans | Plain text |
+| `release_notes.md` | 2,500+ bytes | **GitHub markdown** version for repositories | Markdown |
+
+### **📋 CRQ Content Structure**
+
+Each generated CRQ includes:
+
+- ✅ **Enterprise-compliant format** matching your template
+- 🤖 **AI-enhanced content** with intelligent risk assessment
+- 📊 **Comprehensive implementation plan** with specific steps
+- 🔍 **Detailed validation procedures** with dashboard links
+- 🔄 **Complete rollback plan** with decision criteria
+- 📈 **PR change summary** with automatic categorization
+
+---
+
+## 🧪 **Testing & Validation**
+
+### **🔍 Test Your Configuration**
+
+```bash
+# Test complete system
+python test_cli.py --test-all
+
+# Test specific components
+python test_cli.py --test-config      # Configuration validation
+python test_cli.py --test-ai          # AI provider connectivity  
+python test_cli.py --test-github      # GitHub API integration
+python test_cli.py --test-templates   # Template processing
+
+# Test external features
+python test_external_template.py      # Dashboard and external templates
+```
+
+### **📊 Mock Data Testing**
+
+The system includes comprehensive mock data for testing:
+
+```bash
+# Test with 15 mock PRs (5 schema + 4 features + 5 bugfixes + 1 i18n)
+python main.py --test-mode \
+  --service-name test-service \
+  --prod-version v1.0.0 \
+  --new-version v1.1.0 \
+  --rc-name "Test User" \
+  --rc-manager "Test Manager"
+```
+
+**Mock PRs include:**
+- Schema changes (database migrations)
+- Feature additions (new functionality)  
+- Bug fixes (critical and non-critical)
+- International/localization updates
+- Various label combinations for testing categorization
 
 ---
 
@@ -76,235 +456,17 @@ python main.py --service-name cer-cart --prod-version v2.4.3 --new-version v2.5.
 - **Inline Panel Formatting** - Prevents table structure breaking
 - **Copy-Paste Ready** - Zero manual formatting required
 
-### **🔧 GitHub Actions Integration**
-- **Serverless Execution** - Zero infrastructure costs
-- **Repository Dispatch** - Triggered from Slack Workflow Builder
-- **Artifact Management** - Automatic file generation and storage
-- **Multi-Environment Support** - Dev, staging, production configurations
+### **🔧 Flexible Integration**
+- **External Template Support** - Download from SharePoint, Word docs, etc.
+- **Configurable Dashboard URLs** - Integration with your monitoring systems
+- **Multiple Output Formats** - Confluence, Markdown, Plain text
+- **Cache Management** - Efficient template caching with configurable duration
 
-### **🚀 Slack Workflow Builder**
-- **8-Field Form** - Captures all release information
-- **Instant Feedback** - Confirmation messages with progress tracking
-- **Team Collaboration** - Multi-user access and permissions
-- **Enterprise Security** - Integrates with existing Slack governance
-
----
-
-## 💬 **Slack Integration**
-
-### **Current Implementation: Slack Workflow Builder**
-The system uses **Slack Workflow Builder** (not a traditional bot) for maximum compatibility and zero approval requirements:
-
-**✅ What's Included:**
-- **`/run-release` shortcut command** - Triggers the workflow
-- **Modal form interface** - 8-field form for release information
-- **HTTP webhook integration** - Sends data to GitHub Actions via `repository_dispatch`
-- **Confirmation messages** - Real-time progress updates
-- **No custom app approval needed** - Uses built-in Slack functionality
-
-### **Optional: Sign-off Bot (Enterprise Feature)**
-For advanced workflow tracking, you can optionally deploy a lightweight Slack bot:
-
-**🤖 Sign-off Bot Features:**
-- **Interactive approval tracking** - ✅/❌ buttons for stakeholder sign-offs
-- **Real-time status updates** - Live progress tracking in Slack channels
-- **Automated notifications** - Alerts when approvals are needed
-- **Audit trail** - Complete history of who approved what and when
-
-**📦 Bot Deployment Options:**
-```bash
-# Option 1: Deploy to Heroku/Railway (5 minutes)
-git clone https://github.com/your-org/slack-signoff-bot
-railway up
-
-# Option 2: Docker container
-docker run -e SLACK_BOT_TOKEN=xoxb-your-token slack-signoff-bot
-
-# Option 3: AWS Lambda/Azure Functions
-# Deploy serverless function for minimal cost
-```
-
-**🔧 Bot Integration:**
-When deployed, the bot receives notifications from GitHub Actions and creates interactive messages:
-```json
-{
-  "service": "cer-cart v2.5.0",
-  "status": "✅ Documentation Generated",
-  "approvals_needed": ["Release Manager", "Security Team"],
-  "artifacts": "https://github.com/your-org/repo/actions/runs/123"
-}
-```
-
-### **Why Workflow Builder vs. Custom Bot?**
-
-| Feature | Workflow Builder | Custom Bot |
-|---------|------------------|------------|
-| **Setup Time** | 5 minutes | 30+ minutes |
-| **Approval Required** | ❌ None | ✅ Admin approval |
-| **Infrastructure** | ❌ None | ✅ Server/hosting |
-| **Maintenance** | ❌ None | ✅ Updates needed |
-| **Form Interface** | ✅ Native | ✅ Custom modals |
-| **Basic Notifications** | ✅ Yes | ✅ Yes |
-| **Interactive Approvals** | ❌ No | ✅ Yes |
-| **Real-time Updates** | ❌ No | ✅ Yes |
-| **Enterprise Features** | ❌ Limited | ✅ Full featured |
-
-**🎯 Recommendation:** Start with **Workflow Builder** for immediate value, add **Sign-off Bot** for enterprise workflows.
-
----
-
-## 📁 **What Gets Generated**
-
-When you run `/run-release`, you automatically get:
-
-| File | Size | Purpose |
-|------|------|---------|
-| `release_notes.txt` | 6,000+ bytes | **Confluence-ready** release notes with 15 sections |
-| `crq_day1.txt` | 3,500+ bytes | **Day 1 preparation** CRQ with detailed steps |
-| `crq_day2.txt` | 4,500+ bytes | **Day 2 deployment** CRQ with rollback plans |
-| `release_notes.md` | 2,500+ bytes | **GitHub markdown** version for repositories |
-| `RELEASE_SUMMARY.md` | 1,000+ bytes | **Executive summary** with key metrics |
-
-**🎯 All files are production-ready and require zero manual editing.**
-
----
-
-## 🛠️ **Architecture**
-
-### **Complete System Flow:**
-
-```mermaid
-graph TB
-    subgraph "Slack Workspace"
-        A["/run-release command"] --> B["🎯 Slack Workflow Builder"]
-        B --> C["📋 Modal Form<br/>(8 fields)"]
-        C --> D["✅ Form Submission"]
-    end
-    
-    subgraph "GitHub Integration"
-        D --> E["🔗 HTTP POST Request<br/>repository_dispatch webhook"]
-        E --> F["⚡ GitHub Actions Trigger<br/>run_release.yml"]
-    end
-    
-    subgraph "Automation Engine"
-        F --> G["🐍 Python CLI Agent<br/>main.py"]
-        G --> H["🔧 Parameter Extraction"]
-        H --> I["📊 Configuration Loading"]
-    end
-    
-    subgraph "Data Sources"
-        I --> J["🐙 GitHub API<br/>PR Fetching"]
-        I --> K["🤖 AI Providers<br/>OpenAI/Azure/Anthropic"]
-        I --> L["📝 Template Engine<br/>Jinja2"]
-    end
-    
-    subgraph "Document Generation"
-        J --> M["📋 PR Categorization<br/>Schema/Features/Bugfixes"]
-        K --> M
-        M --> N["📄 Release Notes Generation<br/>15-section Confluence"]
-        M --> O["📋 CRQ Generation<br/>Day 1 & Day 2"]
-        L --> N
-        L --> O
-    end
-    
-    subgraph "Output & Delivery"
-        N --> P["📦 GitHub Artifacts<br/>release_notes.txt<br/>crq_day1.txt<br/>crq_day2.txt"]
-        O --> P
-        P --> Q["📥 Download Links"]
-        F --> R["💬 Slack Confirmation<br/>Message with Progress"]
-    end
-
-    style A fill:#e1f5fe
-    style C fill:#f3e5f5
-    style F fill:#e8f5e8
-    style G fill:#fff3e0
-    style P fill:#fce4ec
-```
-
-### **🔗 Component Breakdown:**
-
-#### **🎯 Slack Integration Layer**
-- **Slack Workflow Builder** - No custom app required, uses built-in Slack functionality
-- **Modal Form Interface** - 8-field form with validation and user-friendly inputs
-- **Repository Dispatch Webhook** - Secure HTTP POST to GitHub API
-- **Confirmation Messages** - Real-time progress updates in Slack
-
-#### **⚡ GitHub Actions Processing**
-- **Serverless Execution** - Zero infrastructure costs, runs on GitHub's cloud
-- **Parameter Handling** - Extracts and validates form data from Slack
-- **Multi-trigger Support** - Works from Slack or manual GitHub Actions runs
-- **Artifact Management** - Automatically uploads generated files
-
-#### **🐍 Release Automation Agent**
-- **Professional CLI** - Full argument parsing with mock data support
-- **Configuration Management** - YAML-based settings with environment overrides
-- **Error Handling** - Comprehensive logging and graceful failure recovery
-- **Testing Framework** - Built-in validation and mock data capabilities
-
-#### **🤖 AI-Powered Intelligence**
-- **Multi-Provider Support** - OpenAI → Azure OpenAI → Anthropic fallback chain
-- **Smart Categorization** - Automatically detects PR types and impacts
-- **Context-Aware Generation** - Understands technical relationships and dependencies
-- **Fallback Content** - Works even without AI API keys
-
-#### **📄 Enterprise Documentation**
-- **15-Section Confluence Template** - Professional enterprise release format
-- **Inline Panel Formatting** - Prevents table structure breaking in Confluence
-- **Sign-off Tracking** - ✅/❌ checkboxes for stakeholder approvals
-- **Multi-Format Output** - Confluence, Markdown, and executive summaries
-
-### **🔐 Security & Enterprise Features:**
-- **GitHub Secrets Management** - All tokens stored securely
-- **No Data Persistence** - Stateless operation, no databases required
-- **GDPR Compliance** - No personal data retention
-- **Enterprise Integration** - Works with existing Slack governance and GitHub enterprise
-
-### **⚡ Performance Characteristics:**
-- **30-60 second execution time** from Slack command to artifact download
-- **6,000+ bytes of professional documentation** generated automatically
-- **Zero manual intervention** required for standard releases
-- **Scales to any number of PRs and services**
-
----
-
-## 📚 **Complete Documentation**
-
-### **🚀 Getting Started**
-- **[⚡ Quick Start Guide](docs/quickstart.md)** - 5-minute setup for Slack integration
-- **[🔧 Slack Workflow Setup](setup/slack_workflow_setup.md)** - Detailed Slack Workflow Builder instructions
-- **[⚙️ Configuration Reference](docs/configuration.md)** - Customize for your organization
-
-### **🏢 Enterprise Deployment**
-- **[🏗️ Enterprise Setup](docs/enterprise.md)** - Large-scale deployment guide
-- **[📝 Template Customization](docs/templates.md)** - Brand output for your company
-- **[🔒 Security & Compliance](docs/security.md)** - Enterprise security features
-
-### **🔧 Advanced Topics**
-- **[🤖 AI Provider Setup](docs/ai-providers.md)** - Configure OpenAI, Azure, Anthropic
-- **[📊 GitHub Integration](docs/github-integration.md)** - Enterprise GitHub setup
-- **[🚨 Troubleshooting](docs/troubleshooting.md)** - Common issues and solutions
-
----
-
-## 🧪 **Testing & Validation**
-
-The system includes comprehensive testing capabilities:
-
-```bash
-# Test complete functionality
-python test_cli.py --test-all
-
-# Test individual components
-python test_cli.py --test-config    # Configuration validation
-python test_cli.py --test-ai        # AI provider connectivity  
-python test_cli.py --test-github    # GitHub API integration
-python test_cli.py --test-docs      # Document generation
-
-# Test with comprehensive mock data
-python test_cli.py --test-comprehensive
-```
-
-**✅ All tests passing = Production ready**
+### **🚀 Deployment Options**
+- **Serverless Execution** - Zero infrastructure costs with GitHub Actions
+- **CLI Integration** - Perfect for CI/CD pipelines
+- **Slack Workflow Builder** - No app approval required
+- **Full Bot Integration** - Enterprise-grade interactive features
 
 ---
 
@@ -313,18 +475,141 @@ python test_cli.py --test-comprehensive
 ### **Core Requirements**
 - **Python 3.10+** 
 - **GitHub repository** with Actions enabled
-- **Slack workspace** with Workflow Builder
 - **Internet connectivity** for GitHub/AI APIs
 
-### **Optional for AI Features**
-- **OpenAI API key** (recommended)
-- **Azure OpenAI** (enterprise)
-- **Anthropic API key** (alternative)
+### **Optional for Enhanced Features**
+- **OpenAI API key** (recommended for AI-powered content)
+- **Azure OpenAI** (enterprise alternative)
+- **Anthropic API key** (alternative AI provider)
+- **Slack workspace** (for workflow integration)
 
 ### **Infrastructure**
-- **Zero servers required** - Uses GitHub Actions
+- **Zero servers required** - Uses GitHub Actions or runs locally
 - **No databases** - Stateless operation
 - **Minimal costs** - Only API usage
+
+---
+
+## 🛠️ **Architecture**
+
+### **🔗 Component Breakdown**
+
+#### **🎯 Core Automation Engine**
+- **CLI Interface** - Full argument parsing with validation
+- **Configuration Management** - YAML-based with environment overrides
+- **Template Processing** - Jinja2 with custom filters and functions
+- **Error Handling** - Comprehensive logging and graceful failures
+
+#### **🤖 AI Integration Layer**
+- **Multi-Provider Support** - OpenAI → Azure → Anthropic fallback
+- **Smart Content Generation** - Context-aware CRQ and release notes
+- **Fallback Mechanisms** - Works without AI for basic functionality
+- **Caching & Optimization** - Efficient API usage
+
+#### **📄 Document Generation**
+- **Enterprise Templates** - Professional formatting
+- **External Template Support** - Word docs, SharePoint, etc.
+- **Multi-Format Output** - Confluence, Markdown, Plain text
+- **Dynamic Content** - AI-enhanced with PR analysis
+
+#### **🔗 Integration Capabilities**
+- **GitHub API** - PR fetching with comprehensive metadata
+- **Slack Integration** - Workflow Builder and full bot options
+- **Dashboard URLs** - Configurable monitoring system links
+- **External Templates** - Automatic download and conversion
+
+---
+
+## 📚 **Advanced Configuration**
+
+### **🔧 Complete Configuration Example**
+
+```yaml
+# config/settings.yaml - Production Ready
+slack:
+  bot_token: "${SLACK_BOT_TOKEN}"
+  signing_secret: "${SLACK_SIGNING_SECRET}"
+  default_channels: ["#releases"]
+
+github:
+  token: "${GITHUB_TOKEN}"
+  repo: "your-org/your-repo"
+
+ai:
+  provider: "openai"
+  openai:
+    api_key: "${OPENAI_API_KEY}"
+    model: "gpt-4-1106-preview"
+    max_tokens: 1000
+
+organization:
+  name: "Your Company"
+  default_service: "your-service"
+  regions: ["EUS", "SCUS", "WUS"]
+  platform: "Glass"
+
+dashboard:
+  base_confluence_url: "https://confluence.yourcompany.com"
+  base_grafana_url: "https://grafana.yourcompany.com"
+  p0_dashboard_pattern: "{base_grafana_url}/d/{service_name}-p0"
+  l1_dashboard_pattern: "{base_grafana_url}/d/{service_name}-l1"
+
+external_template:
+  enabled: true
+  template_url: "https://sharepoint.company.com/CRQ_Template.docx"
+  cache_duration: 3600
+  fallback_to_builtin: true
+
+app:
+  environment: "production"
+  log_level: "INFO"
+  output_dir: "output"
+```
+
+### **🔐 Security Best Practices**
+
+```bash
+# Use environment variables for secrets
+export GITHUB_TOKEN="ghp_your_token"
+export OPENAI_API_KEY="sk_your_key"
+export SLACK_BOT_TOKEN="xoxb_your_token"
+
+# Or use .env file (not committed to git)
+echo "GITHUB_TOKEN=ghp_your_token" > .env
+echo "OPENAI_API_KEY=sk_your_key" >> .env
+
+# GitHub secrets for Actions
+gh secret set GITHUB_TOKEN --body "ghp_your_token"
+gh secret set OPENAI_API_KEY --body "sk_your_key"
+```
+
+---
+
+## 🤝 **Community & Support**
+
+### **📞 Getting Help**
+
+1. **🐛 Bug Reports:** [GitHub Issues](https://github.com/ArnoldoM23/automated-release-rc/issues)
+2. **💡 Feature Requests:** [GitHub Discussions](https://github.com/ArnoldoM23/automated-release-rc/discussions)
+3. **📖 Documentation:** [GitHub Wiki](https://github.com/ArnoldoM23/automated-release-rc/wiki)
+4. **💬 Community Chat:** Join our Slack community
+
+### **🚀 Contributing**
+
+We welcome contributions! Areas where you can help:
+
+- **🔧 Code contributions** - New features and improvements
+- **📝 Documentation** - Improve guides and examples  
+- **🎨 Templates** - Share organization-specific templates
+- **🔗 Integrations** - Add support for new platforms (JIRA, ServiceNow, etc.)
+
+### **💼 Enterprise Support**
+
+For large-scale deployments:
+- **🏗️ Custom deployment assistance**
+- **🎓 Team training and workshops**
+- **🔧 Custom feature development**
+- **📞 Priority support channels**
 
 ---
 
@@ -334,37 +619,11 @@ python test_cli.py --test-comprehensive
 > *"Reduced our release documentation time from 3 hours to 30 seconds. The Confluence output is better than what our team was creating manually."*  
 > — **Release Engineering Manager, Fortune 500 Company**
 
-### **Startup Impact**
-> *"Perfect for our fast-moving team. `/run-release` in Slack gives us professional documentation that impresses our enterprise customers."*  
-> — **CTO, Series B Startup**
-
-### **Developer Productivity**
+### **Key Metrics**
 - **90%+ time reduction** in release documentation
 - **100% consistency** across all releases  
 - **Zero manual errors** in CRQ generation
 - **Professional output** that scales with team growth
-
----
-
-## 🤝 **Community & Support**
-
-### **Community Resources**
-- **[🐛 Issues](https://github.com/ArnoldoM23/automated-release-rc/issues)** - Bug reports and feature requests
-- **[💬 Discussions](https://github.com/ArnoldoM23/automated-release-rc/discussions)** - Community help and ideas
-- **[📖 Wiki](https://github.com/ArnoldoM23/automated-release-rc/wiki)** - Additional guides and examples
-
-### **Contributing**
-We welcome contributions! See our [Contributing Guide](CONTRIBUTING.md) for:
-- **Code contributions** - New features and improvements
-- **Documentation** - Help improve guides and examples  
-- **Templates** - Share organization-specific templates
-- **Integrations** - Add support for new platforms
-
-### **Professional Services**
-For enterprise deployment, custom integrations, or professional support:
-- **Enterprise consulting** - Large-scale deployment assistance
-- **Custom development** - Organization-specific features
-- **Training & workshops** - Team onboarding and best practices
 
 ---
 
@@ -374,7 +633,7 @@ For enterprise deployment, custom integrations, or professional support:
 
 **Privacy & Security:**
 - **No data collection** - Your PRs and docs stay in your environment
-- **API keys secured** - All credentials stored in GitHub secrets
+- **API keys secured** - All credentials stored safely
 - **GDPR compliant** - No personal data retention
 - **Enterprise ready** - Meets corporate security standards
 
@@ -382,23 +641,35 @@ For enterprise deployment, custom integrations, or professional support:
 
 ## 🚀 **Ready to Transform Your Release Process?**
 
-### **🎯 Start in 5 Minutes:**
+### **🎯 Get Started Now:**
 
-1. **[📖 Follow Quick Start Guide](docs/quickstart.md)**
-2. **Fork this repository**
-3. **Setup Slack Workflow Builder**
-4. **Test with `/run-release`**
-5. **Download professional documentation**
-
-### **⚡ Test Right Now:**
 ```bash
+# 1. Clone and test immediately
 git clone https://github.com/ArnoldoM23/automated-release-rc.git
 cd automated-release-rc
+pip install -r requirements.txt
+
+# 2. Test with mock data (no tokens needed)
 python main.py --test-mode --service-name demo --prod-version v1.0.0 --new-version v1.1.0
+
+# 3. Configure for your organization
+cp config/settings.example.yaml config/settings.yaml
+# Edit config/settings.yaml with your details
+
+# 4. Test with real data
+export GITHUB_TOKEN="your_token"
+python main.py --service-name your-service --prod-version v1.0.0 --new-version v1.1.0
+
+# 5. Deploy to production (Slack integration)
+# Follow Slack Workflow Builder setup in docs/
 ```
 
-**🎉 Get enterprise-grade release documentation in 30 seconds!**
+### **📈 Next Steps:**
 
----
+1. **📋 Create your CRQ template** using the guidelines above
+2. **🔧 Configure dashboard URLs** for your monitoring systems  
+3. **🤖 Set up AI provider** for enhanced content generation
+4. **💬 Deploy Slack integration** for team workflow
+5. **🎉 Start generating professional documentation** in 30 seconds!
 
-**Built with ❤️ for Release Engineering teams everywhere** 
+**Questions? Need help?** Open an issue or start a discussion on GitHub! 

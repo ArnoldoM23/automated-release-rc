@@ -440,26 +440,43 @@ def generate_crqs(prs: List, params: Dict[str, Any], output_dir: Path, config=No
             "ai_analysis": ai_analysis,
             "generation_timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S UTC"),
             "confluence_link": f"https://confluence.company.com/display/RELEASES/{params['service_name'].upper()}/Release-{params['new_version']}",
-            "dashboard_url": f"https://confluence.company.com/display/{params['service_name'].upper()}/Dashboards",
-            "grafana_url": f"https://grafana.company.com/d/{params['service_name']}-p0",
-            "l1_dashboard_url": f"https://grafana.company.com/d/{params['service_name']}-l1",
-            "services_dashboard_url": f"https://grafana.company.com/d/{params['service_name']}-services",
-            "wcnp_dashboard_url": f"https://grafana.company.com/d/{params['service_name']}-wcnp",
-            "istio_dashboard_url": f"https://grafana.company.com/d/{params['service_name']}-istio"
         }
+        
+        # Generate dashboard URLs using configuration
+        dashboard_urls = config.dashboard.get_dashboard_urls()
+        base_template_vars.update(dashboard_urls)
         
         generated_files = []
         
         # Try to load enterprise template
         try:
-            from jinja2 import Environment, FileSystemLoader
+            from jinja2 import Environment, FileSystemLoader, Template
             template_path = Path("templates")
+            template = None
             
-            if (template_path / "crq_template.j2").exists():
+            # First, try external template if enabled
+            try:
+                from .external_template import ExternalTemplateManager
+                external_manager = ExternalTemplateManager(config)
+                external_template_content = external_manager.get_external_template()
+                
+                if external_template_content:
+                    logger.info("Using external CRQ template")
+                    template = Template(external_template_content)
+                else:
+                    logger.info("External template not available, using enterprise template")
+            except ImportError:
+                logger.info("External template module not available")
+            except Exception as e:
+                logger.warning(f"External template failed: {e}, falling back to enterprise template")
+            
+            # If no external template, use enterprise template
+            if template is None and (template_path / "crq_template.j2").exists():
                 logger.info("Using enterprise CRQ template")
                 env = Environment(loader=FileSystemLoader("templates"))
                 template = env.get_template("crq_template.j2")
-                
+            
+            if template:
                 # Generate Day 1 CRQ
                 logger.info("Generating Day 1 CRQ document...")
                 day1_vars = {**base_template_vars, "day_number": "1"}

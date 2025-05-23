@@ -294,6 +294,61 @@ class IntegrationsConfig(BaseModel):
     servicenow: ServiceNowIntegration = Field(default_factory=ServiceNowIntegration)
 
 
+class DashboardConfig(BaseModel):
+    """Dashboard configuration for monitoring links."""
+    # Direct dashboard URLs - users specify exactly what they want
+    confluence_dashboard_url: str = Field(
+        default="https://confluence.company.com/display/SERVICE/Dashboards",
+        description="Direct URL to Confluence dashboard page"
+    )
+    p0_dashboard_url: str = Field(
+        default="https://grafana.company.com/d/service-p0",
+        description="Direct URL to P0 dashboard"
+    )
+    l1_dashboard_url: str = Field(
+        default="https://grafana.company.com/d/service-l1", 
+        description="Direct URL to L1 dashboard"
+    )
+    services_dashboard_url: str = Field(
+        default="https://grafana.company.com/d/service-overview",
+        description="Direct URL to services dashboard"
+    )
+    wcnp_dashboard_url: str = Field(
+        default="https://grafana.company.com/d/service-wcnp",
+        description="Direct URL to WCNP dashboard"
+    )
+    istio_dashboard_url: str = Field(
+        default="https://grafana.company.com/d/service-istio",
+        description="Direct URL to Istio dashboard"
+    )
+
+    def get_dashboard_urls(self) -> Dict[str, str]:
+        """Get all dashboard URLs as a dictionary."""
+        return {
+            "confluence_dashboard_url": self.confluence_dashboard_url,
+            "p0_dashboard_url": self.p0_dashboard_url,
+            "l1_dashboard_url": self.l1_dashboard_url,
+            "services_dashboard_url": self.services_dashboard_url,
+            "wcnp_dashboard_url": self.wcnp_dashboard_url,
+            "istio_dashboard_url": self.istio_dashboard_url
+        }
+
+
+class ExternalTemplateConfig(BaseModel):
+    """External CRQ template configuration."""
+    enabled: bool = Field(default=False, description="Enable external template download")
+    template_url: Optional[str] = Field(None, description="URL to external CRQ template (Word doc, text file, etc.)")
+    template_type: str = Field(default="auto", description="Template type: auto, word, text, markdown")
+    cache_duration: int = Field(default=3600, description="Cache duration in seconds (1 hour default)")
+    fallback_to_builtin: bool = Field(default=True, description="Fall back to built-in template if download fails")
+    
+    @validator('template_type')
+    def validate_template_type(cls, v):
+        if v not in ['auto', 'word', 'text', 'markdown', 'html']:
+            raise ValueError('Template type must be one of: auto, word, text, markdown, html')
+        return v
+
+
 class Settings(BaseModel):
     """Main application settings."""
     slack: SlackConfig
@@ -307,6 +362,8 @@ class Settings(BaseModel):
     security: SecurityConfig = Field(default_factory=SecurityConfig)
     monitoring: MonitoringConfig = Field(default_factory=MonitoringConfig)
     integrations: IntegrationsConfig = Field(default_factory=IntegrationsConfig)
+    dashboard: DashboardConfig = Field(default_factory=DashboardConfig)
+    external_template: ExternalTemplateConfig = Field(default_factory=ExternalTemplateConfig)
 
 
 def substitute_env_vars(data: Any) -> Any:

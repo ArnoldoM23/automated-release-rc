@@ -10,12 +10,12 @@ slack:
   app_token: "${SLACK_APP_TOKEN}"  # For Socket Mode
   default_channels:
     - "#releases"
-    - "#general"
+    - "#release-notifications"
   
 # GitHub Configuration  
 github:
   token: "${GITHUB_TOKEN}"
-  repo: "${GITHUB_REPO}"  # Format: owner/repo
+  repo: "your-org/your-repo"
   api_url: "https://api.github.com"  # For GitHub Enterprise: https://your-enterprise.github.com/api/v3
   
 # AI Configuration (multiple providers supported)
@@ -24,7 +24,7 @@ ai:
   openai:
     api_key: "${OPENAI_API_KEY}"
     model: "gpt-4-1106-preview"
-    api_base: "https://api.openai.com/v1"
+    max_tokens: 1000
   azure:
     endpoint: "${AZURE_OPENAI_ENDPOINT}"
     api_key: "${AZURE_OPENAI_API_KEY}"
@@ -36,21 +36,22 @@ ai:
 
 # Organization-specific Settings
 organization:
-  name: "${ORGANIZATION_NAME:Your Company}"
-  default_service: "${DEFAULT_SERVICE_NAME:your-service}"
-  timezone: "${TIMEZONE:UTC}"
+  name: "Your Company"
+  default_service: "your-service"
+  timezone: "PST"
   regions:
     - "EUS"  # East US
     - "SCUS" # South Central US
     - "WUS"  # West US
+  platform: "Glass"  # or "Store"
 
 # Application Settings
 app:
-  environment: "${ENVIRONMENT:development}"
-  log_level: "${LOG_LEVEL:INFO}"
-  deployment_mode: "${DEPLOYMENT_MODE:socket}"  # socket, http
-  port: ${PORT:3000}
-  output_dir: "${OUTPUT_DIR:output}"
+  environment: "production"
+  log_level: "INFO"
+  deployment_mode: "socket"  # socket, http
+  port: 3000
+  output_dir: "output"
 
 # Modal Field Configuration
 modal:
@@ -148,7 +149,7 @@ templates:
   # Output formats
   formats:
     confluence: true
-    markdown: true
+    markdown: false
     html: false
     plain_text: false
 
@@ -160,20 +161,38 @@ security:
   
 # Monitoring & Alerting
 monitoring:
-  webhook_url: "${MONITORING_WEBHOOK_URL:}"
-  sentry_dsn: "${SENTRY_DSN:}"
+  webhook_url: "${MONITORING_WEBHOOK_URL}"
+  sentry_dsn: "${SENTRY_DSN}"
   enable_metrics: true
 
 # Integration Settings
 integrations:
   jira:
     enabled: false
-    url: "${JIRA_URL:}"
-    username: "${JIRA_USERNAME:}"
-    api_token: "${JIRA_API_TOKEN:}"
+    url: "https://yourcompany.atlassian.net"
+    username: "${JIRA_USERNAME}"
+    api_token: "${JIRA_API_TOKEN}"
   
   servicenow:
     enabled: false
-    instance: "${SERVICENOW_INSTANCE:}"
-    username: "${SERVICENOW_USERNAME:}"
-    password: "${SERVICENOW_PASSWORD:}" 
+    instance: "yourcompany.service-now.com"
+    username: "${SERVICENOW_USERNAME}"
+    password: "${SERVICENOW_PASSWORD}"
+
+# Dashboard Configuration
+dashboard:
+  # Direct dashboard URLs - specify exactly what you want
+  confluence_dashboard_url: "https://confluence.yourcompany.com/display/YOUR_SERVICE/Dashboards"
+  p0_dashboard_url: "https://grafana.yourcompany.com/d/your-service-p0-dashboard"
+  l1_dashboard_url: "https://grafana.yourcompany.com/d/your-service-l1-dashboard"
+  services_dashboard_url: "https://grafana.yourcompany.com/d/your-service-overview"
+  wcnp_dashboard_url: "https://grafana.yourcompany.com/d/your-service-wcnp"
+  istio_dashboard_url: "https://grafana.yourcompany.com/d/your-service-istio"
+
+# External CRQ Template Configuration
+external_template:
+  enabled: false  # Set to true to enable external template downloading
+  template_url: "https://yourcompany.sharepoint.com/sites/IT/Shared%20Documents/CRQ_Template.docx"
+  template_type: "auto"  # auto, word, text, markdown
+  cache_duration: 3600  # Cache for 1 hour (in seconds)
+  fallback_to_builtin: true  # Fall back to built-in template if download fails 

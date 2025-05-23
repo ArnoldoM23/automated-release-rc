@@ -27,4 +27,13 @@ app:
   log_level: "INFO"
   deployment_mode: "socket"
   port: 3000
-  output_dir: "test_outputs" 
+  output_dir: "test_outputs"
+
+# Dashboard Configuration for Testing
+dashboard:
+  confluence_dashboard_url: "https://confluence.testcompany.com/display/TEST_SERVICE/Dashboards"
+  p0_dashboard_url: "https://grafana.testcompany.com/d/test-service-p0"
+  l1_dashboard_url: "https://grafana.testcompany.com/d/test-service-l1"
+  services_dashboard_url: "https://grafana.testcompany.com/d/test-service-overview"
+  wcnp_dashboard_url: "https://grafana.testcompany.com/d/test-service-wcnp"
+  istio_dashboard_url: "https://grafana.testcompany.com/d/test-service-istio" 

@@ -28,7 +28,7 @@ h1. {{ service_name }} (release date {{ release_date }})
 {% endfor %}
 {panel} ||
 || 11 || URLs & Dashboards ||  
-1. [Grafana|{{ grafana_url|default('https://grafana.company.com/d/service-dashboard') }}]  
+1. [Grafana|{{ p0_dashboard_url|default('https://grafana.company.com/d/service-dashboard') }}]  
 2. [Service Dashboard|{{ dashboard_url|default('https://dashboard.company.com/' + service_name) }}]  
 3. [DataDog APM|{{ datadog_url|default('https://app.datadoghq.com/apm/services') }}]  
 4. [Alerts|{{ alerts_url|default('https://alerts.company.com/' + service_name) }}] ||
