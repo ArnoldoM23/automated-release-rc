@@ -202,24 +202,30 @@ h2. 📞 Contact Information
     return Template(template_content)
 
 
-def render_release_notes(prs: List, params: Dict[str, Any], output_dir: Path) -> Path:
+def render_release_notes(prs: List, params: Dict[str, Any], output_dir: Path, config=None) -> Path:
     """
-    Generate Confluence-ready release notes from PR data using the comprehensive template.
+    Generate Confluence-formatted release notes from PR data.
     
     Args:
-        prs: List of GitHub PR objects
-        params: Release parameters from CLI
-        output_dir: Directory to save the release notes
+        prs: List of PR objects from GitHub API
+        params: Dictionary with release parameters
+        output_dir: Path to output directory
+        config: Optional configuration object (loads default if None)
         
     Returns:
-        Path to the generated release notes file
+        Path to generated release notes file
     """
     logger = get_logger(__name__)
     
     try:
-        # Load configuration for additional template variables
-        from config.config import load_config
-        config = load_config()
+        # Load configuration if not provided
+        if config is None:
+            from config.config import load_config
+            config = load_config()
+        
+        # Setup output directory
+        output_dir = Path(output_dir)
+        output_dir.mkdir(parents=True, exist_ok=True)
         
         # Categorize PRs for better organization
         logger.info(f"Categorizing {len(prs)} PRs...")
@@ -371,11 +377,16 @@ def render_release_notes(prs: List, params: Dict[str, Any], output_dir: Path) ->
         raise
 
 
-def render_release_notes_markdown(prs: List, params: Dict[str, Any], output_dir: Path) -> Path:
+def render_release_notes_markdown(prs: List, params: Dict[str, Any], output_dir: Path, config=None) -> Path:
     """Alternative markdown format for GitHub/GitLab."""
     logger = get_logger(__name__)
     
     try:
+        # Load configuration if not provided
+        if config is None:
+            from config.config import load_config
+            config = load_config()
+        
         categories = categorize_prs(prs)
         
         markdown_content = f"""# Release Notes - {params['service_name']} {params['new_version']}

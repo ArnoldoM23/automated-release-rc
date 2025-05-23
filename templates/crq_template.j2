@@ -1,182 +1,84 @@
-{#- CRQ Template based on the provided format -#}
-{#- This template generates both Day 1 and Day 2 CRQs -#}
-
-{% for day_type in ['Day 1', 'Day 2'] %}
-{% set day_num = '1' if day_type == 'Day 1' else '2' %}
-{% set deployment_date = params.day1_date if day_type == 'Day 1' else params.day2_date %}
-
-================================================================================
-{{ params.service_name | title }} Application - CRQ {{ day_type }}
-================================================================================
-Generated on: {{ current_date }}
-Release Coordinator: {{ params.rc_name }}
-Release Manager: {{ params.rc_manager }}
-
-Summary:
-========
-
-{{ params.service_name | title }} Application Code deployment for {{ organization.name | default('Glass') }} ({{ organization.regions | join(' and ') }}) - {{ day_type }}
-
-Description:
-============
+Summary: {{ service_name }} Application Code deployment for {{ platform }} ({{ regions | join(' and ') }}) - Day {{ day_number }}
 
 ===== Description Section ======
-Application Name: {{ params.service_name | title }}
-Namespace: {{ params.service_name | lower }}
-Region of deployment: {{ organization.regions | join(', ') }}
+
+Application Name: {{ service_name }}
+Namespace: {{ namespace }}
+Region of deployment: {{ regions | join(', ') }}
 
 1. What is the criticality of change or why is this change required?
-{{ ai_responses.criticality | default('This release includes bug fixes and feature enhancements that improve system stability and user experience. The changes are necessary to maintain security compliance and address customer-reported issues.') }}
+{{ ai_analysis.get('BUSINESS_IMPACT', 'Scheduled release containing bug fixes, feature enhancements, and system improvements to maintain service quality and add new functionality for end users.') }}
 
 2. How have we validated this change in the lower environment?
-{{ ai_responses.validation | default('Changes have been thoroughly tested in development and staging environments. Unit tests, integration tests, and end-to-end testing have been completed with passing results. Performance testing shows no degradation in system performance.') }}
+{{ ai_analysis.get('VALIDATION_STEPS', 'All automated test suites passing in staging environment. Integration tests completed successfully. Performance testing completed with acceptable results. Security scans completed with no critical vulnerabilities. Code review and approval processes completed. Manual QA validation performed.') }}
 
 3. What is the blast radius of this change?
-{{ ai_responses.blast_radius | default('This change affects the ' + params.service_name + ' service and its dependent components. Impact is limited to specific functionality areas and includes appropriate rollback mechanisms.') }}
+{{ ai_analysis.get('RISK_ASSESSMENT', 'Medium blast radius - Changes affect ' + service_name + ' service across ' + (regions | join(' and ')) + ' regions. Service dependencies have been validated and rollback procedures are established.') }}
 
 4. Describe how testing has reduced risk for the deployment?
-{{ ai_responses.testing_risk_reduction | default('Comprehensive testing strategy including automated unit tests, integration tests, and manual verification has been executed. All critical user workflows have been validated in staging environment that mirrors production.') }}
+Comprehensive testing in staging environment including functional testing, performance validation, integration testing, and security scanning. All {{ total_prs }} pull requests have been individually tested and code reviewed. Deployment artifacts validated in pre-deployment preparation.
 
 5. What happens if we encounter an issue during release?
-{{ ai_responses.issue_response | default('If issues are encountered, the deployment will be immediately halted. The incident response team will be engaged, and rollback procedures will be initiated within 15 minutes of issue identification.') }}
+{{ ai_analysis.get('ROLLBACK_SCENARIOS', 'Immediate rollback procedures activated if: application fails to start, critical functionality broken, error rates >5%, or performance degradation >20%. Rollback typically takes 15-30 minutes with established procedures.') }}
 
 6. What controls do we have to minimize the impact to our customers?
-{{ ai_responses.customer_impact_controls | default('Blue-green deployment strategy minimizes customer impact. Real-time monitoring and alerting systems are in place. Feature flags allow for immediate disabling of problematic features without full rollback.') }}
+Progressive deployment with monitoring at each stage. Real-time monitoring and alerting systems. Established rollback procedures with automated tools. Communication channels for immediate issue reporting. Load balancer routing to maintain service availability during deployment.
 
 7. What monitoring is in place to determine the errors?
-{{ ai_responses.monitoring | default('Comprehensive monitoring including application logs, performance metrics, error rates, and business metrics. Alerts are configured for anomalies with escalation to on-call engineers.') }}
-
-Implementation Plan:
-===================
+Application performance monitoring via DataDog/Grafana. Error rate monitoring and alerting. Infrastructure monitoring (CPU, Memory, Network). Service mesh monitoring (Istio). Database performance monitoring. User experience monitoring.
 
 ===== Implementation Plan Section ======
-Application Name: {{ params.service_name | title }}
-Namespace: {{ params.service_name | lower }}
-Assembly: {{ params.service_name | lower }}-assembly
-Service name: {{ params.service_name | lower }}
-Platform: {{ organization.platform | default('Kubernetes') }}
-Artifact Version: {{ params.production_version }}
-Forward Artifact Version (new version): {{ params.new_version }}
-Rollback Artifact Version (previous stable version): {{ params.production_version }}
-Confluence link: {{ confluence_link | default('https://confluence.company.com/display/RELEASES/' + params.service_name | upper) }}
 
-Implementation Plan – {{ day_type }} Activities:
+Application Name: {{ service_name }}
+Namespace: {{ namespace }}
+Assembly: {{ assembly }}
+Service name: {{ service_name }}
+Platform: {{ platform }}
+Artifact Version: {{ prod_version }}
+Forward Artifact Version (new version): {{ new_version }}
+Rollback Artifact Version (previous stable version): {{ prod_version }}
+Confluence link: {{ confluence_link }}
 
-{% if day_type == 'Day 1' %}
-Day 1 Implementation Steps (Preparation and Setup):
-1. Pre-deployment validation and environment preparation
-2. Database migration scripts execution (if applicable)
-3. Configuration updates and validation
-4. Load balancer configuration updates
-5. Monitoring dashboard setup and validation
-6. Backup verification and rollback plan validation
-7. Communication to stakeholders about upcoming deployment
-8. Final smoke tests in staging environment
-
-Timeline: {{ deployment_date }} - Preparation phase
-Duration: 2-4 hours
-Team: {{ params.rc_name }} (Release Coordinator), Infrastructure Team
+Implementation Plan:
+{% if day_number == "1" %}
+Day 1 preparation activities include environment validation, artifact preparation, infrastructure readiness checks, and team coordination. Validate staging environment matches production configuration. Build and validate deployment artifacts for version {{ new_version }}. Verify target environment capacity and readiness. Confirm database migration compatibility if applicable. Test rollback procedures in staging environment. Complete final deployment readiness review with release team and confirm Day 2 deployment team availability.
 {% else %}
-Day 2 Implementation Steps (Production Deployment):
-1. Final pre-deployment checks and go/no-go decision
-2. Traffic routing adjustments (if blue-green deployment)
-3. Application deployment using automated pipelines
-4. Post-deployment smoke tests and health checks
-5. Gradual traffic increase and performance monitoring
-6. Functional verification of key user workflows
-7. Monitoring dashboard review and anomaly detection
-8. Release completion notification and documentation
-
-Timeline: {{ deployment_date }} - Production deployment
-Duration: 1-2 hours
-Team: {{ params.rc_name }} (Release Coordinator), {{ params.rc_manager }} (Release Manager), On-call Engineers
+Day 2 production deployment activities include pre-deployment validation, actual deployment execution, post-deployment verification, and monitoring stabilization. Verify Day 1 preparation completion and team readiness. Deploy {{ service_name }} version {{ new_version }} to {{ regions | join(' and ') }} regions. Execute database migrations if applicable and verify service startup. Execute smoke tests for critical functionality and monitor error rates. Extended monitoring period with active observation and final deployment success confirmation.
 {% endif %}
-
-Validation Plan:
-===============
 
 ===== Validation Plan Section ======
-Application Name: {{ params.service_name | title }}
-Namespace: {{ params.service_name | lower }}
+
+Application Name: {{ service_name }}
+Namespace: {{ namespace }}
 
 Dashboard links:
-Dashboard link: {{ confluence_link | default('https://confluence.company.com/display/' + params.service_name | upper + '/' + params.service_name | upper + '+Dashboard+Links') }}
-
-P0 Dashboard – Grafana Link: {{ grafana_base_url | default('https://grafana.company.com') }}/d/{{ params.service_name }}-p0
-L1 Dashboard – Grafana Link: {{ grafana_base_url | default('https://grafana.company.com') }}/d/{{ params.service_name }}-l1
-Services dashboard – Grafana Link: {{ grafana_base_url | default('https://grafana.company.com') }}/d/{{ params.service_name }}-services
-WCNP - CPU - Memory – Link: {{ grafana_base_url | default('https://grafana.company.com') }}/d/{{ params.service_name }}-resources
-Istio/ SM: {{ grafana_base_url | default('https://grafana.company.com') }}/d/{{ params.service_name }}-istio
-
-Validation Criteria:
-- Application health checks return 200 OK
-- Error rate remains below 0.1%
-- Response time stays within SLA thresholds
-- CPU and memory utilization within normal ranges
-- No critical alerts triggered for 30 minutes post-deployment
-
-Backout Plan:
-=============
+Dashboard link: {{ dashboard_url }}
+P0 Dashboard – Grafana Link: {{ grafana_url }}
+L1 Dashboard – Grafana Link: {{ l1_dashboard_url }}
+Services dashboard – Grafana Link: {{ services_dashboard_url }}
+WCNP - CPU - Memory – Link: {{ wcnp_dashboard_url }}
+Istio/ SM: Link: {{ istio_dashboard_url }}
 
 ===== Backout Plan Section ======
-Application Name: {{ params.service_name | title }}
-Namespace: {{ params.service_name | lower }}
-Assembly: {{ params.service_name | lower }}-assembly
-Service name: {{ params.service_name | lower }}
-Platform: {{ organization.platform | default('Kubernetes') }}
-Artifact Version (Previous Version for rollback): {{ params.production_version }}
-Confluence link: {{ confluence_link | default('https://confluence.company.com/display/RELEASES/' + params.service_name | upper + '/Rollback') }}
+
+Application Name: {{ service_name }}
+Namespace: {{ namespace }}
+Assembly: {{ assembly }}
+Service name: {{ service_name }}
+Platform: {{ platform }}
+Artifact Version (Previous Version for rollback): {{ prod_version }}
+Confluence link: {{ confluence_link }}
 
 What are the rollback criteria?
-Rollback will be triggered if any of the following conditions are met:
-- Error rate exceeds 1% for more than 5 minutes
-- Response time increases by more than 50% from baseline
-- Critical functionality is not working as expected
-- Customer-facing issues that cannot be resolved within 15 minutes
-- Infrastructure metrics showing resource exhaustion
-- Manual decision by Release Manager due to unforeseen issues
+{% if day_number == "1" %}
+Deployment artifacts fail validation checks. Staging environment tests reveal critical issues. Infrastructure readiness validation fails. Critical team members become unavailable. Any blocking issue that prevents Day 2 execution.
+{% else %}
+Application startup failure or crash loops. Critical functionality unavailable or broken. Error rate exceeds 5% for more than 10 minutes. Performance degradation >50% from baseline. Database connectivity or data integrity issues. P1/P0 incident triggered by deployment. Customer-facing functionality severely impacted.
+{% endif %}
 
 What are the rollback steps and how long does rollback take?
-Rollback Steps (Estimated time: 10-15 minutes):
-1. Immediate notification to all stakeholders about rollback initiation
-2. Stop traffic to new version using load balancer configuration
-3. Route all traffic back to previous stable version ({{ params.production_version }})
-4. Verify application health and functionality with previous version
-5. Monitor system metrics to ensure stability is restored
-6. Database rollback (if schema changes were made) - Additional 15-30 minutes
-7. Clear application caches and restart services if necessary
-8. Post-rollback validation and monitoring for 30 minutes
-9. Incident documentation and post-mortem scheduling
-
-Rollback can be executed by L2 support team following the documented procedures.
-Emergency contact: {{ params.rc_manager }} (Release Manager)
-
-Additional Information:
-======================
-Release Type: {{ params.release_type | upper }}
-Generated Files:
-- release_notes.txt (Confluence-ready format)
-- crq_day1.txt (this file for Day 1)
-- crq_day2.txt (Day 2 deployment file)
-
-Pull Requests Included in this Release:
-{% if prs %}
-{% for pr in prs %}
-- PR #{{ pr.number }}: {{ pr.title }}
-  Author: {{ pr.user.login }}
-  Merged: {{ pr.merged_at.strftime('%Y-%m-%d %H:%M:%S') }}
-  {% if pr.labels %}Labels: {{ pr.labels | map(attribute='name') | join(', ') }}{% endif %}
-{% endfor %}
+{% if day_number == "1" %}
+Day 1 rollback takes 15-30 minutes. Halt all preparation activities immediately. Notify release team via #release-rc Slack channel. Document the blocking issue and decision rationale. Clean up any partial preparation work and reset staging environment to stable state. Cancel Day 2 deployment scheduling. Notify all stakeholders of postponement and schedule post-mortem if required. Determine new deployment window and update project timelines.
 {% else %}
-- No pull requests found between {{ params.production_version }} and {{ params.new_version }}
-{% endif %}
-
-================================================================================
-End of CRQ {{ day_type }} Document
-================================================================================
-
-{% if not loop.last %}
-
-
-{% endif %}
-{% endfor %} 
+Day 2 rollback takes 15-30 minutes. Stop any ongoing deployment activities immediately. Notify via #release-rc channel and activate incident response. Deploy previous stable version {{ prod_version }}. Restore database to pre-deployment state if needed. Update load balancer routing to stable version and verify rollback deployment success. Confirm service stability and validate all monitoring dashboards show normal state. Notify stakeholders of successful rollback and begin incident post-mortem process.
+{% endif %} 

@@ -1,0 +1,30 @@
+slack:
+  bot_token: "xoxb-test-token-for-testing"
+  signing_secret: "test-signing-secret"
+  app_token: "xapp-test-token"
+  default_channels: ["#test-releases"]
+
+github:
+  token: "ghp-test-token-for-testing"
+  repo: "test-org/test-repo"
+  api_url: "https://api.github.com"
+
+ai:
+  provider: "openai"
+  openai:
+    api_key: "sk-test-key-for-testing"
+    model: "gpt-4-1106-preview"
+    max_tokens: 1000
+
+organization:
+  name: "Test Company"
+  default_service: "test-service"
+  timezone: "UTC"
+  regions: ["EUS", "SCUS", "WUS"]
+
+app:
+  environment: "development"
+  log_level: "INFO"
+  deployment_mode: "socket"
+  port: 3000
+  output_dir: "test_outputs" 

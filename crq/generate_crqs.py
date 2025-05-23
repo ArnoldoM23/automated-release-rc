@@ -17,13 +17,14 @@ from utils.ai_client import AIClient
 from config.config import load_config
 
 
-def analyze_prs_with_ai(prs: List, params: Dict[str, Any]) -> Dict[str, str]:
+def analyze_prs_with_ai(prs: List, params: Dict[str, Any], config=None) -> Dict[str, str]:
     """Use AI to analyze PRs and generate intelligent CRQ content."""
     logger = get_logger(__name__)
     
     try:
-        # Load config for AI client
-        config = load_config()
+        # Load config for AI client if not provided
+        if config is None:
+            config = load_config()
         ai_client = AIClient(config.ai)
         
         # Prepare PR summary for AI analysis
@@ -396,14 +397,15 @@ Temporary service disruption during rollback (15-30 minutes). Monitoring alerts 
     return Template(template_content)
 
 
-def generate_crqs(prs: List, params: Dict[str, Any], output_dir: Path) -> List[Path]:
+def generate_crqs(prs: List, params: Dict[str, Any], output_dir: Path, config=None) -> List[Path]:
     """
-    Generate Day 1 and Day 2 CRQ documents.
+    Generate Day 1 and Day 2 CRQ documents using enterprise template.
     
     Args:
         prs: List of GitHub PR objects
         params: Release parameters from CLI
         output_dir: Directory to save the CRQ documents
+        config: Optional configuration object (loads default if None)
         
     Returns:
         List of paths to generated CRQ files
@@ -413,13 +415,14 @@ def generate_crqs(prs: List, params: Dict[str, Any], output_dir: Path) -> List[P
     try:
         # Get AI analysis of PRs
         logger.info("Generating AI-powered CRQ content...")
-        ai_analysis = analyze_prs_with_ai(prs, params)
+        ai_analysis = analyze_prs_with_ai(prs, params, config)
         
-        # Load configuration for organization details
-        config = load_config()
+        # Load configuration for organization details if not provided
+        if config is None:
+            config = load_config()
         
-        # Prepare template variables
-        template_vars = {
+        # Prepare common template variables
+        base_template_vars = {
             "service_name": params["service_name"],
             "new_version": params["new_version"],
             "prod_version": params["prod_version"],
@@ -428,43 +431,97 @@ def generate_crqs(prs: List, params: Dict[str, Any], output_dir: Path) -> List[P
             "rc_manager": params["rc_manager"],
             "day1_date": params["day1_date"],
             "day2_date": params["day2_date"],
-            "platform": getattr(config.organization, 'platform', 'Azure'),
+            "platform": getattr(config.organization, 'platform', 'Glass'),
             "regions": getattr(config.organization, 'regions', ['EUS', 'SCUS', 'WUS']),
+            "namespace": params["service_name"].lower().replace('_', '-'),
+            "assembly": f"{params['service_name'].lower().replace('_', '-')}-assembly",
             "total_prs": len(prs),
             "prs": prs,
             "ai_analysis": ai_analysis,
-            "generation_timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S UTC")
+            "generation_timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S UTC"),
+            "confluence_link": f"https://confluence.company.com/display/RELEASES/{params['service_name'].upper()}/Release-{params['new_version']}",
+            "dashboard_url": f"https://confluence.company.com/display/{params['service_name'].upper()}/Dashboards",
+            "grafana_url": f"https://grafana.company.com/d/{params['service_name']}-p0",
+            "l1_dashboard_url": f"https://grafana.company.com/d/{params['service_name']}-l1",
+            "services_dashboard_url": f"https://grafana.company.com/d/{params['service_name']}-services",
+            "wcnp_dashboard_url": f"https://grafana.company.com/d/{params['service_name']}-wcnp",
+            "istio_dashboard_url": f"https://grafana.company.com/d/{params['service_name']}-istio"
         }
         
         generated_files = []
         
-        # Generate Day 1 CRQ
-        logger.info("Generating Day 1 CRQ document...")
-        day1_template = create_day1_crq_template()
-        day1_content = day1_template.render(**template_vars)
-        
-        day1_file = output_dir / "crq_day1.txt"
-        with open(day1_file, "w", encoding="utf-8") as f:
-            f.write(day1_content)
-        
-        generated_files.append(day1_file)
-        logger.info(f"Day 1 CRQ generated: {day1_file}")
-        
-        # Generate Day 2 CRQ  
-        logger.info("Generating Day 2 CRQ document...")
-        day2_template = create_day2_crq_template()
-        day2_content = day2_template.render(**template_vars)
-        
-        day2_file = output_dir / "crq_day2.txt"
-        with open(day2_file, "w", encoding="utf-8") as f:
-            f.write(day2_content)
+        # Try to load enterprise template
+        try:
+            from jinja2 import Environment, FileSystemLoader
+            template_path = Path("templates")
             
-        generated_files.append(day2_file)
-        logger.info(f"Day 2 CRQ generated: {day2_file}")
+            if (template_path / "crq_template.j2").exists():
+                logger.info("Using enterprise CRQ template")
+                env = Environment(loader=FileSystemLoader("templates"))
+                template = env.get_template("crq_template.j2")
+                
+                # Generate Day 1 CRQ
+                logger.info("Generating Day 1 CRQ document...")
+                day1_vars = {**base_template_vars, "day_number": "1"}
+                day1_content = template.render(**day1_vars)
+                
+                day1_file = output_dir / "crq_day1.txt"
+                with open(day1_file, "w", encoding="utf-8") as f:
+                    f.write(day1_content)
+                
+                generated_files.append(day1_file)
+                logger.info(f"Day 1 CRQ generated: {day1_file}")
+                
+                # Generate Day 2 CRQ  
+                logger.info("Generating Day 2 CRQ document...")
+                day2_vars = {**base_template_vars, "day_number": "2"}
+                day2_content = template.render(**day2_vars)
+                
+                day2_file = output_dir / "crq_day2.txt"
+                with open(day2_file, "w", encoding="utf-8") as f:
+                    f.write(day2_content)
+                    
+                generated_files.append(day2_file)
+                logger.info(f"Day 2 CRQ generated: {day2_file}")
+                
+            else:
+                # Fallback to built-in templates
+                logger.warning("Enterprise template not found, using built-in templates")
+                
+                # Generate Day 1 CRQ
+                logger.info("Generating Day 1 CRQ document...")
+                day1_template = create_day1_crq_template()
+                day1_content = day1_template.render(**base_template_vars)
+                
+                day1_file = output_dir / "crq_day1.txt"
+                with open(day1_file, "w", encoding="utf-8") as f:
+                    f.write(day1_content)
+                
+                generated_files.append(day1_file)
+                logger.info(f"Day 1 CRQ generated: {day1_file}")
+                
+                # Generate Day 2 CRQ  
+                logger.info("Generating Day 2 CRQ document...")
+                day2_template = create_day2_crq_template()
+                day2_content = day2_template.render(**base_template_vars)
+                
+                day2_file = output_dir / "crq_day2.txt"
+                with open(day2_file, "w", encoding="utf-8") as f:
+                    f.write(day2_content)
+                    
+                generated_files.append(day2_file)
+                logger.info(f"Day 2 CRQ generated: {day2_file}")
+                
+        except Exception as template_error:
+            logger.error(f"Template processing failed: {template_error}")
+            raise
         
         # Log preview of generated content
-        logger.info(f"CRQ content preview - Day 1 (first 300 chars): {day1_content[:300]}...")
-        logger.info(f"CRQ content preview - Day 2 (first 300 chars): {day2_content[:300]}...")
+        if generated_files:
+            for i, file_path in enumerate(generated_files, 1):
+                if file_path.exists():
+                    content = file_path.read_text()
+                    logger.info(f"CRQ content preview - Day {i} (first 300 chars): {content[:300]}...")
         
         logger.info(f"Successfully generated {len(generated_files)} CRQ documents")
         return generated_files

@@ -33,6 +33,72 @@ from notes.release_notes import render_release_notes, render_release_notes_markd
 from crq.generate_crqs import generate_crqs
 
 
+def validate_confluence_format(content: str) -> bool:
+    """Validate that content is proper Confluence wiki markup."""
+    required_elements = [
+        "h1.",  # Confluence header
+        "||",   # Confluence table syntax
+        "|",    # Table rows
+        "Artifact",  # Key sections
+        "Release Date/Time",
+        "GraphQL Schema Changes",
+        "{panel:",  # Confluence panels
+        "Sign-off"  # Release approval workflow
+    ]
+    
+    for element in required_elements:
+        if element not in content:
+            return False
+    
+    # Check for proper table structure
+    lines = content.split('\n')
+    table_lines = [line for line in lines if line.strip().startswith('||') or line.strip().startswith('|')]
+    
+    return len(table_lines) >= 5  # Should have multiple table rows
+
+
+def validate_crq_format(content: str, day_type: str) -> bool:
+    """Validate that content is proper enterprise CRQ format."""
+    required_elements = [
+        "Summary:",
+        "===== Description Section ======",
+        "Application Name:",
+        "Namespace:",
+        "Region of deployment:",
+        "What is the criticality of change",
+        "How have we validated this change",
+        "What is the blast radius",
+        "===== Implementation Plan Section ======",
+        "Assembly:",
+        "Service name:",
+        "Platform:",
+        "Artifact Version:",
+        "Forward Artifact Version",
+        "Rollback Artifact Version",
+        "Confluence link:",
+        "===== Validation Plan Section ======",
+        "Dashboard links:",
+        "P0 Dashboard",
+        "L1 Dashboard", 
+        "Services dashboard",
+        "===== Backout Plan Section ======",
+        "What are the rollback criteria",
+        "What are the rollback steps"
+    ]
+    
+    for element in required_elements:
+        if element not in content:
+            return False
+    
+    # Day-specific validation
+    if day_type == "day1":
+        return "Day 1" in content
+    elif day_type == "day2": 
+        return "Day 2" in content
+    
+    return True
+
+
 def create_sample_params(args) -> Dict[str, Any]:
     """Create sample parameters for testing."""
     return {
@@ -46,7 +112,7 @@ def create_sample_params(args) -> Dict[str, Any]:
         "day2_date": args.day2_date or "2024-01-16",
         "channel": "#release-rc",
         "output_dir": args.output_dir or "test_outputs",
-        "config_path": "config/settings.yaml"
+        "config_path": getattr(args, 'config_path', "config/settings.yaml")
     }
 
 
@@ -141,20 +207,28 @@ def test_release_notes(prs: list, params: Dict[str, Any], output_dir: Path):
     logger.info("📝 Testing release notes generation...")
     
     try:
-        # Test Confluence format
-        confluence_file = render_release_notes(prs, params, output_dir)
+        # Load config using the specified path
+        config_path = params.get("config_path", "config/settings.yaml")
+        config = load_config(config_path)
+        
+        # Test Confluence format only (enterprise standard)
+        confluence_file = render_release_notes(prs, params, output_dir, config=config)
         logger.info(f"✅ Confluence release notes: {confluence_file}")
         
-        # Test Markdown format
-        markdown_file = render_release_notes_markdown(prs, params, output_dir)
-        logger.info(f"✅ Markdown release notes: {markdown_file}")
-        
-        # Validate files exist and have content
-        for file_path in [confluence_file, markdown_file]:
-            if file_path.exists() and file_path.stat().st_size > 0:
-                logger.info(f"✅ {file_path.name} generated successfully ({file_path.stat().st_size} bytes)")
+        # Validate file exists and has content
+        if confluence_file.exists() and confluence_file.stat().st_size > 0:
+            logger.info(f"✅ {confluence_file.name} generated successfully ({confluence_file.stat().st_size} bytes)")
+            
+            # Validate Confluence format
+            content = confluence_file.read_text()
+            if validate_confluence_format(content):
+                logger.info("✅ Confluence markup format validation passed")
             else:
-                logger.error(f"❌ {file_path.name} is empty or missing")
+                logger.error("❌ Confluence markup format validation failed")
+                return False
+        else:
+            logger.error(f"❌ {confluence_file.name} is empty or missing")
+            return False
                 
         return True
         
@@ -169,17 +243,34 @@ def test_crq_generation(prs: list, params: Dict[str, Any], output_dir: Path):
     logger.info("📋 Testing CRQ generation...")
     
     try:
-        crq_files = generate_crqs(prs, params, output_dir)
+        # Load config using the specified path
+        config_path = params.get("config_path", "config/settings.yaml")
+        config = load_config(config_path)
+        
+        crq_files = generate_crqs(prs, params, output_dir, config=config)
         logger.info(f"✅ CRQ generation successful: {len(crq_files)} files")
         
-        # Validate files
-        expected_files = ["crq_day1.txt", "crq_day2.txt"]
-        for expected_file in expected_files:
+        # Validate both CRQ files with format validation
+        expected_files = [
+            ("crq_day1.txt", "day1"),
+            ("crq_day2.txt", "day2")
+        ]
+        
+        for expected_file, day_type in expected_files:
             file_path = output_dir / expected_file
             if file_path.exists() and file_path.stat().st_size > 0:
                 logger.info(f"✅ {expected_file} generated successfully ({file_path.stat().st_size} bytes)")
+                
+                # Validate CRQ format
+                content = file_path.read_text()
+                if validate_crq_format(content, day_type):
+                    logger.info(f"✅ {expected_file} format validation passed")
+                else:
+                    logger.error(f"❌ {expected_file} format validation failed")
+                    return False
             else:
                 logger.error(f"❌ {expected_file} is empty or missing")
+                return False
                 
         return True
         
@@ -306,9 +397,9 @@ def create_comprehensive_mock_prs():
 
 
 def test_comprehensive_release_notes(params: Dict[str, Any]):
-    """Test release notes generation with comprehensive mock data."""
+    """Test comprehensive document generation with realistic mock data."""
     logger = get_logger(__name__)
-    logger.info("🔍 Testing comprehensive release notes with realistic data...")
+    logger.info("🔍 Testing comprehensive document generation with realistic data...")
     
     try:
         # Create comprehensive mock data
@@ -322,30 +413,53 @@ def test_comprehensive_release_notes(params: Dict[str, Any]):
         # Update params to include international PRs
         params["international_prs"] = international_prs
         
-        # Test release notes generation
-        success = test_release_notes(prs, params, output_dir)
+        # Test 1: Release notes generation
+        logger.info("📝 Testing release notes generation...")
+        release_notes_success = test_release_notes(prs, params, output_dir)
         
-        if success:
-            logger.info("✅ Comprehensive release notes test passed!")
+        # Test 2: CRQ generation  
+        logger.info("📋 Testing CRQ generation...")
+        crq_success = test_crq_generation(prs, params, output_dir)
+        
+        # Overall validation
+        if release_notes_success and crq_success:
+            logger.info("✅ Comprehensive document generation test passed!")
             
-            # Show breakdown of generated content
-            release_notes_file = output_dir / "release_notes.txt"
-            if release_notes_file.exists():
+            # Validate all expected files are present
+            expected_files = ["release_notes.txt", "crq_day1.txt", "crq_day2.txt"]
+            all_files_present = True
+            
+            for expected_file in expected_files:
+                file_path = output_dir / expected_file
+                if file_path.exists():
+                    logger.info(f"✅ {expected_file}: {file_path.stat().st_size:,} bytes")
+                else:
+                    logger.error(f"❌ Missing: {expected_file}")
+                    all_files_present = False
+            
+            if all_files_present:
+                # Show content analysis for release notes
+                release_notes_file = output_dir / "release_notes.txt"
                 content = release_notes_file.read_text()
                 schema_count = content.count("schema")
                 feature_count = content.count("feature")
                 international_count = content.count("i18n") + content.count("locale")
                 
-                logger.info(f"📊 Content Analysis:")
+                logger.info(f"📊 Release Notes Content Analysis:")
                 logger.info(f"  - Schema references: {schema_count}")
                 logger.info(f"  - Feature references: {feature_count}")
                 logger.info(f"  - International references: {international_count}")
-                logger.info(f"  - Total file size: {release_notes_file.stat().st_size} bytes")
-        
-        return success
+                logger.info(f"  - Total size: {release_notes_file.stat().st_size:,} bytes")
+                
+                return True
+            else:
+                return False
+        else:
+            logger.error("❌ Document generation failed")
+            return False
         
     except Exception as e:
-        logger.error(f"❌ Comprehensive release notes test failed: {e}")
+        logger.error(f"❌ Comprehensive document generation test failed: {e}")
         return False
 
 
@@ -444,6 +558,12 @@ def parse_args():
                        help="Day 1 date (default: 2024-01-15)")
     parser.add_argument("--day2-date",
                        help="Day 2 date (default: 2024-01-16)")
+    parser.add_argument("--output-dir",
+                       default="test_outputs",
+                       help="Output directory for test results (default: test_outputs)")
+    parser.add_argument("--config-path",
+                       default="config/settings.yaml",
+                       help="Path to configuration file (default: config/settings.yaml)")
                        
     return parser.parse_args()
 
