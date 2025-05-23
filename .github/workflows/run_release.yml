@@ -1,122 +1,232 @@
-name: RC Release Automation
+name: 🚀 RC Release Automation
 
 on:
   repository_dispatch:
-    types: [run_release]
+    types: [run-release]
+  workflow_dispatch:
+    inputs:
+      prod_version:
+        description: 'Production version (e.g., v1.2.3)'
+        required: true
+        default: 'v1.0.0'
+      new_version:
+        description: 'New release version (e.g., v1.3.0)'
+        required: true
+        default: 'v1.1.0'
+      service_name:
+        description: 'Service name (e.g., cer-cart)'
+        required: true
+        default: 'test-service'
+      release_type:
+        description: 'Release type'
+        required: true
+        default: 'standard'
+        type: choice
+        options:
+          - standard
+          - hotfix
+          - ebf
+      rc_name:
+        description: 'Release Coordinator name'
+        required: true
+        default: 'Test RC'
+      rc_manager:
+        description: 'Release Manager name'
+        required: true
+        default: 'Test Manager'
+      day1_date:
+        description: 'Day 1 date (YYYY-MM-DD)'
+        required: true
+        default: '2024-01-15'
+      day2_date:
+        description: 'Day 2 date (YYYY-MM-DD)'
+        required: true
+        default: '2024-01-16'
 
 jobs:
-  release:
+  generate-release-docs:
     runs-on: ubuntu-latest
     
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+    - name: 🚀 Checkout repository
+      uses: actions/checkout@v4
+
+    - name: 🐍 Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+        cache: 'pip'
+
+    - name: 📦 Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+
+    - name: 🔧 Extract parameters
+      id: params
+      run: |
+        # Extract from repository_dispatch or workflow_dispatch
+        if [ "${{ github.event_name }}" = "repository_dispatch" ]; then
+          echo "source=slack" >> $GITHUB_OUTPUT
+          echo "prod_version=${{ github.event.client_payload.prod_version }}" >> $GITHUB_OUTPUT
+          echo "new_version=${{ github.event.client_payload.new_version }}" >> $GITHUB_OUTPUT
+          echo "service_name=${{ github.event.client_payload.service_name }}" >> $GITHUB_OUTPUT
+          echo "release_type=${{ github.event.client_payload.release_type }}" >> $GITHUB_OUTPUT
+          echo "rc_name=${{ github.event.client_payload.rc_name }}" >> $GITHUB_OUTPUT
+          echo "rc_manager=${{ github.event.client_payload.rc_manager }}" >> $GITHUB_OUTPUT
+          echo "day1_date=${{ github.event.client_payload.day1_date }}" >> $GITHUB_OUTPUT
+          echo "day2_date=${{ github.event.client_payload.day2_date }}" >> $GITHUB_OUTPUT
+          echo "slack_channel=${{ github.event.client_payload.slack_channel }}" >> $GITHUB_OUTPUT
+          echo "slack_user=${{ github.event.client_payload.slack_user }}" >> $GITHUB_OUTPUT
+        else
+          echo "source=manual" >> $GITHUB_OUTPUT
+          echo "prod_version=${{ inputs.prod_version }}" >> $GITHUB_OUTPUT
+          echo "new_version=${{ inputs.new_version }}" >> $GITHUB_OUTPUT
+          echo "service_name=${{ inputs.service_name }}" >> $GITHUB_OUTPUT
+          echo "release_type=${{ inputs.release_type }}" >> $GITHUB_OUTPUT
+          echo "rc_name=${{ inputs.rc_name }}" >> $GITHUB_OUTPUT
+          echo "rc_manager=${{ inputs.rc_manager }}" >> $GITHUB_OUTPUT
+          echo "day1_date=${{ inputs.day1_date }}" >> $GITHUB_OUTPUT
+          echo "day2_date=${{ inputs.day2_date }}" >> $GITHUB_OUTPUT
+          echo "slack_channel=" >> $GITHUB_OUTPUT
+          echo "slack_user=" >> $GITHUB_OUTPUT
+        fi
+
+    - name: 📋 Display release information
+      run: |
+        echo "🚀 RC Release Automation Started"
+        echo "=================================="
+        echo "Source: ${{ steps.params.outputs.source }}"
+        echo "Service: ${{ steps.params.outputs.service_name }}"
+        echo "Version: ${{ steps.params.outputs.prod_version }} → ${{ steps.params.outputs.new_version }}"
+        echo "Type: ${{ steps.params.outputs.release_type }}"
+        echo "RC: ${{ steps.params.outputs.rc_name }}"
+        echo "Manager: ${{ steps.params.outputs.rc_manager }}"
+        echo "Schedule: ${{ steps.params.outputs.day1_date }} (Day 1) → ${{ steps.params.outputs.day2_date }} (Day 2)"
+        echo "=================================="
+
+    - name: 🔍 Validate configuration
+      run: |
+        echo "🔧 Validating configuration..."
+        python test_cli.py --test-config
+
+    - name: 📝 Generate release documentation
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        AZURE_OPENAI_API_KEY: ${{ secrets.AZURE_OPENAI_API_KEY }}
+        AZURE_OPENAI_ENDPOINT: ${{ secrets.AZURE_OPENAI_ENDPOINT }}
+        GITHUB_REPO: ${{ github.repository }}
+      run: |
+        echo "📝 Generating release documentation..."
         
-      - name: Setup Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: "3.11"
-          
-      - name: Install dependencies
-        run: |
-          pip install --upgrade pip
-          pip install -r requirements.txt
-          
-      - name: Run release orchestrator
-        id: orchestrator
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
-          GITHUB_REPOSITORY: ${{ github.repository }}
-        run: |
-          python main.py \
-            --prod-version "${{ github.event.client_payload.prod_version }}" \
-            --new-version "${{ github.event.client_payload.new_version }}" \
-            --service-name "${{ github.event.client_payload.service_name }}" \
-            --release-type "${{ github.event.client_payload.release_type }}" \
-            --rc-name "${{ github.event.client_payload.rc_name }}" \
-            --rc-manager "${{ github.event.client_payload.rc_manager }}" \
-            --day1-date "${{ github.event.client_payload.day1_date }}" \
-            --day2-date "${{ github.event.client_payload.day2_date }}" \
-            --channel "${{ github.event.client_payload.channel || '#release-rc' }}"
-            
-      - name: Upload release artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: release-docs-${{ github.event.client_payload.service_name }}-${{ github.event.client_payload.new_version }}
-          path: |
-            outputs/release_notes.txt
-            outputs/crq_day1.txt
-            outputs/crq_day2.txt
-            outputs/pr_summary.json
-          retention-days: 30
-          
-      - name: Post sign-off message to Slack
-        if: env.SIGNOFF_BOT_URL
-        run: |
-          curl -X POST "${{ secrets.SIGNOFF_BOT_URL }}/create-signoff" \
-            -H "Content-Type: application/json" \
-            -H "Authorization: Bearer ${{ secrets.SLACK_BOT_TOKEN }}" \
-            -d '{
-              "channel": "${{ github.event.client_payload.channel || '#release-rc' }}",
-              "service_name": "${{ github.event.client_payload.service_name }}",
-              "new_version": "${{ github.event.client_payload.new_version }}",
-              "prs": ${{ steps.orchestrator.outputs.prs }},
-              "artifacts_url": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-            }'
-        env:
-          SIGNOFF_BOT_URL: ${{ secrets.SIGNOFF_BOT_URL }}
-          
-      - name: Notify completion in Slack
-        uses: slackapi/slack-github-action@v1.24.0
-        with:
-          payload: |
-            {
-              "channel": "${{ github.event.client_payload.channel || '#release-rc' }}",
-              "blocks": [
-                {
-                  "type": "section",
-                  "text": {
-                    "type": "mrkdwn",
-                    "text": "✅ *Release automation completed for ${{ github.event.client_payload.service_name }} v${{ github.event.client_payload.new_version }}*"
-                  }
-                },
-                {
-                  "type": "section",
-                  "fields": [
-                    {
-                      "type": "mrkdwn",
-                      "text": "*RC:* ${{ github.event.client_payload.rc_name }}"
-                    },
-                    {
-                      "type": "mrkdwn",
-                      "text": "*Release Type:* ${{ github.event.client_payload.release_type }}"
-                    },
-                    {
-                      "type": "mrkdwn",
-                      "text": "*Day 1:* ${{ github.event.client_payload.day1_date }}"
-                    },
-                    {
-                      "type": "mrkdwn",
-                      "text": "*Day 2:* ${{ github.event.client_payload.day2_date }}"
-                    }
-                  ]
-                },
-                {
-                  "type": "actions",
-                  "elements": [
-                    {
-                      "type": "button",
-                      "text": {
-                        "type": "plain_text",
-                        "text": "📥 Download Artifacts"
-                      },
-                      "url": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-                    }
-                  ]
-                }
-              ]
-            }
-        env:
-          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }} 
+        # Create output directory
+        mkdir -p release_output
+        
+        # Run the main CLI with extracted parameters
+        python main.py \
+          --prod-version "${{ steps.params.outputs.prod_version }}" \
+          --new-version "${{ steps.params.outputs.new_version }}" \
+          --service-name "${{ steps.params.outputs.service_name }}" \
+          --release-type "${{ steps.params.outputs.release_type }}" \
+          --rc-name "${{ steps.params.outputs.rc_name }}" \
+          --rc-manager "${{ steps.params.outputs.rc_manager }}" \
+          --day1-date "${{ steps.params.outputs.day1_date }}" \
+          --day2-date "${{ steps.params.outputs.day2_date }}" \
+          --output-dir "release_output"
+
+    - name: 📊 Validate generated files
+      run: |
+        echo "📊 Validating generated files..."
+        
+        # Check that files were generated
+        ls -la release_output/
+        
+        # Validate file sizes
+        if [ ! -f "release_output/release_notes.txt" ]; then
+          echo "❌ Error: release_notes.txt not generated"
+          exit 1
+        fi
+        
+        if [ ! -f "release_output/crq_day1.txt" ]; then
+          echo "❌ Error: crq_day1.txt not generated"
+          exit 1
+        fi
+        
+        if [ ! -f "release_output/crq_day2.txt" ]; then
+          echo "❌ Error: crq_day2.txt not generated"
+          exit 1
+        fi
+        
+        # Check file sizes
+        RELEASE_NOTES_SIZE=$(stat -c%s "release_output/release_notes.txt")
+        CRQ_DAY1_SIZE=$(stat -c%s "release_output/crq_day1.txt")
+        CRQ_DAY2_SIZE=$(stat -c%s "release_output/crq_day2.txt")
+        
+        echo "✅ Files generated successfully:"
+        echo "  - release_notes.txt: $RELEASE_NOTES_SIZE bytes"
+        echo "  - crq_day1.txt: $CRQ_DAY1_SIZE bytes"
+        echo "  - crq_day2.txt: $CRQ_DAY2_SIZE bytes"
+        
+        # Validate minimum file sizes
+        if [ "$RELEASE_NOTES_SIZE" -lt 1000 ]; then
+          echo "⚠️ Warning: release_notes.txt seems too small ($RELEASE_NOTES_SIZE bytes)"
+        fi
+
+    - name: 📋 Create release summary
+      run: |
+        echo "📋 Creating release summary..."
+        
+        # Create a summary file
+        cat > release_output/RELEASE_SUMMARY.md << EOF
+        # 🚀 Release Summary
+        
+        **Generated:** $(date -u +"%Y-%m-%d %H:%M:%S UTC")
+        **Workflow:** ${{ github.workflow }} (#${{ github.run_number }})
+        **Triggered by:** ${{ steps.params.outputs.source }}
+        
+        ## 📋 Release Information
+        - **Service:** ${{ steps.params.outputs.service_name }}
+        - **Version:** ${{ steps.params.outputs.prod_version }} → ${{ steps.params.outputs.new_version }}
+        - **Type:** ${{ steps.params.outputs.release_type }}
+        - **RC:** ${{ steps.params.outputs.rc_name }}
+        - **Manager:** ${{ steps.params.outputs.rc_manager }}
+        - **Schedule:** ${{ steps.params.outputs.day1_date }} (Day 1) → ${{ steps.params.outputs.day2_date }} (Day 2)
+        
+        ## 📁 Generated Files
+        - \`release_notes.txt\` - Confluence-ready release notes
+        - \`release_notes.md\` - Markdown version for GitHub
+        - \`crq_day1.txt\` - Day 1 preparation CRQ
+        - \`crq_day2.txt\` - Day 2 deployment CRQ
+        
+        ## 🔗 Next Steps
+        1. Download the artifacts from this workflow run
+        2. Copy \`release_notes.txt\` content into Confluence
+        3. Use CRQ files for change management process
+        4. Share release information with stakeholders
+        
+        **🎉 Release documentation generated successfully!**
+        EOF
+
+    - name: 📦 Upload release artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: release-documentation-${{ steps.params.outputs.service_name }}-${{ steps.params.outputs.new_version }}
+        path: release_output/
+        retention-days: 30
+
+    - name: 📝 Add job summary
+      run: |
+        cat release_output/RELEASE_SUMMARY.md >> $GITHUB_STEP_SUMMARY
+        
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "## 📥 Download Artifacts" >> $GITHUB_STEP_SUMMARY
+        echo "Click the 'Artifacts' section above to download the generated release documentation." >> $GITHUB_STEP_SUMMARY
+
+    - name: ✅ Workflow completion
+      run: |
+        echo "✅ RC Release Automation completed successfully!"
+        echo "📊 Workflow run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+        echo "📦 Artifacts ready for download"
+        echo "⏱️ Total execution time: ${{ github.event.repository.updated_at }}" 
