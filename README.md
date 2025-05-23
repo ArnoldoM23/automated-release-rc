@@ -57,6 +57,109 @@ cp config/settings.example.yaml config/settings.yaml
 # Edit config/settings.yaml with your details
 ```
 
+### **🚀 Complete Workflow Setup Guide**
+
+Follow this **step-by-step guide** to set up your complete release automation workflow:
+
+#### **Step 1: Basic Configuration (2 minutes)**
+
+```bash
+# 1. Copy and edit configuration
+cp config/settings.example.yaml config/settings.yaml
+nano config/settings.yaml  # Edit with your details
+
+# 2. Set minimum required configuration
+```
+
+**Essential config:**
+```yaml
+# config/settings.yaml
+github:
+  token: "${GITHUB_TOKEN}"
+  repo: "your-org/your-repo"
+  
+organization:
+  name: "Your Company"
+  default_service: "your-service"
+  regions: ["EUS", "WUS"]  # Your deployment regions
+```
+
+#### **Step 2: GitHub Setup (3 minutes)**
+
+```bash
+# 1. Create GitHub token at: https://github.com/settings/tokens
+#    - For public repos: select 'public_repo' scope
+#    - For private repos: select 'repo' scope
+
+# 2. Set environment variable
+export GITHUB_TOKEN="ghp_your-token-here"
+
+# 3. Test GitHub connection
+python tests/test_github/test_github_integration.py --list-tags --repo your-org/your-repo
+```
+
+#### **Step 3: Generate Your First Release (30 seconds)**
+
+```bash
+# Option A: Using Git tags
+python main.py \
+  --service-name your-service \
+  --prod-version v1.0.0 \
+  --new-version v1.1.0 \
+  --rc-name "Your Name" \
+  --rc-manager "Manager Name"
+
+# Option B: Using commit SHAs (if no tags)
+python main.py \
+  --service-name your-service \
+  --prod-version abc123f \
+  --new-version def456a \
+  --rc-name "Your Name" \
+  --rc-manager "Manager Name"
+```
+
+#### **Step 4: Setup Slack Integration (5 minutes) - Optional**
+
+```bash
+# 1. Create Slack App: https://api.slack.com/apps
+# 2. Enable slash commands and bot features
+# 3. Add environment variables:
+export SLACK_BOT_TOKEN="xoxb-your-bot-token"
+export SLACK_SIGNING_SECRET="your-signing-secret"
+
+# 4. Test Slack integration
+python tests/test_slack/test_slack_bot.py
+```
+
+#### **Step 5: Add AI Enhancement (2 minutes) - Optional**
+
+```bash
+# 1. Get OpenAI API key: https://platform.openai.com/api-keys
+# 2. Add to environment
+export OPENAI_API_KEY="sk-your-openai-key"
+
+# 3. Test AI integration
+python tests/test_cli.py --test-ai
+```
+
+### **✅ Verification Checklist**
+
+After setup, verify everything works:
+
+```bash
+# ✅ 1. Configuration loads properly
+python -c "from config.config import load_config; print('✅ Config loaded')"
+
+# ✅ 2. GitHub integration works
+python run_tests.py --github
+
+# ✅ 3. Generate test documentation
+python main.py --test-mode --service-name demo --prod-version v1.0.0 --new-version v1.1.0
+
+# ✅ 4. Check output files exist
+ls -la output/ && echo "✅ Files generated successfully"
+```
+
 ### **🔗 Detailed Setup Guides**
 
 | Setup Guide | Time | Purpose |
@@ -65,6 +168,26 @@ cp config/settings.example.yaml config/settings.yaml
 | [**Configuration Setup**](#configuration-setup) | 5 min | Basic YAML configuration |
 | [**Slack Bot Integration**](#slack-bot-integration) | 10 min | Full workflow automation |
 | [**Custom CRQ Templates**](#creating-custom-crq-templates) | 5 min | Use your organization's templates |
+
+### **🎯 Quick Commands for Daily Use**
+
+Once set up, use these commands for daily releases:
+
+```bash
+# Standard release with tags
+python main.py --service-name my-app --prod-version v2.1.0 --new-version v2.2.0
+
+# Hotfix with commit SHAs
+python main.py --service-name my-app --prod-version abc123f --new-version def456a
+
+# Custom dates for scheduled releases
+python main.py --service-name my-app --prod-version v2.1.0 --new-version v2.2.0 \
+  --day1-date "2024-01-15" --day2-date "2024-01-16"
+
+# Generate and copy to clipboard (macOS)
+python main.py --service-name my-app --prod-version v2.1.0 --new-version v2.2.0 && \
+cat output/release_notes.txt | pbcopy
+```
 
 **🚀 Ready to run?** Jump to [Local Development Setup](#local-development-setup) for detailed instructions.
 
