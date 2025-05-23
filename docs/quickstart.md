@@ -96,13 +96,15 @@ Value: your_anthropic_key_here
 Field 1: Production Version
 - Type: Short text
 - Variable: prod_version
-- Placeholder: v1.2.3
+- Placeholder: v1.2.3 or abc123f
+- Help text: Git tag (v1.2.3) or commit SHA (abc123f)
 - Required: Yes
 
 Field 2: New Release Version  
 - Type: Short text
 - Variable: new_version
-- Placeholder: v1.3.0
+- Placeholder: v1.3.0 or def456a
+- Help text: Git tag (v1.3.0) or commit SHA (def456a)
 - Required: Yes
 
 Field 3: Service Name
@@ -139,6 +141,19 @@ Field 8: CRQ Day 2 Date (Deployment)
 - Variable: day2_date
 - Required: Yes
 ```
+
+**📋 Version Reference Support:**
+
+Our system now supports **both Git tags and commit SHAs**:
+- **Git Tags:** `v1.2.3`, `1.0.0`, `release-2024-01` (standard releases)
+- **Commit SHAs:** `abc123f`, `9f8e7d6c5b4a` (hotfixes, no-tag workflows)
+- **Mixed usage:** You can use a tag for production and SHA for new version (or vice versa)
+
+**✅ Benefits:**
+- **No tags required** - works with any repository
+- **Precise control** - target exact commits for hotfixes
+- **Flexible workflows** - supports non-standard release processes  
+- **Backward compatible** - existing tag-based workflows still work
 
 5. Click **"Save"** and **"Next"**
 
@@ -216,6 +231,8 @@ Accept: application/vnd.github.v3+json
 ### **4.1 Run Test Release**
 1. In any Slack channel, type: `/run-release`
 2. Fill out the form with test data:
+
+**Option A: Using Git Tags (Standard Release)**
    - **Production Version:** `v1.0.0`
    - **New Version:** `v1.1.0`
    - **Service Name:** `test-service`
@@ -224,6 +241,27 @@ Accept: application/vnd.github.v3+json
    - **Release Manager:** `Your Manager`
    - **Day 1 Date:** Tomorrow's date
    - **Day 2 Date:** Day after tomorrow
+
+**Option B: Using Commit SHAs (Hotfix/No-Tag Workflow)**
+   - **Production Version:** `abc123f`
+   - **New Version:** `def456a`
+   - **Service Name:** `test-service`
+   - **Release Type:** `hotfix`
+   - **RC Name:** `Your Name`
+   - **Release Manager:** `Your Manager`
+   - **Day 1 Date:** Tomorrow's date
+   - **Day 2 Date:** Day after tomorrow
+
+**Option C: Mixed Usage (Tag to Commit)**
+   - **Production Version:** `v1.4.2`
+   - **New Version:** `9f8e7d6c`
+   - **Service Name:** `test-service`
+   - **Release Type:** `standard`
+   - **RC Name:** `Your Name`
+   - **Release Manager:** `Your Manager`
+   - **Day 1 Date:** Tomorrow's date
+   - **Day 2 Date:** Day after tomorrow
+
 3. Click **"Submit"**
 
 ### **4.2 Verify Results**
@@ -249,10 +287,21 @@ When the workflow completes, download artifacts to find:
 
 ### **What You Now Have:**
 - 🚀 **Slack Command:** `/run-release` generates professional docs in 30 seconds
-- 📋 **Enterprise Documentation:** Copy-paste ready Confluence release notes
+- 📋 **Enterprise Documentation:** Copy-paste ready Confluence release notes with wiki markup
 - 📝 **CRQ Documents:** Day 1 & Day 2 change requests with AI insights
-- 🔧 **GitHub Actions:** Serverless, zero-cost execution
+- 🔧 **GitHub Actions:** Serverless, zero-cost execution  
 - 📊 **Professional Output:** 6,000+ bytes of enterprise-ready content
+- 🎯 **Flexible Version Support:** Works with Git tags AND commit SHAs
+- ⚡ **Multi-Workflow Support:** Standard releases, hotfixes, and custom builds
+- 🔗 **Copy-Paste Ready:** Confluence markup that works immediately
+
+### **🆕 Latest Capabilities:**
+- ✅ **Commit SHA Support:** Use `abc123f` instead of tags for precise version control
+- ✅ **Mixed References:** Combine tags and commit SHAs (e.g., `v1.0.0` → `def456a`)
+- ✅ **No-Tag Workflows:** Perfect for repositories without consistent tagging
+- ✅ **Hotfix Releases:** Target exact commits for emergency deployments
+- ✅ **Enterprise Validation:** Built-in testing and reference validation
+- ✅ **Wiki Markup:** Professional Confluence formatting ready for copy-paste
 
 ### **Next Steps:**
 1. **Share with your team** - Add collaborators to the Slack workflow
@@ -279,10 +328,49 @@ When the workflow completes, download artifacts to find:
 - Ensure all fields are marked as required
 - Verify JSON syntax in request body is valid
 
+### **"No PRs found between versions" Error**
+- **For Git tags:** Ensure tags exist in repository: `git tag -l`
+- **For commit SHAs:** Verify commits exist and are valid (7-40 hex characters)
+- Check commit messages contain PR references (`#123`, `PR #123`, `Merge pull request #123`)
+- Ensure PRs were actually merged (not just closed)
+- Verify you have access to the repository
+
+### **"Invalid version reference" Error**
+- **Git tags:** Use format `v1.2.3` or `1.2.3` (with or without 'v' prefix)
+- **Commit SHAs:** Use 7-40 character hex strings (e.g., `abc123f`, `9f8e7d6c5b4a`)
+- **Mixed usage:** You can combine tags and commit SHAs (e.g., `v1.0.0` → `def456a`)
+- Verify references exist in the target repository
+
 ### **GitHub Actions failing**
 - Check Actions tab for detailed error messages
 - Verify all repository secrets are set correctly
 - Look for Python errors in workflow logs
+
+### **Testing Version References**
+If you want to test your version references before running the full workflow:
+
+```bash
+# Clone your repository locally
+git clone https://github.com/YOUR_USERNAME/automated-release-rc.git
+cd automated-release-rc
+
+# Test with your repository
+python tests/test_github/test_github_integration.py \
+  --repo your-org/your-repo \
+  --old-tag v1.0.0 \
+  --new-tag v1.1.0
+
+# Test with commit SHAs
+python tests/test_github/test_github_integration.py \
+  --repo your-org/your-repo \
+  --old-tag abc123f \
+  --new-tag def456a
+
+# List available tags in your repository
+python tests/test_github/test_github_integration.py \
+  --list-tags \
+  --repo your-org/your-repo
+```
 
 ---
 
