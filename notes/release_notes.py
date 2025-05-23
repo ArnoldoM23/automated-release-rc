@@ -576,36 +576,33 @@ def generate_schema_and_features_section(prs: List, pr_categories: Dict[int, str
 
 def generate_international_section(international_prs: List = None) -> str:
     """
-    Generate Section 9 (International & Sams Code Changes).
+    Generate Section 9 (Internationalization & Localization Changes).
     
     Args:
         international_prs: List of international-related PRs
         
     Returns:
-        Confluence wiki markup for section 9
+        str: Confluence markup for international changes section
     """
-    
-    headers = ["PR", "Author", "Description", "PR description", "Sign-off/Comments"]
     rows = []
     
     if international_prs:
         for pr in international_prs:
-            row = [
-                f"[#{pr.number}|{pr.html_url}]",
-                f"@{pr.user.login}",
+            rows.append([
+                f"PR #{pr.number}",
+                pr.user.login if hasattr(pr, 'user') and hasattr(pr.user, 'login') else "Unknown",
                 pr.title,
-                (pr.body[:100] + "..." if pr.body and len(pr.body) > 100 else pr.body or ""),
-                "❌"
-            ]
-            rows.append(row)
+                pr.html_url if hasattr(pr, 'html_url') else f"#PR{pr.number}",
+                "✅"
+            ])
     else:
         # Default row when no international changes
-        rows.append(["N/A", "N/A", "No international changes in this release", "N/A", "✅"])
+        rows.append(["N/A", "N/A", "No internationalization changes in this release", "N/A", "✅"])
     
     panels = [{
-        'title': 'International & Sams Code Changes',
-        'headers': headers,
-        'rows': rows
+        'title': 'Internationalization & Localization Changes',
+        'rows': rows,
+        'headers': ['PR', 'Developer', 'Description', 'Link', 'Status']
     }]
     
-    return generate_confluence_section_with_panels(9, "International & Sams Code Changes", panels) 
+    return generate_confluence_section_with_panels(9, "Internationalization & Localization Changes", panels) 

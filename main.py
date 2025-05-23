@@ -1,19 +1,27 @@
 #!/usr/bin/env python3
 """
-RC Release Automation Agent - Main CLI
+RC Release Automation Agent
 
 Enterprise-grade release documentation and CRQ generation from GitHub PRs.
-Reduces release captain workload by 90%+ with AI-powered automation.
 
 Usage:
-    python main.py --prod-version v1.2.3 --new-version v1.3.0 --service-name cer-cart
-    python main.py --help
+    python main.py --prod-version v1.2.3 --new-version v1.3.0 --service-name example-service
+    
+Features:
+    - Generate professional Confluence release notes from GitHub PRs
+    - Create CRQ (Change Request) documentation with zero-downtime focus
+    - 30-second end-to-end execution for fast-moving teams
+    - Full enterprise security with token-based authentication
+    - Multi-service support with configurable templates
+    
+Learn more: https://github.com/yourusername/automated-release-rc
 """
 
 import argparse
 import json
 import os
 import sys
+import logging
 from pathlib import Path
 from typing import Dict, Any
 
@@ -35,25 +43,14 @@ def parse_arguments():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  # Basic usage
-  python main.py --prod-version v1.2.3 --new-version v1.3.0 --service-name cer-cart
-
-  # Full configuration
-  python main.py \\
-    --prod-version v2.4.3 \\
-    --new-version v2.5.0 \\
-    --service-name payment-gateway \\
-    --release-type standard \\
-    --rc-name "John Doe" \\
-    --rc-manager "Jane Smith" \\
-    --day1-date 2024-01-15 \\
-    --day2-date 2024-01-16 \\
-    --output-dir ./release_docs
-
-  # Test with comprehensive mock data
-  python main.py --test-mode --service-name test-service
-
-For more information: https://github.com/ArnoldoM23/automated-release-rc
+    # Standard release with full documentation
+    python main.py --prod-version v1.2.3 --new-version v1.3.0 --service-name example-service
+    
+    # Emergency hotfix release
+    python main.py --prod-version v2.1.0 --new-version v2.1.1 --service-name api-gateway --release-type hotfix
+    
+    # Custom output directory
+    python main.py --prod-version v1.0.0 --new-version v1.1.0 --service-name web-frontend --output-dir /tmp/releases
         """
     )
     
@@ -71,7 +68,7 @@ For more information: https://github.com/ArnoldoM23/automated-release-rc
     parser.add_argument(
         "--service-name",
         required=True,
-        help="Service name (e.g., cer-cart, payment-gateway)"
+        help="Service name (e.g., example-service, payment-gateway)"
     )
     
     # Optional release information

@@ -173,7 +173,18 @@ config/settings.local.yaml
 *.log
 logs/
 
+# Test outputs (generated during testing)
+test_outputs/
+quick_test/
+
 # Proprietary design and strategy files (protect IP)
+**/proprietary/
+**/internal/
+**/*proprietary*
+**/*internal*
+**/*confidential*
+
+# Proprietary development methodology and architecture
 plan.md
 strategy.md
 design_methodology.md
@@ -181,11 +192,16 @@ architecture_decisions.md
 competitive_analysis.md
 business_strategy.md
 pricing_strategy.md
+development_plan.md
+roadmap.md
+*_plan.md
+*_strategy.md
+*_methodology.md
+*_architecture.md
 
-# Test outputs (may contain sensitive data)
-test_outputs/
-test_output/
-*.test_output
+# Company-specific configuration
+config/settings.yaml
+!config/settings.example.yaml
 
 # Temporary development files
 temp/

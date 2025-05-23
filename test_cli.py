@@ -12,7 +12,7 @@ Usage:
     python test_cli.py --help
     python test_cli.py --test-all
     python test_cli.py --test-prs --prod-version v1.2.3 --new-version v1.3.0
-    python test_cli.py --test-docs --service-name cer-cart --rc-name "John Doe"
+    python test_cli.py --test-docs --service-name example-service --rc-name "John Doe"
 """
 
 import argparse
@@ -38,14 +38,14 @@ def create_sample_params(args) -> Dict[str, Any]:
     return {
         "prod_version": args.prod_version or "v1.2.3",
         "new_version": args.new_version or "v1.3.0", 
-        "service_name": args.service_name or "cer-cart",
+        "service_name": args.service_name or "example-service",
         "release_type": args.release_type or "standard",
-        "rc_name": args.rc_name or "Test RC",
+        "rc_name": args.rc_name or "Test User",
         "rc_manager": args.rc_manager or "Test Manager",
         "day1_date": args.day1_date or "2024-01-15",
         "day2_date": args.day2_date or "2024-01-16",
         "channel": "#release-rc",
-        "output_dir": "test_outputs",
+        "output_dir": args.output_dir or "test_outputs",
         "config_path": "config/settings.yaml"
     }
 
@@ -433,7 +433,7 @@ def parse_args():
     parser.add_argument("--new-version",
                        help="New version (default: v1.3.0)")
     parser.add_argument("--service-name",
-                       help="Service name (default: cer-cart)")
+                       help="Service name (default: example-service)")
     parser.add_argument("--release-type", choices=["standard", "hotfix", "ebf"],
                        help="Release type (default: standard)")
     parser.add_argument("--rc-name",

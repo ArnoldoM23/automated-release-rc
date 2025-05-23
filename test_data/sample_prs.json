@@ -1,0 +1,38 @@
+[
+  {
+    "number": 123,
+    "html_url": "https://github.com/org/example-service/pull/123",
+    "title": "Add payment validation for new checkout flow",
+    "user": {
+      "login": "alice"
+    },
+    "labels": [
+      {"name": "feature"},
+      {"name": "frontend"}
+    ]
+  },
+  {
+    "number": 124,
+    "html_url": "https://github.com/org/example-service/pull/124",
+    "title": "Fix cart calculation bug in discount logic",
+    "user": {
+      "login": "bob"
+    },
+    "labels": [
+      {"name": "bugfix"},
+      {"name": "backend"}
+    ]
+  },
+  {
+    "number": 125,
+    "html_url": "https://github.com/org/example-service/pull/125",
+    "title": "Update GraphQL schema for new product variants",
+    "user": {
+      "login": "charlie"
+    },
+    "labels": [
+      {"name": "schema"},
+      {"name": "graphql"}
+    ]
+  }
+] 
