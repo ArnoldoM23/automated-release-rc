@@ -1,0 +1,122 @@
+name: RC Release Automation
+
+on:
+  repository_dispatch:
+    types: [run_release]
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+          
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+          
+      - name: Run release orchestrator
+        id: orchestrator
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: |
+          python main.py \
+            --prod-version "${{ github.event.client_payload.prod_version }}" \
+            --new-version "${{ github.event.client_payload.new_version }}" \
+            --service-name "${{ github.event.client_payload.service_name }}" \
+            --release-type "${{ github.event.client_payload.release_type }}" \
+            --rc-name "${{ github.event.client_payload.rc_name }}" \
+            --rc-manager "${{ github.event.client_payload.rc_manager }}" \
+            --day1-date "${{ github.event.client_payload.day1_date }}" \
+            --day2-date "${{ github.event.client_payload.day2_date }}" \
+            --channel "${{ github.event.client_payload.channel || '#release-rc' }}"
+            
+      - name: Upload release artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-docs-${{ github.event.client_payload.service_name }}-${{ github.event.client_payload.new_version }}
+          path: |
+            outputs/release_notes.txt
+            outputs/crq_day1.txt
+            outputs/crq_day2.txt
+            outputs/pr_summary.json
+          retention-days: 30
+          
+      - name: Post sign-off message to Slack
+        if: env.SIGNOFF_BOT_URL
+        run: |
+          curl -X POST "${{ secrets.SIGNOFF_BOT_URL }}/create-signoff" \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer ${{ secrets.SLACK_BOT_TOKEN }}" \
+            -d '{
+              "channel": "${{ github.event.client_payload.channel || '#release-rc' }}",
+              "service_name": "${{ github.event.client_payload.service_name }}",
+              "new_version": "${{ github.event.client_payload.new_version }}",
+              "prs": ${{ steps.orchestrator.outputs.prs }},
+              "artifacts_url": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+            }'
+        env:
+          SIGNOFF_BOT_URL: ${{ secrets.SIGNOFF_BOT_URL }}
+          
+      - name: Notify completion in Slack
+        uses: slackapi/slack-github-action@v1.24.0
+        with:
+          payload: |
+            {
+              "channel": "${{ github.event.client_payload.channel || '#release-rc' }}",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "✅ *Release automation completed for ${{ github.event.client_payload.service_name }} v${{ github.event.client_payload.new_version }}*"
+                  }
+                },
+                {
+                  "type": "section",
+                  "fields": [
+                    {
+                      "type": "mrkdwn",
+                      "text": "*RC:* ${{ github.event.client_payload.rc_name }}"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Release Type:* ${{ github.event.client_payload.release_type }}"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Day 1:* ${{ github.event.client_payload.day1_date }}"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Day 2:* ${{ github.event.client_payload.day2_date }}"
+                    }
+                  ]
+                },
+                {
+                  "type": "actions",
+                  "elements": [
+                    {
+                      "type": "button",
+                      "text": {
+                        "type": "plain_text",
+                        "text": "📥 Download Artifacts"
+                      },
+                      "url": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+                    }
+                  ]
+                }
+              ]
+            }
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }} 

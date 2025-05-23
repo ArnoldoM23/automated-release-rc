@@ -1,0 +1,1 @@
+"""CRQ generation module.""" 
