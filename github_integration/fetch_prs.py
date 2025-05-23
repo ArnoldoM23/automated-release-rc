@@ -1,6 +1,7 @@
 """
-GitHub integration for fetching pull requests between Git tags.
+GitHub integration for fetching pull requests between Git references.
 Supports GitHub.com, GitHub Enterprise, and various authentication methods.
+Can use Git tags (v1.2.3) or commit SHAs (abc123f) as references.
 """
 
 import re
@@ -39,13 +40,13 @@ class GitHubClient:
         self.repo = self.github.get_repo(config.repo)
         self.logger.info(f"Initialized GitHub client for {config.repo}")
     
-    def fetch_prs_between_tags(self, old_tag: str, new_tag: str) -> List[PullRequest]:
+    def fetch_prs_between_refs(self, old_ref: str, new_ref: str) -> List[PullRequest]:
         """
-        Fetch pull requests between two Git tags.
+        Fetch pull requests between two Git references (tags or commit SHAs).
         
         Args:
-            old_tag: Older Git tag (e.g., v1.2.3)
-            new_tag: Newer Git tag (e.g., v1.3.0)
+            old_ref: Older Git reference (tag like v1.2.3 or commit SHA like abc123f)
+            new_ref: Newer Git reference (tag like v1.3.0 or commit SHA like def456a)
             
         Returns:
             List of PullRequest objects
@@ -53,16 +54,16 @@ class GitHubClient:
         start_time = time.time()
         
         try:
-            self.logger.info(f"Fetching PRs between {old_tag} and {new_tag}")
+            self.logger.info(f"Fetching PRs between {old_ref} and {new_ref}")
             
-            # Get tag commits
-            old_commit = self._get_tag_commit(old_tag)
-            new_commit = self._get_tag_commit(new_tag)
+            # Get commit SHAs from references (tags or commit SHAs)
+            old_commit = self._get_commit_sha(old_ref)
+            new_commit = self._get_commit_sha(new_ref)
             
             if not old_commit or not new_commit:
-                raise ValueError(f"Could not find commits for tags {old_tag} or {new_tag}")
+                raise ValueError(f"Could not find commits for references {old_ref} or {new_ref}")
             
-            # Get commits between tags
+            # Get commits between references
             commits = self._get_commits_between(old_commit, new_commit)
             
             # Extract PR numbers from commit messages
@@ -74,11 +75,11 @@ class GitHubClient:
             duration_ms = (time.time() - start_time) * 1000
             log_workflow_step(
                 self.logger,
-                step="fetch_prs_between_tags",
+                step="fetch_prs_between_refs",
                 status="completed",
                 duration_ms=duration_ms,
-                old_tag=old_tag,
-                new_tag=new_tag,
+                old_ref=old_ref,
+                new_ref=new_ref,
                 pr_count=len(prs)
             )
             
@@ -88,26 +89,38 @@ class GitHubClient:
             duration_ms = (time.time() - start_time) * 1000
             log_workflow_step(
                 self.logger,
-                step="fetch_prs_between_tags", 
+                step="fetch_prs_between_refs", 
                 status="failed",
                 duration_ms=duration_ms,
                 error=str(e)
             )
             raise
     
-    def _get_tag_commit(self, tag_name: str) -> Optional[str]:
+    def _get_commit_sha(self, ref: str) -> Optional[str]:
         """
-        Get the commit SHA for a given tag.
+        Get the commit SHA for a given reference (tag or commit SHA).
         
         Args:
-            tag_name: Git tag name
+            ref: Git tag name or commit SHA (short or full)
             
         Returns:
-            Commit SHA or None if tag not found
+            Full commit SHA or None if not found
         """
         try:
+            # Check if it's already a commit SHA (7-40 characters, alphanumeric)
+            if re.match(r'^[a-f0-9]{7,40}$', ref.lower()):
+                try:
+                    # Try to get the commit directly
+                    commit = self.repo.get_commit(ref)
+                    self.logger.info(f"Found commit SHA: {ref} -> {commit.sha}")
+                    return commit.sha
+                except GithubException as e:
+                    self.logger.warning(f"Commit SHA {ref} not found: {e}")
+                    return None
+            
+            # Otherwise, treat as a tag
             # Remove 'v' prefix if present for consistency
-            tag_name = tag_name.lstrip('v')
+            tag_name = ref.lstrip('v')
             
             # Try to find tag with and without 'v' prefix
             possible_tags = [tag_name, f"v{tag_name}"]
@@ -120,27 +133,30 @@ class GitHubClient:
                     if tag.object.type == "tag":
                         # Annotated tag
                         tag_obj = self.repo.get_git_tag(tag.object.sha)
+                        self.logger.info(f"Found annotated tag: {possible_tag} -> {tag_obj.object.sha}")
                         return tag_obj.object.sha
                     else:
                         # Lightweight tag
+                        self.logger.info(f"Found lightweight tag: {possible_tag} -> {tag.object.sha}")
                         return tag.object.sha
                         
                 except GithubException:
                     continue
             
-            # If not found, try to get the latest tag
-            self.logger.warning(f"Tag {tag_name} not found, searching in all tags")
+            # If not found, try to search in all tags
+            self.logger.warning(f"Tag {ref} not found, searching in all tags")
             tags = self.repo.get_tags()
             
             for tag in tags:
                 if tag.name in possible_tags:
+                    self.logger.info(f"Found tag in search: {tag.name} -> {tag.commit.sha}")
                     return tag.commit.sha
             
-            self.logger.error(f"Could not find tag: {tag_name}")
+            self.logger.error(f"Could not find tag or commit: {ref}")
             return None
             
         except Exception as e:
-            self.logger.error(f"Error getting commit for tag {tag_name}: {e}")
+            self.logger.error(f"Error getting commit for reference {ref}: {e}")
             return None
     
     def _get_commits_between(self, old_commit: str, new_commit: str) -> List[Any]:
@@ -254,17 +270,17 @@ class GitHubClient:
             self.logger.error(f"Error getting repository info: {e}")
             return {}
     
-    def validate_tag(self, tag_name: str) -> bool:
+    def validate_ref(self, ref: str) -> bool:
         """
-        Validate if a tag exists in the repository.
+        Validate if a reference (tag or commit SHA) exists in the repository.
         
         Args:
-            tag_name: Git tag name to validate
+            ref: Git tag name or commit SHA to validate
             
         Returns:
-            True if tag exists, False otherwise
+            True if reference exists, False otherwise
         """
-        commit = self._get_tag_commit(tag_name)
+        commit = self._get_commit_sha(ref)
         return commit is not None
     
     def get_latest_tags(self, limit: int = 10) -> List[str]:
@@ -289,29 +305,29 @@ class GitHubClient:
             return []
 
 
-def fetch_prs(prod_tag: str, new_tag: str, config: GitHubConfig) -> List[PullRequest]:
+def fetch_prs(prod_ref: str, new_ref: str, config: GitHubConfig) -> List[PullRequest]:
     """
-    Convenience function to fetch PRs between tags.
+    Convenience function to fetch PRs between Git references (tags or commit SHAs).
     
     Args:
-        prod_tag: Production tag (older)
-        new_tag: New release tag (newer)
+        prod_ref: Production reference (older tag or commit SHA)
+        new_ref: New release reference (newer tag or commit SHA)
         config: GitHub configuration
         
     Returns:
         List of PullRequest objects
     """
     client = GitHubClient(config)
-    return client.fetch_prs_between_tags(prod_tag, new_tag)
+    return client.fetch_prs_between_refs(prod_ref, new_ref)
 
 
-def validate_tags(prod_tag: str, new_tag: str, config: GitHubConfig) -> tuple[bool, Optional[str]]:
+def validate_refs(prod_ref: str, new_ref: str, config: GitHubConfig) -> tuple[bool, Optional[str]]:
     """
-    Validate that both tags exist and are in correct order.
+    Validate that both references (tags or commit SHAs) exist and are accessible.
     
     Args:
-        prod_tag: Production tag
-        new_tag: New release tag
+        prod_ref: Production reference (tag or commit SHA)
+        new_ref: New release reference (tag or commit SHA)
         config: GitHub configuration
         
     Returns:
@@ -319,12 +335,12 @@ def validate_tags(prod_tag: str, new_tag: str, config: GitHubConfig) -> tuple[bo
     """
     client = GitHubClient(config)
     
-    # Check if both tags exist
-    if not client.validate_tag(prod_tag):
-        return False, f"Production tag '{prod_tag}' not found in repository"
+    # Check if both references exist
+    if not client.validate_ref(prod_ref):
+        return False, f"Production reference '{prod_ref}' not found in repository"
     
-    if not client.validate_tag(new_tag):
-        return False, f"New tag '{new_tag}' not found in repository"
+    if not client.validate_ref(new_ref):
+        return False, f"New reference '{new_ref}' not found in repository"
     
     # Additional validation could include:
     # - Semantic version comparison

@@ -141,11 +141,57 @@ python tests/test_github/test_github_integration.py \
   --old-tag v1.0.0 \
   --new-tag v1.1.0
 
+# Test with commit SHAs (when tags aren't available)
+python tests/test_github/test_github_integration.py \
+  --repo your-org/your-repo \
+  --old-tag abc123f \
+  --new-tag def456a
+
+# Mix tags and commit SHAs
+python tests/test_github/test_github_integration.py \
+  --repo your-org/your-repo \
+  --old-tag v1.0.0 \
+  --new-tag 9f8e7d6c
+
 # List available tags in your repository
 python tests/test_github/test_github_integration.py \
   --list-tags \
   --repo your-org/your-repo
 ```
+
+#### **📋 Supported Version References:**
+
+The system supports both **Git tags** and **commit SHAs** as version references:
+
+| Reference Type | Format | Examples | Use Case |
+|----------------|--------|----------|----------|
+| **Git Tags** | `v1.2.3` or `1.2.3` | `v2.4.0`, `1.0.0`, `release-2024-01` | Standard releases with semantic versioning |
+| **Commit SHAs** | 7-40 hex characters | `abc123f`, `9f8e7d6c5b4a`, `f45b2a1fc2bcf208` | Hot fixes, custom builds, no-tag workflows |
+
+**Examples:**
+
+```bash
+# Using Git tags (recommended for releases)
+python main.py --prod-version v1.4.2 --new-version v1.5.0
+
+# Using commit SHAs (useful for hotfixes or pre-release testing)  
+python main.py --prod-version abc123f --new-version def456a
+
+# Mixed approach (tag to commit)
+python main.py --prod-version v1.4.2 --new-version 9f8e7d6c
+
+# Test the complete workflow with commit SHAs
+python tests/test_real_github_workflow.py \
+  --repo ArnoldoM23/PerfCopilot \
+  --old-tag abc123f \
+  --new-tag def456a
+```
+
+**✅ Advantages of Commit SHA Support:**
+- **No tags required** - works with any repository
+- **Precise control** - target exact commits for hotfixes  
+- **Flexible workflows** - supports non-standard release processes
+- **Backward compatible** - existing tag-based workflows still work
 
 #### **GitHub Enterprise Support:**
 
