@@ -133,8 +133,8 @@ class RealGitHubWorkflowTester:
             
         return results
     
-    def _fetch_prs(self, repo: str, old_tag: str, new_tag: str) -> List:
-        """Fetch PRs between tags using the existing GitHub integration."""
+    def _fetch_prs(self, repo: str, old_ref: str, new_ref: str) -> List:
+        """Fetch PRs between Git references (tags or commit SHAs) using the existing GitHub integration."""
         try:
             # Create a proper GitHubConfig object for the fetch function
             github_config = GitHubConfig(
@@ -143,7 +143,7 @@ class RealGitHubWorkflowTester:
                 api_url="https://api.github.com"
             )
             
-            prs = fetch_prs(old_tag, new_tag, github_config)
+            prs = fetch_prs(old_ref, new_ref, github_config)
             self.logger.info(f"Successfully fetched {len(prs)} PRs from {repo}")
             
             # Log PR summary
