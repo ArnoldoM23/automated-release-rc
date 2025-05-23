@@ -128,8 +128,8 @@ In **Event Subscriptions**:
 
 ```bash
 # Slack credentials
-SLACK_BOT_TOKEN=xoxb-1234567890-1234567890123-abcdefghijklmnopqrstuvwx
-SLACK_APP_TOKEN=xapp-1-A1234567890-1234567890123-abcdefghijklmnopqrstuvwxyz123456
+SLACK_BOT_TOKEN=your-bot-token-here
+SLACK_APP_TOKEN=your-app-token-here
 
 # Bot configuration
 REMINDER_INTERVAL_HOURS=2
