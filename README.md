@@ -35,13 +35,7 @@ Stop spending **hours** manually creating release documentation. Our **Release A
 
 ## ⚡ **Quick Start - Get Running in 10 Minutes**
 
-### **🎯 Prerequisites**
-- Python 3.10+ installed
-- GitHub account with repository access
-- Slack workspace (for integration)
-- Optional: OpenAI API key for enhanced AI features
-
-### **📋 Instant Setup**
+### **📋 Instant Demo**
 
 ```bash
 # 1. Clone and install
@@ -49,270 +43,85 @@ git clone https://github.com/ArnoldoM23/automated-release-rc.git
 cd automated-release-rc
 pip install -r requirements.txt
 
-# 2. Test without any tokens (uses mock data)
+# 2. See it in action - generates 4 professional documents in 30 seconds
 python main.py --test-mode --service-name demo --prod-version v1.0.0 --new-version v1.1.0
 
-# 3. Setup your configuration (see detailed setup below)
-cp config/settings.example.yaml config/settings.yaml
-# Edit config/settings.yaml with your details
+# 3. Check your generated enterprise documentation
+ls -la output/  # See release_notes.txt, crq_day1.txt, crq_day2.txt, release_notes.md
 ```
 
-### **🚀 Complete Workflow Setup Guide**
+### **🚀 Complete Slack Workflow Setup**
 
-Follow this **step-by-step guide** to set up your complete release automation workflow:
+**📖 [Follow our 5-Minute Setup Guide →](docs/quickstart.md)**
 
-#### **Step 1: Basic Configuration (2 minutes)**
+Get your **complete `/run-release` command** working in Slack:
+- ✅ `/run-release` command in Slack (30-second form)
+- ✅ Automatic GitHub Actions execution  
+- ✅ Professional documentation generation
+- ✅ Enterprise CRQ documents with AI insights
+- ✅ Copy-paste ready Confluence markup
 
-```bash
-# 1. Copy and edit configuration
-cp config/settings.example.yaml config/settings.yaml
-nano config/settings.yaml  # Edit with your details
+**⏱️ Setup:** 5 minutes • **Daily use:** 30 seconds • **Output:** 4 enterprise documents
 
-# 2. Set minimum required configuration
-```
+### **🎯 What You'll Generate**
 
-**Essential config:**
-```yaml
-# config/settings.yaml
-github:
-  token: "${GITHUB_TOKEN}"
-  repo: "your-org/your-repo"
-  
-organization:
-  name: "Your Company"
-  default_service: "your-service"
-  regions: ["EUS", "WUS"]  # Your deployment regions
-```
-
-#### **Step 2: GitHub Setup (3 minutes)**
-
-```bash
-# 1. Create GitHub token at: https://github.com/settings/tokens
-#    - For public repos: select 'public_repo' scope
-#    - For private repos: select 'repo' scope
-
-# 2. Set environment variable
-export GITHUB_TOKEN="ghp_your-token-here"
-
-# 3. Test GitHub connection
-python tests/test_github/test_github_integration.py --list-tags --repo your-org/your-repo
-```
-
-#### **Step 3: Generate Your First Release (30 seconds)**
-
-```bash
-# Option A: Using Git tags
-python main.py \
-  --service-name your-service \
-  --prod-version v1.0.0 \
-  --new-version v1.1.0 \
-  --rc-name "Your Name" \
-  --rc-manager "Manager Name"
-
-# Option B: Using commit SHAs (if no tags)
-python main.py \
-  --service-name your-service \
-  --prod-version abc123f \
-  --new-version def456a \
-  --rc-name "Your Name" \
-  --rc-manager "Manager Name"
-```
-
-#### **Step 4: Setup Slack Integration (5 minutes) - Optional**
-
-```bash
-# 1. Create Slack App: https://api.slack.com/apps
-# 2. Enable slash commands and bot features
-# 3. Add environment variables:
-export SLACK_BOT_TOKEN="xoxb-your-bot-token"
-export SLACK_SIGNING_SECRET="your-signing-secret"
-
-# 4. Test Slack integration
-python tests/test_slack/test_slack_bot.py
-```
-
-#### **Step 5: Add AI Enhancement (2 minutes) - Optional**
-
-```bash
-# 1. Get OpenAI API key: https://platform.openai.com/api-keys
-# 2. Add to environment
-export OPENAI_API_KEY="sk-your-openai-key"
-
-# 3. Test AI integration
-python tests/test_cli.py --test-ai
-```
-
-### **✅ Verification Checklist**
-
-After setup, verify everything works:
-
-```bash
-# ✅ 1. Configuration loads properly
-python -c "from config.config import load_config; print('✅ Config loaded')"
-
-# ✅ 2. GitHub integration works
-python run_tests.py --github
-
-# ✅ 3. Generate test documentation
-python main.py --test-mode --service-name demo --prod-version v1.0.0 --new-version v1.1.0
-
-# ✅ 4. Check output files exist
-ls -la output/ && echo "✅ Files generated successfully"
-```
-
-### **🔗 Detailed Setup Guides**
-
-| Setup Guide | Time | Purpose |
-|-------------|------|---------|
-| [**GitHub Authentication**](#github-authentication-setup) | 3 min | Connect to your repositories |
-| [**Configuration Setup**](#configuration-setup) | 5 min | Basic YAML configuration |
-| [**Slack Bot Integration**](#slack-bot-integration) | 10 min | Full workflow automation |
-| [**Custom CRQ Templates**](#creating-custom-crq-templates) | 5 min | Use your organization's templates |
-
-### **🎯 Quick Commands for Daily Use**
-
-Once set up, use these commands for daily releases:
-
-```bash
-# Standard release with tags
-python main.py --service-name my-app --prod-version v2.1.0 --new-version v2.2.0
-
-# Hotfix with commit SHAs
-python main.py --service-name my-app --prod-version abc123f --new-version def456a
-
-# Custom dates for scheduled releases
-python main.py --service-name my-app --prod-version v2.1.0 --new-version v2.2.0 \
-  --day1-date "2024-01-15" --day2-date "2024-01-16"
-
-# Generate and copy to clipboard (macOS)
-python main.py --service-name my-app --prod-version v2.1.0 --new-version v2.2.0 && \
-cat output/release_notes.txt | pbcopy
-```
-
-**🚀 Ready to run?** Jump to [Local Development Setup](#local-development-setup) for detailed instructions.
+| File | Purpose | Size |
+|------|---------|------|
+| `release_notes.txt` | **Confluence-ready** wiki markup | 6,000+ bytes |
+| `crq_day1.txt` | Day 1 preparation CRQ | 4,500+ bytes |
+| `crq_day2.txt` | Day 2 deployment CRQ | 4,600+ bytes |
+| `release_notes.md` | GitHub markdown | 2,500+ bytes |
 
 ---
 
 ## 🏢 **Core Features**
 
-### **📋 Creating Custom CRQ Templates**
+### **📋 Custom CRQ Templates**
 
-The system supports **external CRQ templates** from various sources. Here's how to create templates that work seamlessly with our tool:
+The system supports **external CRQ templates** from multiple sources:
+- **Microsoft Word** (.docx) - Corporate templates from SharePoint
+- **Text files** (.txt) - Simple text-based templates  
+- **Markdown** (.md) - GitHub-friendly templates
 
-#### **🎯 Template Structure**
+**✅ Template Features:**
+- **Variable substitution** - Automatic placeholder replacement
+- **Enterprise integration** - SharePoint, Confluence, file servers
+- **Professional formatting** - Maintains corporate branding
+- **Copy-paste ready** - No additional formatting needed
 
-Your CRQ template should follow this structure for best results:
-
-```text
-**CHANGE REQUEST - DAY {day_number}**
-
-**Summary:** {service_name} Application Code deployment for {platform} ({regions}) - Day {day_number}
-
-**Service Information:**
-- Application Name: {service_name}
-- Namespace: {namespace}
-- Platform: {platform}
-- Regions: {regions}
-
-**Version Information:**
-- Current Version: {prod_version}
-- New Version: {new_version}
-- Rollback Version: {prod_version}
-
-**Release Details:**
-- Release Type: {release_type}
-- Release Coordinator: {rc_name}
-- Release Manager: {rc_manager}
-- Day 1 Date: {day1_date}
-- Day 2 Date: {day2_date}
-
-**Description Section:**
-1. What is the business reason for this change?
-2. What is the technical summary?
-3. What testing has been performed?
-4. What is the risk assessment?
-
-**Implementation Plan:**
-{implementation_plan}
-
-**Validation Plan:**
-- P0 Dashboard: {p0_dashboard_url}
-- L1 Dashboard: {l1_dashboard_url}
-- Services Dashboard: {services_dashboard_url}
-
-**Backout Plan:**
-{backout_plan}
-```
-
-#### **📝 Supported Template Formats**
-
-| Format | Configuration | Use Case |
-|--------|---------------|----------|
-| **Word (.docx)** | `template_type: "word"` | Corporate templates |
-| **Text (.txt)** | `template_type: "text"` | Simple text templates |
-| **Markdown (.md)** | `template_type: "markdown"` | GitHub-friendly templates |
-
-```yaml
-# config/settings.yaml
-external_template:
-  enabled: true
-  template_url: "https://sharepoint.company.com/sites/IT/CRQ_Template.docx"
-  template_type: "word"
-```
-
-#### **🔧 Variable Placeholders**
-
-The tool automatically converts these placeholders:
-
-| Placeholder | Converts To | Description |
-|-------------|-------------|-------------|
-| `{service_name}` | `{{ service_name }}` | Service being deployed |
-| `{new_version}` | `{{ new_version }}` | Target version |
-| `{prod_version}` | `{{ prod_version }}` | Current production version |
-| `{platform}` | `{{ platform }}` | Deployment platform |
-| `{regions}` | `{{ regions \| join(", ") }}` | Deployment regions |
-| `{day_number}` | `{{ day_number }}` | Day 1 or Day 2 |
-| `{rc_name}` | `{{ rc_name }}` | Release coordinator name |
+**📖 [Template Setup Guide →](docs/quickstart.md#custom-templates)**
 
 ### **🤖 Slack Bot Integration**
 
-Transform your release process with intelligent Slack automation.
+Transform your release process with intelligent Slack automation:
 
-#### **Option 1: Slack Workflow Builder (Recommended)**
+**Option 1: Slack Workflow Builder** ⭐ *Recommended*
+- ✅ **5-minute setup** - No approvals needed
+- ✅ **Zero infrastructure** - Uses GitHub Actions  
+- ✅ **30-second releases** - Fill form, get documents
 
-**✅ Pros:** No approvals needed, 5-minute setup, zero infrastructure  
-**❌ Cons:** Limited to basic notifications
+**Option 2: Advanced Slack Bot**
+- ✅ **Interactive approvals** - Real-time collaboration
+- ✅ **Enterprise features** - Advanced workflows
+- ✅ **Custom integrations** - API access
 
-1. **Setup Slack Workflow:**
-   - Open Slack → Tools → Workflow Builder
-   - Create new workflow → "Shortcut" trigger
-   - Add webhook step pointing to your GitHub Actions
+**📖 [Slack Setup Guide →](docs/quickstart.md)**
 
-2. **Configure GitHub Actions:**
-   ```yaml
-   # .github/workflows/run_release.yml
-   name: Release Automation
-   on:
-     repository_dispatch:
-       types: [slack_release_request]
-   ```
+### **📊 Professional Output**
 
-#### **Option 2: Full Slack Bot Integration**
+Every release generates enterprise-ready documentation:
 
-**✅ Pros:** Interactive approvals, real-time updates, enterprise features  
-**❌ Cons:** Requires app approval, hosting needed
+**🔗 Wiki Markup Release Notes**
+- **Confluence-ready** formatting with professional markup
+- **Copy-paste directly** into your organization's wiki
+- **15+ sections** including impact analysis and rollback procedures
+- **AI-enhanced content** with intelligent risk assessment
 
-1. **Deploy Bot:**
-   ```bash
-   # Deploy to Railway/Heroku
-   cd slack_bot
-   railway up  # or git push heroku main
-   ```
-
-2. **Create Slack App:**
-   - Visit api.slack.com/apps
-   - Create new app → Enable Socket Mode
-   - Add bot scopes: chat:write, commands
+**📋 CRQ Documents**
+- **Day 1 & Day 2** change request documents
+- **AI-powered insights** and risk analysis
+- **Complete implementation plans** with validation steps
+- **Professional formatting** matching enterprise standards
 
 ### **📊 Dashboard URL Configuration**
 
@@ -371,287 +180,36 @@ cat output/release_notes.txt | xclip   # Linux
 
 ## 🔧 **Local Development Setup**
 
-### **🔑 Configuration Setup**
+For developers who want to run the tool locally or integrate it into CI/CD pipelines:
+
+### **🔑 Quick Local Setup**
 
 ```bash
-# Copy example configuration
+# 1. Clone and configure
+git clone https://github.com/ArnoldoM23/automated-release-rc.git
+cd automated-release-rc
 cp config/settings.example.yaml config/settings.yaml
 
-# Edit with your details
-nano config/settings.yaml  # or your preferred editor
-```
+# 2. Set environment variables
+export GITHUB_TOKEN="ghp_your-token-here"
+export OPENAI_API_KEY="sk_your-key-here"  # Optional
 
-**Essential configuration (minimum required):**
-
-```yaml
-# config/settings.yaml
-github:
-  token: "${GITHUB_TOKEN}"  # Set via environment variable
-  repo: "your-org/your-repo"
-
-ai:
-  provider: "openai"  # or "azure" or "anthropic"
-  openai:
-    api_key: "${OPENAI_API_KEY}"  # Optional but recommended
-
-organization:
-  name: "Your Company"
-  default_service: "your-service"
-  regions: ["EUS", "SCUS", "WUS"]  # Your deployment regions
-
-slack:
-  bot_token: "${SLACK_BOT_TOKEN}"  # Only if using Slack integration
-  signing_secret: "${SLACK_SIGNING_SECRET}"
-```
-
-### **🔑 Environment Variables**
-
-Create a `.env` file or set environment variables:
-
-```bash
-# .env file (create in project root)
-GITHUB_TOKEN=ghp_your_github_token_here
-OPENAI_API_KEY=sk-your_openai_key_here
-SLACK_BOT_TOKEN=xoxb-your_slack_token_here
-SLACK_SIGNING_SECRET=your_slack_signing_secret
-```
-
-### **🐙 GitHub Authentication Setup**
-
-The system requires a GitHub Personal Access Token to fetch PR data between releases.
-
-#### **Creating a GitHub Token:**
-
-1. **Go to GitHub Settings:**
-   - Visit https://github.com/settings/tokens
-   - Click "Generate new token (classic)"
-
-2. **Configure Token:**
-   - **Note:** `RC Release Automation` (or similar)
-   - **Expiration:** Set based on your security policy
-   - **Scopes:** Select appropriate permissions:
-     - For **public repositories:** `public_repo`
-     - For **private repositories:** `repo` (full repo access)
-
-3. **Copy and Store Token:**
-   ```bash
-   # Set as environment variable
-   export GITHUB_TOKEN="ghp_your-actual-token-here"
-   
-   # Or add to .env file
-   echo "GITHUB_TOKEN=ghp_your-actual-token-here" >> .env
-   ```
-
-#### **📋 Supported Version References:**
-
-The system supports both **Git tags** and **commit SHAs** as version references:
-
-| Reference Type | Format | Examples | Use Case |
-|----------------|--------|----------|----------|
-| **Git Tags** | `v1.2.3` or `1.2.3` | `v2.4.0`, `1.0.0`, `release-2024-01` | Standard releases with semantic versioning |
-| **Commit SHAs** | 7-40 hex characters | `abc123f`, `9f8e7d6c5b4a`, `f45b2a1fc2bcf208` | Hot fixes, custom builds, no-tag workflows |
-
-**Examples:**
-
-```bash
-# Using Git tags (recommended for releases)
-python main.py --prod-version v1.4.2 --new-version v1.5.0
-
-# Using commit SHAs (useful for hotfixes or pre-release testing)  
-python main.py --prod-version abc123f --new-version def456a
-
-# Mixed approach (tag to commit)
-python main.py --prod-version v1.4.2 --new-version 9f8e7d6c
-```
-
-**✅ Advantages of Commit SHA Support:**
-- **No tags required** - works with any repository
-- **Precise control** - target exact commits for hotfixes  
-- **Flexible workflows** - supports non-standard release processes
-- **Backward compatible** - existing tag-based workflows still work
-
-#### **GitHub Enterprise Support:**
-
-If using GitHub Enterprise, update your configuration:
-
-```yaml
-# config/settings.yaml
-github:
-  token: "${GITHUB_TOKEN}"
-  repo: "your-org/your-repo"
-  api_url: "https://your-enterprise.github.com/api/v3"  # Enterprise API URL
-```
-
-### **🚀 Running Locally**
-
-#### **Option 1: CLI-Only Usage**
-
-Perfect for CI/CD integration or manual releases:
-
-```bash
-# Manual release generation
-python main.py \
-  --service-name cer-cart \
-  --prod-version v2.4.3 \
-  --new-version v2.5.0 \
-  --rc-name "Alice Johnson" \
-  --rc-manager "Bob Smith" \
-  --day1-date "2024-01-15" \
-  --day2-date "2024-01-16"
-
-# Test with real GitHub data
-export GITHUB_TOKEN="your_token"
+# 3. Generate release documentation
 python main.py --service-name your-service --prod-version v1.0.0 --new-version v1.1.0
-
-# Integrate into CI/CD
-./scripts/generate_release_docs.sh $SERVICE_NAME $NEW_VERSION
 ```
 
-#### **Option 2: With Mock Data**
+### **📖 Detailed Setup Documentation**
 
-```bash
-# Test with 25 mock PRs (5 schema + 10 features + 5 bugfixes + 5 i18n)
-python main.py --test-mode \
-  --service-name test-service \
-  --prod-version v1.0.0 \
-  --new-version v1.1.0 \
-  --rc-name "Test User" \
-  --rc-manager "Test Manager"
-```
+| Guide | Purpose |
+|-------|---------|
+| **[📖 Complete Setup Guide](docs/quickstart.md)** | Full Slack workflow + local setup |
+| **[🔧 Configuration Guide](#configuration-setup)** | YAML configuration details |
+| **[🐙 GitHub Integration](#github-authentication-setup)** | Token setup and repository access |
+| **[📋 Custom Templates](#creating-custom-crq-templates)** | Organization-specific templates |
 
----
+### **🎯 Version Reference Support**
 
-## 🧪 **Testing & Validation**
-
-### **🔍 Test Your Configuration**
-
-```bash
-# Run all tests with the new test runner
-python run_tests.py
-
-# Test specific components
-python run_tests.py --github          # GitHub integration tests
-python run_tests.py --slack           # Slack integration tests  
-python run_tests.py --cli             # CLI and core functionality
-python run_tests.py --unit            # Unit tests only
-python run_tests.py --integration     # Integration tests only
-python run_tests.py --external        # External template tests
-```
-
-### **📊 GitHub Integration Testing**
-
-```bash
-# Test GitHub authentication and PR fetching  
-python run_tests.py --github
-
-# Test with your repository (interactive)
-python tests/test_github/test_github_integration.py --test-all
-
-# Test with specific repository and tags
-python tests/test_github/test_github_integration.py \
-  --repo your-org/your-repo \
-  --old-tag v1.0.0 \
-  --new-tag v1.1.0
-
-# Test with commit SHAs (when tags aren't available)
-python tests/test_github/test_github_integration.py \
-  --repo your-org/your-repo \
-  --old-tag abc123f \
-  --new-tag def456a
-
-# Mix tags and commit SHAs
-python tests/test_github/test_github_integration.py \
-  --repo your-org/your-repo \
-  --old-tag v1.0.0 \
-  --new-tag 9f8e7d6c
-
-# List available tags in your repository
-python tests/test_github/test_github_integration.py \
-  --list-tags \
-  --repo your-org/your-repo
-```
-
-### **🎯 Real Workflow Testing**
-
-```bash
-# Test the complete workflow with commit SHAs
-python tests/test_real_github_workflow.py \
-  --repo ArnoldoM23/PerfCopilot \
-  --old-tag abc123f \
-  --new-tag def456a
-
-# Test with your repository and custom parameters
-python tests/test_real_github_workflow.py \
-  --repo owner/repo \
-  --old-tag v1.0.0 \
-  --new-tag v1.1.0 \
-  --service-name my-service \
-  --rc-name "John Doe" \
-  --rc-manager "Jane Smith"
-
-# Run with default test setup
-python tests/test_real_github_workflow.py --test-all
-```
-
-### **📊 Mock Data Testing**
-
-The system includes comprehensive mock data for testing:
-
-**Mock PRs include:**
-- Schema changes (database migrations)
-- Feature additions (new functionality)  
-- Bug fixes (critical and non-critical)
-- International/localization updates
-- Various label combinations for testing categorization
-
-### **🔧 Individual Test Files**
-
-For advanced testing:
-
-```bash
-python tests/test_cli.py --test-config      # Configuration validation
-python tests/test_cli.py --test-ai          # AI provider connectivity  
-python tests/test_cli.py --test-github      # GitHub API integration
-python tests/test_cli.py --test-templates   # Template processing
-
-# Test configuration loading
-python -c "from config.config import load_config; print('✅ Config loaded successfully')"
-
-# Test external template validation
-python tests/test_external_template.py
-```
-
-### **❓ Troubleshooting**
-
-#### **GitHub Issues:**
-
-**❌ Authentication failed:**
-- Verify token format starts with `ghp_` or `github_pat_`
-- Check token hasn't expired
-- Ensure token has correct repository permissions
-
-**❌ Repository access denied:**
-- Verify repository name format: `owner/repo`
-- Check if repository is private and token has `repo` scope
-- Confirm you have access to the repository
-
-**❌ No PRs found:**
-- Ensure tags exist: `git tag -l`
-- Check commit messages contain PR references (`#123`, `PR #123`)
-- Verify PRs were actually merged (not just closed)
-
-#### **Template Validation:**
-
-```bash
-# Test external template download
-python tests/test_external_template.py
-
-# Validate template conversion
-python -c "
-from crq.external_template import ExternalTemplateManager
-from config.config import load_config
-manager = ExternalTemplateManager(load_config())
-result = manager.get_external_template()
-print('✅ Template loaded successfully' if result else '❌ Template failed')
-"
-```
+Works with both **Git tags** and **commit SHAs**:
+- **Git Tags:** `v1.2.3`, `1.0.0` (standard releases)
+- **Commit SHAs:** `abc123f`, `9f8e7d6c` (hotfixes, precise control)
+- **Mixed usage:** `v1.0.0` → `def456a` (flexible workflows)

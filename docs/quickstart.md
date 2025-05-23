@@ -389,4 +389,124 @@ python tests/test_github/test_github_integration.py \
 - 💬 **Questions:** [GitHub Discussions](https://github.com/ArnoldoM23/automated-release-rc/discussions)
 - 📧 **Enterprise Support:** Contact for professional services
 
-**🎯 You now have a professional release automation agent that reduces RC workload by 90%!** 
+**🎯 You now have a professional release automation agent that reduces RC workload by 90%!**
+
+---
+
+## 📋 **Custom Templates Setup**
+
+### **🎯 Template Structure**
+
+Your CRQ template should follow this structure for best results:
+
+```text
+**CHANGE REQUEST - DAY {day_number}**
+
+**Summary:** {service_name} Application Code deployment for {platform} ({regions}) - Day {day_number}
+
+**Service Information:**
+- Application Name: {service_name}
+- Namespace: {namespace}
+- Platform: {platform}
+- Regions: {regions}
+
+**Version Information:**
+- Current Version: {prod_version}
+- New Version: {new_version}
+- Rollback Version: {prod_version}
+
+**Release Details:**
+- Release Type: {release_type}
+- Release Coordinator: {rc_name}
+- Release Manager: {rc_manager}
+- Day 1 Date: {day1_date}
+- Day 2 Date: {day2_date}
+
+**Description Section:**
+1. What is the business reason for this change?
+2. What is the technical summary?
+3. What testing has been performed?
+4. What is the risk assessment?
+
+**Implementation Plan:**
+{implementation_plan}
+
+**Validation Plan:**
+- P0 Dashboard: {p0_dashboard_url}
+- L1 Dashboard: {l1_dashboard_url}
+- Services Dashboard: {services_dashboard_url}
+
+**Backout Plan:**
+{backout_plan}
+```
+
+### **📝 Supported Template Formats**
+
+| Format | Configuration | Use Case |
+|--------|---------------|----------|
+| **Word (.docx)** | `template_type: "word"` | Corporate templates |
+| **Text (.txt)** | `template_type: "text"` | Simple text templates |
+| **Markdown (.md)** | `template_type: "markdown"` | GitHub-friendly templates |
+
+```yaml
+# config/settings.yaml
+external_template:
+  enabled: true
+  template_url: "https://sharepoint.company.com/sites/IT/CRQ_Template.docx"
+  template_type: "word"
+```
+
+### **🔧 Variable Placeholders**
+
+The tool automatically converts these placeholders:
+
+| Placeholder | Converts To | Description |
+|-------------|-------------|-------------|
+| `{service_name}` | `{{ service_name }}` | Service being deployed |
+| `{new_version}` | `{{ new_version }}` | Target version |
+| `{prod_version}` | `{{ prod_version }}` | Current production version |
+| `{platform}` | `{{ platform }}` | Deployment platform |
+| `{regions}` | `{{ regions \| join(", ") }}` | Deployment regions |
+| `{day_number}` | `{{ day_number }}` | Day 1 or Day 2 |
+| `{rc_name}` | `{{ rc_name }}` | Release coordinator name |
+| `{rc_manager}` | `{{ rc_manager }}` | Release manager name |
+| `{confluence_link}` | `{{ confluence_link }}` | Generated Confluence URL |
+| `{p0_dashboard_url}` | `{{ p0_dashboard_url }}` | P0 dashboard URL |
+| `{l1_dashboard_url}` | `{{ l1_dashboard_url }}` | L1 dashboard URL |
+| `{services_dashboard_url}` | `{{ services_dashboard_url }}` | Services dashboard URL |
+
+### **📊 Dashboard URL Configuration**
+
+Configure your monitoring dashboard URLs directly:
+
+```yaml
+# config/settings.yaml
+dashboard:
+  confluence_dashboard_url: "https://confluence.yourcompany.com/display/YOUR_SERVICE/Dashboards"
+  p0_dashboard_url: "https://grafana.yourcompany.com/d/your-service-p0-dashboard"
+  l1_dashboard_url: "https://grafana.yourcompany.com/d/your-service-l1-dashboard"
+  services_dashboard_url: "https://grafana.yourcompany.com/d/your-service-overview"
+```
+
+### **✅ Template Testing**
+
+Test your custom template:
+
+```bash
+# Test external template download
+python tests/test_external_template.py
+
+# Test with your template
+python main.py --test-mode --config-path config/settings.yaml
+
+# Validate template conversion
+python -c "
+from crq.external_template import ExternalTemplateManager
+from config.config import load_config
+manager = ExternalTemplateManager(load_config())
+result = manager.get_external_template()
+print('✅ Template loaded successfully' if result else '❌ Template failed')
+"
+```
+
+--- 
