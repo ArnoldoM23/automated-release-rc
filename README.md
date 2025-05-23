@@ -100,6 +100,79 @@ SLACK_BOT_TOKEN=xoxb-your_slack_token_here
 SLACK_SIGNING_SECRET=your_slack_signing_secret
 ```
 
+### **🐙 Step 3.1: GitHub Authentication Setup**
+
+The system requires a GitHub Personal Access Token to fetch PR data between releases.
+
+#### **Creating a GitHub Token:**
+
+1. **Go to GitHub Settings:**
+   - Visit https://github.com/settings/tokens
+   - Click "Generate new token (classic)"
+
+2. **Configure Token:**
+   - **Note:** `RC Release Automation` (or similar)
+   - **Expiration:** Set based on your security policy
+   - **Scopes:** Select appropriate permissions:
+     - For **public repositories:** `public_repo`
+     - For **private repositories:** `repo` (full repo access)
+
+3. **Copy and Store Token:**
+   ```bash
+   # Set as environment variable
+   export GITHUB_TOKEN="ghp_your-actual-token-here"
+   
+   # Or add to .env file
+   echo "GITHUB_TOKEN=ghp_your-actual-token-here" >> .env
+   ```
+
+#### **Testing GitHub Integration:**
+
+```bash
+# Test GitHub authentication and PR fetching
+python test_github_integration.py --test-all
+
+# Test with your repository
+python test_github_integration.py \
+  --repo your-org/your-repo \
+  --old-tag v1.0.0 \
+  --new-tag v1.1.0
+
+# List available tags in your repository
+python test_github_integration.py \
+  --list-tags \
+  --repo your-org/your-repo
+```
+
+#### **GitHub Enterprise Support:**
+
+If using GitHub Enterprise, update your configuration:
+
+```yaml
+# config/settings.yaml
+github:
+  token: "${GITHUB_TOKEN}"
+  repo: "your-org/your-repo"
+  api_url: "https://your-enterprise.github.com/api/v3"  # Enterprise API URL
+```
+
+#### **Troubleshooting GitHub Issues:**
+
+**❌ Authentication failed:**
+- Verify token format starts with `ghp_` or `github_pat_`
+- Check token hasn't expired
+- Ensure token has correct repository permissions
+
+**❌ Repository access denied:**
+- Verify repository name format: `owner/repo`
+- Check if repository is private and token has `repo` scope
+- Confirm you have access to the repository
+
+**❌ No PRs found:**
+- Ensure tags exist: `git tag -l`
+- Check commit messages contain PR references (`#123`, `PR #123`)
+- Verify PRs were actually merged (not just closed)
+
 ### **✅ Step 4: Test Your Setup**
 
 ```bash

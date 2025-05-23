@@ -29,12 +29,12 @@ class GitHubClient:
         if config.api_url != "https://api.github.com":
             # GitHub Enterprise
             self.github = Github(
-                auth=config.token,
+                login_or_token=config.token,
                 base_url=config.api_url
             )
         else:
             # GitHub.com
-            self.github = Github(auth=config.token)
+            self.github = Github(login_or_token=config.token)
         
         self.repo = self.github.get_repo(config.repo)
         self.logger.info(f"Initialized GitHub client for {config.repo}")
