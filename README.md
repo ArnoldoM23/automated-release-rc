@@ -215,6 +215,35 @@ When you run the automation, you get these professional documents:
 | `crq_day2.txt` | 4,600+ bytes | **Day 2 deployment** CRQ with rollback plans | Plain text |
 | `release_notes.md` | 2,500+ bytes | **GitHub markdown** version for repositories | Markdown |
 
+#### **🔗 Wiki Markup Release Notes**
+
+Our **Confluence-ready release notes** (`release_notes.txt`) are generated with professional wiki markup that you can **copy and paste directly** into your organization's wiki or documentation platform:
+
+✅ **Ready-to-use formatting:**
+- Structured headings with proper wiki syntax
+- Bulleted PR lists with GitHub links  
+- Categorized changes (Features, Bug Fixes, Schema Changes)
+- Professional styling with emphasis and tables
+- Sign-off sections for release approvals
+
+✅ **Copy-paste workflow:**
+```bash
+# Generate release notes
+python main.py --service-name your-service --prod-version v1.0.0 --new-version v1.1.0
+
+# Copy the generated content
+cat output/release_notes.txt | pbcopy  # macOS
+cat output/release_notes.txt | xclip   # Linux
+
+# Paste directly into Confluence, Notion, or your wiki platform
+```
+
+✅ **Enterprise-grade content:**
+- **15+ sections** including summary, impact analysis, rollback procedures
+- **AI-enhanced descriptions** with intelligent risk assessment
+- **Professional formatting** matching corporate documentation standards
+- **Complete traceability** with PR links and contributor attribution
+
 ---
 
 ## 🔧 **Local Development Setup**
