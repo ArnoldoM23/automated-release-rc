@@ -19,8 +19,8 @@ cd automated-release-rc
 pip install -r requirements.txt
 
 # Set environment variables
-export SLACK_BOT_TOKEN="xoxb-your-bot-token"
-export SLACK_APP_TOKEN="xapp-your-app-token"
+export SLACK_BOT_TOKEN="your-bot-token-here"
+export SLACK_APP_TOKEN="your-app-token-here"
 
 # Run the bot
 python -m slack_bot.app
@@ -30,8 +30,8 @@ python -m slack_bot.app
 
 ```bash
 # Create .env file with your Slack credentials
-echo "SLACK_BOT_TOKEN=xoxb-your-token" > .env
-echo "SLACK_APP_TOKEN=xapp-your-token" >> .env
+echo "SLACK_BOT_TOKEN=your-bot-token-here" > .env
+echo "SLACK_APP_TOKEN=your-app-token-here" >> .env
 
 # Run with Docker Compose
 docker-compose up -d
@@ -95,8 +95,8 @@ In **Event Subscriptions**:
 
 | Variable | Required | Description | Example |
 |----------|----------|-------------|---------|
-| `SLACK_BOT_TOKEN` | ✅ | Bot User OAuth Token | `xoxb-123-456-abc` |
-| `SLACK_APP_TOKEN` | ✅ | App-Level Token | `xapp-1-A123-456-def` |
+| `SLACK_BOT_TOKEN` | ✅ | Bot User OAuth Token | `your-bot-token-here` |
+| `SLACK_APP_TOKEN` | ✅ | App-Level Token | `your-app-token-here` |
 | `SLACK_SIGNING_SECRET` | ❌ | For webhook verification | `abc123def456` |
 | `REMINDER_INTERVAL_HOURS` | ❌ | Reminder frequency | `2` (default) |
 | `RELEASE_CHANNEL` | ❌ | Default channel | `#release-rc` |
@@ -108,8 +108,8 @@ In **Event Subscriptions**:
 
 ```bash
 # Required Slack credentials
-SLACK_BOT_TOKEN=xoxb-1234567890-1234567890123-abcdefghijklmnopqrstuvwx
-SLACK_APP_TOKEN=xapp-1-A1234567890-1234567890123-abcdefghijklmnopqrstuvwxyz123456
+SLACK_BOT_TOKEN=your-bot-token-here
+SLACK_APP_TOKEN=your-app-token-here
 
 # Optional configuration
 REMINDER_INTERVAL_HOURS=2
@@ -244,8 +244,8 @@ Their changes will be removed from the release branch.
 heroku create release-rc-bot
 
 # Set environment variables
-heroku config:set SLACK_BOT_TOKEN=xoxb-your-token
-heroku config:set SLACK_APP_TOKEN=xapp-your-token
+heroku config:set SLACK_BOT_TOKEN=your-bot-token-here
+heroku config:set SLACK_APP_TOKEN=your-app-token-here
 
 # Deploy
 git push heroku main
@@ -278,8 +278,8 @@ docker pull your-org/release-rc-bot:latest
 docker run -d \
   --name release-rc-bot \
   -p 5000:5000 \
-  -e SLACK_BOT_TOKEN=xoxb-your-token \
-  -e SLACK_APP_TOKEN=xapp-your-token \
+  -e SLACK_BOT_TOKEN=your-bot-token-here \
+  -e SLACK_APP_TOKEN=your-app-token-here \
   your-org/release-rc-bot:latest
 ```
 
