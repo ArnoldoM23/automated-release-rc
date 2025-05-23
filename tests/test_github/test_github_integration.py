@@ -1,26 +1,30 @@
 #!/usr/bin/env python3
 """
-GitHub Integration Testing Script
+GitHub Integration Tests
 
-Test the GitHub PR fetching functionality with a real repository.
-This validates that the GitHub logic works correctly for fetching PRs between tags.
+Comprehensive testing of GitHub API integration including:
+- Repository access validation
+- Tag/branch validation  
+- PR fetching and parsing
+- Error handling and fallbacks
 
 Usage:
-    export GITHUB_TOKEN="ghp_your-token"
+    python test_github_integration.py --help
+    python test_github_integration.py --test-all
     python test_github_integration.py --repo owner/repo --old-tag v1.0.0 --new-tag v1.1.0
-    python test_github_integration.py --test-all  # Interactive setup
 """
+
+import sys
+from pathlib import Path
+
+# Add project root to Python path  
+project_root = Path(__file__).parent.parent.parent
+sys.path.insert(0, str(project_root))
 
 import argparse
 import os
-import sys
-from pathlib import Path
-from typing import List, Optional, Dict, Any
+from typing import List, Dict, Any, Optional
 import json
-
-# Add project root to Python path
-project_root = Path(__file__).parent
-sys.path.insert(0, str(project_root))
 
 from utils.logging import get_logger
 from config.config import GitHubConfig

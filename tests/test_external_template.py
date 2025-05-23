@@ -5,7 +5,14 @@ Test script for external template and dashboard configuration features.
 
 import sys
 from pathlib import Path
-sys.path.insert(0, str(Path(__file__).parent))
+
+# Add project root to Python path
+project_root = Path(__file__).parent.parent
+sys.path.insert(0, str(project_root))
+
+import os
+import tempfile
+from typing import Dict, Any
 
 from config.config import load_config
 from crq.external_template import ExternalTemplateManager

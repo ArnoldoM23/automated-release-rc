@@ -15,16 +15,18 @@ Usage:
     python test_cli.py --test-docs --service-name example-service --rc-name "John Doe"
 """
 
+import sys
+from pathlib import Path
+
+# Add project root to Python path
+project_root = Path(__file__).parent.parent
+sys.path.insert(0, str(project_root))
+
 import argparse
 import json
 import os
-import sys
-from pathlib import Path
 from typing import Dict, Any
-
-# Add project root to Python path
-project_root = Path(__file__).parent
-sys.path.insert(0, str(project_root))
+from types import SimpleNamespace
 
 from utils.logging import get_logger
 from config.config import load_config
@@ -160,7 +162,6 @@ def test_github_integration(params: Dict[str, Any]):
         if not github_token or github_token.startswith("dummy-") or len(github_token) < 20:
             logger.warning("⚠️ GITHUB_TOKEN not set or invalid - using mock data")
             # Create mock PRs for testing
-            from types import SimpleNamespace
             mock_pr = SimpleNamespace()
             mock_pr.number = 123
             mock_pr.title = "Test PR for MVP validation"
@@ -181,7 +182,6 @@ def test_github_integration(params: Dict[str, Any]):
             except Exception as github_error:
                 logger.warning(f"⚠️ GitHub API failed ({github_error}), falling back to mock data")
                 # Fallback to mock data
-                from types import SimpleNamespace
                 mock_pr = SimpleNamespace()
                 mock_pr.number = 124
                 mock_pr.title = "Fallback test PR"
@@ -311,8 +311,6 @@ def test_ai_integration():
 
 def create_comprehensive_mock_prs():
     """Create comprehensive mock PR data for testing release notes with multiple categories."""
-    from types import SimpleNamespace
-    
     prs = []
     
     # Create 5 Schema PRs

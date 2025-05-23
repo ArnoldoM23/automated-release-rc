@@ -22,7 +22,7 @@ from typing import Dict, Any
 import time
 
 # Add project root to Python path
-project_root = Path(__file__).parent
+project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
 
 from utils.logging import get_logger
@@ -125,7 +125,8 @@ def test_modal_structure():
     
     try:
         # Import the bot app to access modal definition
-        sys.path.append(str(Path(__file__).parent / "slack_bot"))
+        slack_bot_path = project_root / "slack_bot"
+        sys.path.append(str(slack_bot_path))
         from app import ReleaseRCBot
         
         # Create a mock modal view (this is what we'd send to Slack)

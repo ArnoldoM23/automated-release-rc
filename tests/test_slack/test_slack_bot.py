@@ -20,7 +20,7 @@ from pathlib import Path
 from typing import Dict, Any
 
 # Add project root to Python path
-project_root = Path(__file__).parent
+project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
 
 from utils.logging import get_logger
