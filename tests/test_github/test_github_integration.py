@@ -182,7 +182,7 @@ def test_pr_categorization(prs: List):
     logger.info("🏷️ Testing PR categorization...")
     
     try:
-        from notes.release_notes import categorize_prs
+        from src.release_notes.release_notes import categorize_prs
         
         categories = categorize_prs(prs)
         
