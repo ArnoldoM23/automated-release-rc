@@ -14,8 +14,8 @@ try:
 except ImportError:
     ANTHROPIC_AVAILABLE = False
 
-from config.config import AIConfig, OpenAIConfig, AzureOpenAIConfig, AnthropicConfig
-from utils.logging import get_logger, log_api_call
+from src.config.config import AIConfig, OpenAIConfig, AzureOpenAIConfig, AnthropicConfig
+from src.utils.logging import get_logger, log_api_call
 
 
 class AIProvider(ABC):

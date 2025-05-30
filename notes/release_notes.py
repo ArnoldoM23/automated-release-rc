@@ -11,7 +11,7 @@ from typing import List, Dict, Any
 from datetime import datetime
 from jinja2 import Environment, FileSystemLoader, Template
 
-from utils.logging import get_logger
+from src.utils.logging import get_logger
 
 
 def categorize_prs(prs: List) -> Dict[str, List]:
@@ -220,7 +220,7 @@ def render_release_notes(prs: List, params: Dict[str, Any], output_dir: Path, co
     try:
         # Load configuration if not provided
         if config is None:
-            from config.config import load_config
+            from src.config.config import load_config
             config = load_config()
         
         # Setup output directory
@@ -384,7 +384,7 @@ def render_release_notes_markdown(prs: List, params: Dict[str, Any], output_dir:
     try:
         # Load configuration if not provided
         if config is None:
-            from config.config import load_config
+            from src.config.config import load_config
             config = load_config()
         
         categories = categorize_prs(prs)

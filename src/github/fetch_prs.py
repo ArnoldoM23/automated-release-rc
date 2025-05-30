@@ -13,8 +13,8 @@ import requests
 from github import Github, GithubException
 from github.PullRequest import PullRequest
 
-from config.config import GitHubConfig
-from utils.logging import get_logger, log_api_call, log_workflow_step
+from src.config.config import GitHubConfig
+from src.utils.logging import get_logger, log_api_call, log_workflow_step
 
 
 class GitHubClient:

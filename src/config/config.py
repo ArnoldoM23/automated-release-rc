@@ -407,9 +407,9 @@ def load_config(config_path: Optional[Union[str, Path]] = None) -> Settings:
     if config_path is None:
         # Look for configuration files in order of preference
         possible_paths = [
-            Path("config/settings.local.yaml"),
-            Path("config/settings.yaml"),
-            Path("config/settings.example.yaml")
+            Path("src/config/settings.local.yaml"),
+            Path("src/config/settings.yaml"),
+            Path("src/config/settings.example.yaml")
         ]
         
         config_path = None
@@ -420,8 +420,8 @@ def load_config(config_path: Optional[Union[str, Path]] = None) -> Settings:
         
         if config_path is None:
             raise FileNotFoundError(
-                "No configuration file found. Please create config/settings.yaml "
-                "or copy config/settings.example.yaml to config/settings.yaml"
+                "No configuration file found. Please create src/config/settings.yaml "
+                "or copy src/config/settings.example.yaml to src/config/settings.yaml"
             )
     
     config_path = Path(config_path)

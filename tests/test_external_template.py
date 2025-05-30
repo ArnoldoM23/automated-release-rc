@@ -14,8 +14,8 @@ import os
 import tempfile
 from typing import Dict, Any
 
-from config.config import load_config
-from crq.external_template import ExternalTemplateManager
+from src.config.config import load_config
+from src.crq.external_template import ExternalTemplateManager
 
 def test_dashboard_configuration():
     """Test dashboard URL configuration."""

@@ -28,11 +28,11 @@ import os
 from typing import Dict, Any
 from types import SimpleNamespace
 
-from utils.logging import get_logger
-from config.config import load_config
-from github_integration.fetch_prs import fetch_prs
+from src.utils.logging import get_logger
+from src.config.config import load_config
+from src.github.fetch_prs import fetch_prs
 from notes.release_notes import render_release_notes, render_release_notes_markdown
-from crq.generate_crqs import generate_crqs
+from src.crq.generate_crqs import generate_crqs
 
 
 def validate_confluence_format(content: str) -> bool:
@@ -114,7 +114,7 @@ def create_sample_params(args) -> Dict[str, Any]:
         "day2_date": args.day2_date or "2024-01-16",
         "channel": "#release-rc",
         "output_dir": args.output_dir or "test_outputs",
-        "config_path": getattr(args, 'config_path', "config/settings.yaml")
+        "config_path": getattr(args, 'config_path', "src/config/settings.test.yaml")
     }
 
 
@@ -124,7 +124,8 @@ def test_configuration():
     logger.info("🔧 Testing configuration loading...")
     
     try:
-        config = load_config()
+        # Use test config to avoid validation errors
+        config = load_config("src/config/settings.test.yaml")
         logger.info("✅ Configuration loaded successfully")
         
         # Test required sections
@@ -289,7 +290,7 @@ def test_ai_integration():
             logger.warning("⚠️ OPENAI_API_KEY not set - AI features will use fallback")
             return True
             
-        from utils.ai_client import AIClient
+        from src.utils.ai_client import AIClient
         config = load_config()
         ai_client = AIClient(config.ai)
         

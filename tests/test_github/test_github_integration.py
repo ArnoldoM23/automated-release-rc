@@ -26,9 +26,9 @@ import os
 from typing import List, Dict, Any, Optional
 import json
 
-from utils.logging import get_logger
-from config.config import GitHubConfig
-from github_integration.fetch_prs import GitHubClient, fetch_prs
+from src.utils.logging import get_logger
+from src.config.config import GitHubConfig
+from src.github.fetch_prs import GitHubClient, fetch_prs
 
 
 def check_github_environment():

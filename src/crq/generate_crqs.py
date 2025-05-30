@@ -12,9 +12,9 @@ from typing import List, Dict, Any
 from datetime import datetime
 from jinja2 import Template
 
-from utils.logging import get_logger
-from utils.ai_client import AIClient
-from config.config import load_config
+from src.utils.logging import get_logger
+from src.utils.ai_client import AIClient
+from src.config.config import load_config
 
 
 def analyze_prs_with_ai(prs: List, params: Dict[str, Any], config=None) -> Dict[str, str]:

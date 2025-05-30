@@ -26,7 +26,7 @@ import os
 project_root = Path(__file__).parent
 sys.path.insert(0, str(project_root))
 
-from utils.logging import get_logger
+from src.utils.logging import get_logger
 
 
 def run_command(command: List[str], description: str) -> bool:
