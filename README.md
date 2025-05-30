@@ -6,9 +6,13 @@ Transform release coordination from manual 30-minute processes to automated 5-mi
 
 ## 🚀 Quick Start
 
-### 1. Install Dependencies
+### 1. Clone and Install
 ```bash
-pip install -r requirements.txt
+git clone https://github.com/ArnoldoM23/automated-release-rc.git
+cd automated-release-rc
+
+# Install package and dependencies (this installs everything you need)
+pip install -e .
 ```
 
 ### 2. Set Environment Variables
@@ -19,11 +23,10 @@ export SLACK_BOT_TOKEN="your_slack_token_here"  # Optional for GitHub-only testi
 
 ### 3. Run Interactive CLI
 ```bash
-# Option 1: Install package and use entry point (recommended)
-pip install -e .
+# Use the installed entry point (recommended)
 rc-release-agent
 
-# Option 2: Direct module execution
+# Alternative: Direct module execution
 python -m src.cli.run_release_agent
 ```
 
@@ -79,11 +82,10 @@ automated-release-rc/
 
 ### Interactive CLI (Recommended)
 ```bash
-# Option 1: Install package and use entry point (recommended)
-pip install -e .
+# Use the installed entry point (recommended)
 rc-release-agent
 
-# Option 2: Direct module execution
+# Alternative: Direct module execution
 python -m src.cli.run_release_agent
 ```
 
@@ -117,10 +119,7 @@ python -m src.cli.run_release_agent
 
 ### Slack Automation
 ```bash
-# Install package for entry points
-pip install -e .
-
-# Start automated sign-off collection
+# Start automated sign-off collection (using entry point)
 rc-slack-bot --config output/slack_config.json
 
 # Alternative: Direct module execution

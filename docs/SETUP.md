@@ -112,8 +112,9 @@ dashboard:
 # Test with mock data (no tokens required)
 python demo_cli_workflow.py
 
-# Alternative: Direct module execution
-python -m src.cli.run_release_agent --test-mode \
+# Alternative: Install package and use entry point
+pip install -e .
+rc-release-agent --test-mode \
   --service-name demo-service \
   --prod-version v1.0.0 \
   --new-version v1.1.0 \

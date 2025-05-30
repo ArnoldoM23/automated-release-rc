@@ -33,7 +33,6 @@ def test_package_structure():
         'src/utils/__init__.py',
         'src/config/__init__.py',
         'src/templates/',
-        'main.py',
         'pyproject.toml',
         'README.md'
     ]
