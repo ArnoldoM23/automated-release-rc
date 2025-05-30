@@ -20,7 +20,7 @@ Before starting, ensure you have:
 
 ## ⚡ Step-by-Step Setup
 
-### **Step 1: Repository Setup (5 minutes)**
+### **Step 1: Clone and Install (3 minutes)**
 
 ```bash
 # Clone the repository
