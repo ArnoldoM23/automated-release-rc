@@ -497,7 +497,7 @@ Test your custom template:
 python tests/test_external_template.py
 
 # Test with your template
-python main.py --test-mode --config-path config/settings.yaml
+rc-release-agent --test-mode --config-path config/settings.yaml
 
 # Validate template conversion
 python -c "

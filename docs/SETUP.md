@@ -317,7 +317,7 @@ Test your template before using in production:
 python test_external_template.py
 
 # Test template with mock data
-python main.py --test-mode --config-path config/settings.yaml
+rc-release-agent --test-mode --config-path config/settings.yaml
 
 # Validate specific template features
 python -c "
@@ -362,7 +362,7 @@ print('✅ Template system working' if manager else '❌ Template failed')
              python-version: '3.10'
          - run: pip install -r requirements.txt
          - run: |
-             python main.py \
+             rc-release-agent \
                --service-name "${{ github.event.client_payload.service_name }}" \
                --prod-version "${{ github.event.client_payload.prod_version }}" \
                --new-version "${{ github.event.client_payload.new_version }}" \
@@ -411,7 +411,7 @@ python test_external_template.py      # Dashboard URLs + external templates
 The system includes 15 mock PRs for comprehensive testing:
 
 ```bash
-python main.py --test-mode \
+rc-release-agent --test-mode \
   --service-name test-service \
   --prod-version v1.0.0 \
   --new-version v1.1.0
@@ -512,7 +512,7 @@ app:
   log_level: "DEBUG"
 
 # Run with debug output
-python main.py --test-mode --service-name debug-test
+rc-release-agent --test-mode --service-name debug-test
 ```
 
 ### **Performance Optimization**
@@ -524,7 +524,7 @@ For faster execution:
 export OPENAI_API_KEY=""  # Disable AI for faster testing
 
 # Use smaller PR sets for testing
-python main.py --max-prs 5 --service-name test
+rc-release-agent --max-prs 5 --service-name test
 
 # Disable external template downloads during development
 # Set external_template.enabled: false in config
@@ -558,7 +558,7 @@ config/settings.staging.yaml  # Staging
 config/settings.local.yaml    # Local development
 
 # Load specific config
-python main.py --config-path config/settings.staging.yaml
+rc-release-agent --config-path config/settings.staging.yaml
 ```
 
 ---
@@ -597,7 +597,7 @@ cp config/settings.example.yaml config/settings.prod.yaml
 # Edit with production values
 
 # Production run
-python main.py \
+rc-release-agent \
   --config-path config/settings.prod.yaml \
   --service-name your-service \
   --prod-version v2.1.0 \
@@ -605,7 +605,7 @@ python main.py \
 
 # Set up cron job for scheduled releases
 crontab -e
-# Add: 0 9 * * 1 cd /path/to/project && python main.py --scheduled-release
+# Add: 0 9 * * 1 cd /path/to/project && rc-release-agent --scheduled-release
 ```
 
 ---
