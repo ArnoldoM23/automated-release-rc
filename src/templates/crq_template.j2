@@ -1,0 +1,84 @@
+Summary: {{ service_name }} Application Code deployment for {{ platform }} ({{ regions | join(' and ') }}) - Day {{ day_number }}
+
+===== Description Section ======
+
+Application Name: {{ service_name }}
+Namespace: {{ namespace }}
+Region of deployment: {{ regions | join(', ') }}
+
+1. What is the criticality of change or why is this change required?
+{{ ai_analysis.get('BUSINESS_IMPACT', 'Scheduled release containing bug fixes, feature enhancements, and system improvements to maintain service quality and add new functionality for end users.') }}
+
+2. How have we validated this change in the lower environment?
+{{ ai_analysis.get('VALIDATION_STEPS', 'All automated test suites passing in staging environment. Integration tests completed successfully. Performance testing completed with acceptable results. Security scans completed with no critical vulnerabilities. Code review and approval processes completed. Manual QA validation performed.') }}
+
+3. What is the blast radius of this change?
+{{ ai_analysis.get('RISK_ASSESSMENT', 'Medium blast radius - Changes affect ' + service_name + ' service across ' + (regions | join(' and ')) + ' regions. Service dependencies have been validated and rollback procedures are established.') }}
+
+4. Describe how testing has reduced risk for the deployment?
+Comprehensive testing in staging environment including functional testing, performance validation, integration testing, and security scanning. All {{ total_prs }} pull requests have been individually tested and code reviewed. Deployment artifacts validated in pre-deployment preparation.
+
+5. What happens if we encounter an issue during release?
+{{ ai_analysis.get('ROLLBACK_SCENARIOS', 'Immediate rollback procedures activated if: application fails to start, critical functionality broken, error rates >5%, or performance degradation >20%. Rollback typically takes 15-30 minutes with established procedures.') }}
+
+6. What controls do we have to minimize the impact to our customers?
+Progressive deployment with monitoring at each stage. Real-time monitoring and alerting systems. Established rollback procedures with automated tools. Communication channels for immediate issue reporting. Load balancer routing to maintain service availability during deployment.
+
+7. What monitoring is in place to determine the errors?
+Application performance monitoring via DataDog/Grafana. Error rate monitoring and alerting. Infrastructure monitoring (CPU, Memory, Network). Service mesh monitoring (Istio). Database performance monitoring. User experience monitoring.
+
+===== Implementation Plan Section ======
+
+Application Name: {{ service_name }}
+Namespace: {{ namespace }}
+Assembly: {{ assembly }}
+Service name: {{ service_name }}
+Platform: {{ platform }}
+Artifact Version: {{ prod_version }}
+Forward Artifact Version (new version): {{ new_version }}
+Rollback Artifact Version (previous stable version): {{ prod_version }}
+Confluence link: {{ confluence_link }}
+
+Implementation Plan:
+{% if day_number == "1" %}
+Day 1 preparation activities include environment validation, artifact preparation, infrastructure readiness checks, and team coordination. Validate staging environment matches production configuration. Build and validate deployment artifacts for version {{ new_version }}. Verify target environment capacity and readiness. Confirm database migration compatibility if applicable. Test rollback procedures in staging environment. Complete final deployment readiness review with release team and confirm Day 2 deployment team availability.
+{% else %}
+Day 2 production deployment activities include pre-deployment validation, actual deployment execution, post-deployment verification, and monitoring stabilization. Verify Day 1 preparation completion and team readiness. Deploy {{ service_name }} version {{ new_version }} to {{ regions | join(' and ') }} regions. Execute database migrations if applicable and verify service startup. Execute smoke tests for critical functionality and monitor error rates. Extended monitoring period with active observation and final deployment success confirmation.
+{% endif %}
+
+===== Validation Plan Section ======
+
+Application Name: {{ service_name }}
+Namespace: {{ namespace }}
+
+Dashboard links:
+Dashboard link: {{ dashboard_url }}
+P0 Dashboard – Grafana Link: {{ p0_dashboard_url }}
+L1 Dashboard – Grafana Link: {{ l1_dashboard_url }}
+Services dashboard – Grafana Link: {{ services_dashboard_url }}
+WCNP - CPU - Memory – Link: {{ wcnp_dashboard_url }}
+Istio/ SM: Link: {{ istio_dashboard_url }}
+
+===== Backout Plan Section ======
+
+Application Name: {{ service_name }}
+Namespace: {{ namespace }}
+Assembly: {{ assembly }}
+Service name: {{ service_name }}
+Platform: {{ platform }}
+Artifact Version (Previous Version for rollback): {{ prod_version }}
+Confluence link: {{ confluence_link }}
+
+What are the rollback criteria?
+{% if day_number == "1" %}
+Deployment artifacts fail validation checks. Staging environment tests reveal critical issues. Infrastructure readiness validation fails. Critical team members become unavailable. Any blocking issue that prevents Day 2 execution.
+{% else %}
+Application startup failure or crash loops. Critical functionality unavailable or broken. Error rate exceeds 5% for more than 10 minutes. Performance degradation >50% from baseline. Database connectivity or data integrity issues. P1/P0 incident triggered by deployment. Customer-facing functionality severely impacted.
+{% endif %}
+
+What are the rollback steps and how long does rollback take?
+{% if day_number == "1" %}
+Day 1 rollback takes 15-30 minutes. Halt all preparation activities immediately. Notify release team via #release-rc Slack channel. Document the blocking issue and decision rationale. Clean up any partial preparation work and reset staging environment to stable state. Cancel Day 2 deployment scheduling. Notify all stakeholders of postponement and schedule post-mortem if required. Determine new deployment window and update project timelines.
+{% else %}
+Day 2 rollback takes 15-30 minutes. Stop any ongoing deployment activities immediately. Notify via #release-rc channel and activate incident response. Deploy previous stable version {{ prod_version }}. Restore database to pre-deployment state if needed. Update load balancer routing to stable version and verify rollback deployment success. Confirm service stability and validate all monitoring dashboards show normal state. Notify stakeholders of successful rollback and begin incident post-mortem process.
+{% endif %} 

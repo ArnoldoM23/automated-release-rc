@@ -1,0 +1,198 @@
+# =============================================================================
+# Automated RC Release Workflow - Configuration Template
+# =============================================================================
+# Copy this file to settings.yaml and customize for your organization
+
+# Slack Configuration
+slack:
+  bot_token: "${SLACK_BOT_TOKEN}"
+  signing_secret: "${SLACK_SIGNING_SECRET}"
+  app_token: "${SLACK_APP_TOKEN}"  # For Socket Mode
+  default_channels:
+    - "#releases"
+    - "#release-notifications"
+  
+# GitHub Configuration  
+github:
+  token: "${GITHUB_TOKEN}"
+  repo: "your-org/your-repo"
+  api_url: "https://api.github.com"  # For GitHub Enterprise: https://your-enterprise.github.com/api/v3
+  
+# AI Configuration (multiple providers supported)
+ai:
+  provider: "openai"  # openai, azure, anthropic
+  openai:
+    api_key: "${OPENAI_API_KEY}"
+    model: "gpt-4-1106-preview"
+    max_tokens: 1000
+  azure:
+    endpoint: "${AZURE_OPENAI_ENDPOINT}"
+    api_key: "${AZURE_OPENAI_API_KEY}"
+    api_version: "2023-12-01-preview"
+    deployment: "${AZURE_OPENAI_DEPLOYMENT}"
+  anthropic:
+    api_key: "${ANTHROPIC_API_KEY}"
+    model: "claude-3-sonnet-20240229"
+
+# Organization-specific Settings
+organization:
+  name: "Your Company"
+  default_service: "your-service"
+  timezone: "PST"
+  regions:
+    - "EUS"  # East US
+    - "SCUS" # South Central US
+    - "WUS"  # West US
+  platform: "Glass"  # or "Store"
+
+# Application Settings
+app:
+  environment: "production"
+  log_level: "INFO"
+  deployment_mode: "socket"  # socket, http
+  port: 3000
+  output_dir: "output"
+
+# Modal Field Configuration
+modal:
+  fields:
+    production_version:
+      required: true
+      validation: "^v?\\d+\\.\\d+\\.\\d+$"  # Semantic versioning
+      placeholder: "e.g., v1.2.3"
+    new_version:
+      required: true
+      validation: "^v?\\d+\\.\\d+\\.\\d+$"
+      placeholder: "e.g., v1.3.0"
+    service_name:
+      required: true
+      validation: "^[a-z][a-z0-9-]*[a-z0-9]$"  # kebab-case
+      placeholder: "e.g., cer-cart"
+    release_type:
+      required: true
+      options:
+        - "standard"
+        - "hotfix" 
+        - "ebf"  # Emergency Bug Fix
+      default: "standard"
+    rc_name:
+      required: true
+      placeholder: "Who's running the release"
+    rc_manager:
+      required: true
+      placeholder: "Who to escalate to"
+    day1_date:
+      required: true
+      type: "date"
+      description: "CRQ Day 1 (prep/setup)"
+    day2_date:
+      required: true
+      type: "date"
+      description: "CRQ Day 2 (actual release)"
+
+# CRQ Template Configuration
+crq:
+  template_fields:
+    # These map to your CRQ template structure
+    summary_format: "{service_name} Application Code deployment for {platform} ({regions}) - {day_type}"
+    
+    # Standard questions for Description section
+    description_questions:
+      - "What is the criticality of change or why is this change required?"
+      - "How have we validated this change in the lower environment?"
+      - "What is the blast radius of this change?"
+      - "Describe how testing has reduced risk for the deployment?"
+      - "What happens if we encounter an issue during release?"
+      - "What controls do we have to minimize the impact to our customers?"
+      - "What monitoring is in place to determine the errors?"
+    
+    # Required fields for Implementation Plan
+    implementation_fields:
+      - "Application Name"
+      - "Namespace"
+      - "Assembly"
+      - "Service name"
+      - "Platform"
+      - "Artifact Version"
+      - "Forward Artifact Version"
+      - "Rollback Artifact Version"
+      - "Confluence link"
+    
+    # Dashboard links for Validation Plan
+    validation_dashboards:
+      - "P0 Dashboard – Grafana Link"
+      - "L1 Dashboard – Grafana Link"
+      - "Services dashboard – Grafana Link"
+      - "WCNP - CPU - Memory – Link"
+      - "Istio/ SM: Link"
+    
+    # Backout plan requirements
+    backout_fields:
+      - "Application Name"
+      - "Namespace"
+      - "Assembly"
+      - "Service name"
+      - "Platform"
+      - "Artifact Version (Previous Version for rollback)"
+      - "Confluence link"
+
+# Template Configuration
+templates:
+  base_path: "templates"
+  release_notes: "release_notes.j2"
+  crq_template: "crq_template.j2"
+  slack_message: "slack_message.j2"
+  
+  # Custom template overrides
+  custom_path: "${CUSTOM_TEMPLATE_DIR:}"
+  
+  # Output formats
+  formats:
+    confluence: true
+    markdown: false
+    html: false
+    plain_text: false
+
+# Security & Access Control
+security:
+  allowed_users: []  # Empty means all workspace members
+  allowed_channels: []  # Empty means all channels
+  require_manager_approval: false
+  
+# Monitoring & Alerting
+monitoring:
+  webhook_url: "${MONITORING_WEBHOOK_URL}"
+  sentry_dsn: "${SENTRY_DSN}"
+  enable_metrics: true
+
+# Integration Settings
+integrations:
+  jira:
+    enabled: false
+    url: "https://yourcompany.atlassian.net"
+    username: "${JIRA_USERNAME}"
+    api_token: "${JIRA_API_TOKEN}"
+  
+  servicenow:
+    enabled: false
+    instance: "yourcompany.service-now.com"
+    username: "${SERVICENOW_USERNAME}"
+    password: "${SERVICENOW_PASSWORD}"
+
+# Dashboard Configuration
+dashboard:
+  # Direct dashboard URLs - specify exactly what you want
+  confluence_dashboard_url: "https://confluence.yourcompany.com/display/YOUR_SERVICE/Dashboards"
+  p0_dashboard_url: "https://grafana.yourcompany.com/d/your-service-p0-dashboard"
+  l1_dashboard_url: "https://grafana.yourcompany.com/d/your-service-l1-dashboard"
+  services_dashboard_url: "https://grafana.yourcompany.com/d/your-service-overview"
+  wcnp_dashboard_url: "https://grafana.yourcompany.com/d/your-service-wcnp"
+  istio_dashboard_url: "https://grafana.yourcompany.com/d/your-service-istio"
+
+# External CRQ Template Configuration
+external_template:
+  enabled: false  # Set to true to enable external template downloading
+  template_url: "https://yourcompany.sharepoint.com/sites/IT/Shared%20Documents/CRQ_Template.docx"
+  template_type: "auto"  # auto, word, text, markdown
+  cache_duration: 3600  # Cache for 1 hour (in seconds)
+  fallback_to_builtin: true  # Fall back to built-in template if download fails 

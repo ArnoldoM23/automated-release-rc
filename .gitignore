@@ -186,6 +186,7 @@ quick_test/
 
 # Proprietary development methodology and architecture
 plan.md
+requirements.md
 strategy.md
 design_methodology.md
 architecture_decisions.md

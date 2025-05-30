@@ -1,0 +1,58 @@
+h1. {{ service_name }} (release date {{ release_date }})
+
+|| 1 || Artifact || {{ service_name }}-rc, #{{ service_name }}-releases ||
+|| 2 || Release Date/Time || {{ day1_date }} {{ day1_time|default('09:00') }} PST → {{ day2_date }} {{ day2_time|default('09:00') }} PST ||
+|| 3 || Deployment CRQ || {panel:title=Deployment CRQ|borderStyle=solid|borderColor=#ccc|titleBGColor=#E0F7EA|bgColor=#FFFFFF}
+|| Current prod version || Version to Deploy – to be updated || CRQ LINK ||
+| Branch: {{ base_branch|default('main') }}<br>Version: TG1: {{ prod_version }}<br><br>Commit: `{{ base_sha|default('TBD') }}`<br>Slack: [thread|{{ slack_thread_url|default('#release-rc') }}] | Branch: {{ head_branch|default('main') }}<br>Version: TG1: {{ new_version }}<br><br>Commit: `{{ head_sha|default('TBD') }}`<br>Slack: [thread|{{ slack_thread_url|default('#release-rc') }}] | Day 1: [{{ crq1_id|default('CRQ-DAY1') }}|{{ crq1_url|default('TBD') }}]<br>Day 2: [{{ crq2_id|default('CRQ-DAY2') }}|{{ crq2_url|default('TBD') }}]<br>links to CRQ. |
+{panel} ||
+|| 4 || Status || IN PROGRESS ||
+|| 5 || Release POC || {panel:title=POC Engineers|borderStyle=solid|borderColor=#ccc|titleBGColor=#E0F7EA|bgColor=#FFFFFF}
+|| POC Engineers ||  ||
+| IDC Release Captains | @{{ idc_captain|default(rc_name) }} |
+| Release engineers IDC | @{{ idc_engineer|default(rc_name) }} |
+| US Release Captain | @{{ us_captain|default(rc_manager) }} |
+| Release engineers US | @{{ us_engineer|default(rc_manager) }} |
+{panel} ||
+|| 6 || ✅ Checklist ||  
+* [ ] Dev Complete<br>* [ ] Stage Deployment<br>* [ ] Stage Validation<br>* [ ] Pre-prod Validation<br>* [ ] Schema Validation<br>* [ ] RC Sign-off<br>* [ ] Clean-up CCM from production ||
+|| 7 || Fed services updated – KITT pipeline || {{ service_name }} ||
+{{ section_8_markup }}
+{{ section_9_markup }}
+|| 10 || CCM Prod Updates || {panel:title=CCM Prod Updates|borderStyle=solid|borderColor=#ccc|titleBGColor=#E0F7EA|bgColor=#FFFFFF}
+|| CCM || Type || Value || Owner || Comments ||
+{% for ccm in ccm_updates|default([]) %}
+| {{ ccm.name }} | {{ ccm.type }} | {{ ccm.value }} | @{{ ccm.owner }} | {{ ccm.comments }} |
+{% else %}
+| N/A | N/A | No CCM updates required | @{{ rc_name }} | octo's to clean up |
+{% endfor %}
+{panel} ||
+|| 11 || URLs & Dashboards ||  
+1. [Grafana|{{ p0_dashboard_url|default('https://grafana.company.com/d/service-dashboard') }}]  
+2. [Service Dashboard|{{ dashboard_url|default('https://dashboard.company.com/' + service_name) }}]  
+3. [DataDog APM|{{ datadog_url|default('https://app.datadoghq.com/apm/services') }}]  
+4. [Alerts|{{ alerts_url|default('https://alerts.company.com/' + service_name) }}] ||
+|| 12 || Rollback Artifact Version || {panel:title=Rollback Artifact Version|borderStyle=solid|borderColor=#ccc|titleBGColor=#E0F7EA|bgColor=#FFFFFF}
+|| Field || Value ||
+| Branch | {{ rollback_branch|default(base_branch|default('main')) }} |
+| Version | {{ rollback_version|default(prod_version) }} |
+| Commit | `{{ rollback_sha|default(base_sha|default('TBD')) }}` |
+| Slack | [thread|{{ slack_thread_url|default('#release-rc') }}] |
+{panel} ||
+|| 13 || Git Code Diffs || [Compare {{ prod_version }}...{{ new_version }}|{{ diff_url|default('https://github.com/' + github_repo + '/compare/' + prod_version + '...' + new_version) }}] ||
+|| 14 || Schema & Automation ||  
+* [Combined Changes|{{ schema_report_url|default('TBD') }}]  
+* [Automation Run|{{ automation_run_url|default('TBD') }}]  
+* [Test Results|{{ test_results_url|default('TBD') }}] ||
+|| 15 || Deployment Notes || {panel:title=Deployment Notes|borderStyle=solid|borderColor=#ccc|titleBGColor=#E0F7EA|bgColor=#FFFFFF}
+|| Cluster || Notes ||
+| {{ cluster1|default('EUS') }} | {{ cluster1_notes|default('Standard deployment - no special notes') }} |
+| {{ cluster2|default('SCUS') }} | {{ cluster2_notes|default('Standard deployment - no special notes') }} |
+| {{ cluster3|default('WUS') }} | {{ cluster3_notes|default('Standard deployment - no special notes') }} |
+{panel} ||
+
+---
+
+*Generated automatically by RC Release Automation on {{ generation_timestamp }}*  
+*Total PRs included: {{ total_prs }}*  
+*Release Type: {{ release_type|title }}* 
