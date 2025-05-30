@@ -19,7 +19,12 @@ export SLACK_BOT_TOKEN="your_slack_token_here"  # Optional for GitHub-only testi
 
 ### 3. Run Interactive CLI
 ```bash
-python run_cli.py
+# Option 1: Install package and use entry point (recommended)
+pip install -e .
+rc-release-agent
+
+# Option 2: Direct module execution
+python -m src.cli.run_release_agent
 ```
 
 Follow the prompts to configure your release and trigger GitHub Actions automatically!
@@ -28,43 +33,58 @@ Follow the prompts to configure your release and trigger GitHub Actions automati
 
 ```
 automated-release-rc/
-├── 🎛️ cli/                        # Interactive CLI Package
-│   ├── run_release_agent.py       # Main orchestrator
-│   └── prompts.py                 # Interactive prompts
-│
-├── 🤖 slack_bot/                  # Slack Automation Package  
-│   └── notifier.py                # Automated messaging
+├── 🎛️ src/                        # Main source package
+│   ├── cli/                       # Interactive CLI components
+│   │   ├── run_release_agent.py   # Main CLI orchestrator
+│   │   └── rc_agent_build_release.py
+│   ├── config/                    # Configuration management
+│   │   ├── config.py              # Settings and validation
+│   │   └── settings.example.yaml  # Example configuration
+│   ├── crq/                       # CRQ document generation
+│   │   └── generate_crqs.py       # CRQ creation logic
+│   ├── github/                    # GitHub API integration
+│   │   └── fetch_prs.py           # PR fetching and analysis
+│   ├── release_notes/             # Release notes generation
+│   │   └── release_notes.py       # Notes creation logic
+│   ├── slack/                     # Slack integration
+│   │   ├── app.py                 # Slack bot application
+│   │   └── integration.py         # Slack API wrapper
+│   ├── templates/                 # Jinja2 templates
+│   │   ├── crq_template.j2        # CRQ document template
+│   │   └── release_notes.j2       # Release notes template
+│   └── utils/                     # Utilities and helpers
+│       ├── ai_client.py           # AI integration
+│       └── logging.py             # Logging configuration
 │
 ├── 📚 docs/                       # Documentation
 │   ├── CLI_AGENT_README.md        # Comprehensive user guide
 │   ├── IMPLEMENTATION_SUMMARY.md  # Technical implementation
+│   ├── SETUP.md                   # Complete setup guide
 │   └── plan.md                    # Project plan and status
 │
-├── 🔧 setup/                      # Setup & Validation Scripts
-│   ├── check_github_permissions.py
-│   └── check_minimal_permissions.py
+├── 🧪 tests/                      # Test suite
+│   ├── test_cli.py                # CLI testing
+│   └── test_github/               # GitHub integration tests
 │
-├── 🧪 tests/                      # Test Suite
-│   └── test_github_trigger.py
+├── 📋 scripts/                    # Helper scripts
+│   └── test_github_trigger.py     # GitHub workflow testing
 │
-├── ⚙️ config/                     # Configuration
-├── 📋 crq/                        # CRQ Generation
-├── 🐙 github_integration/         # GitHub API
-├── 📝 templates/                  # Jinja2 Templates
-├── 🛠️ utils/                      # Utilities
-├── 📁 output/                     # Generated Files
-│
-├── 🎯 run_cli.py                  # Main CLI Entry Point
-├── 💬 run_slack_bot.py            # Slack Bot Entry Point
-└── 📋 requirements.txt            # Dependencies
+├── 📁 output/                     # Generated files directory
+├── 💬 signoff_bot.py              # Slack bot entry point
+├── 📋 requirements.txt            # Python dependencies
+└── 📋 pyproject.toml              # Python package metadata
 ```
 
 ## 🎯 Usage
 
 ### Interactive CLI (Recommended)
 ```bash
-# Main entry point - interactive prompts
-python run_cli.py
+# Option 1: Install package and use entry point (recommended)
+pip install -e .
+rc-release-agent
+
+# Option 2: Direct module execution
+python -m src.cli.run_release_agent
 ```
 
 **Example Session:**
@@ -73,7 +93,7 @@ python run_cli.py
 🛠  Let's gather details for this release.
 
 Who is the RC? munoz
-Who is the RC Manager? anil  
+Who is the RC Manager? Charlie  
 Production version (e.g. v2.3.1): v2.3.1
 New version (e.g. v2.4.0): v2.4.0
 Service name (e.g. cer-cart): cer-cart
@@ -86,22 +106,37 @@ Slack cutoff time (UTC ISO format): 2025-05-29T23:00:00Z
 ✅ GitHub workflow triggered successfully.
 ```
 
+### Direct CLI Usage
+```bash
+# Run with demo data
+python demo_cli_workflow.py
+
+# Run CLI module with Python path setup
+python -m src.cli.run_release_agent
+```
+
 ### Slack Automation
 ```bash
-# Start automated sign-off collection
-python run_slack_bot.py --config output/slack_config.json
+# Install package for entry points
+pip install -e .
 
-# Dry run testing
-python run_slack_bot.py --config output/slack_config.json --dry-run
+# Start automated sign-off collection
+rc-slack-bot --config output/slack_config.json
+
+# Alternative: Direct module execution
+python signoff_bot.py --config output/slack_config.json --dry-run
 ```
 
 ### Testing & Setup
 ```bash
 # Test GitHub integration
-python tests/test_github_trigger.py
+python scripts/test_github_trigger.py
 
-# Validate GitHub token permissions
-python setup/check_github_permissions.py
+# Run comprehensive tests
+python run_tests.py
+
+# Test PR counts
+python test_pr_counts.py
 ```
 
 ## 🔧 Environment Setup

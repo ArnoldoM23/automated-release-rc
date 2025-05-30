@@ -15,7 +15,7 @@ def create_test_config():
     """Create a test configuration for GitHub Actions trigger"""
     return {
         "rc": "munoz",
-        "rc_manager": "anil", 
+        "rc_manager": "Charlie", 
         "production_version": "v2.3.1",
         "new_version": "v2.4.0",
         "service_name": "cer-cart",

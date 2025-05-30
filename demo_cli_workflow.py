@@ -27,7 +27,7 @@ def create_demo_config():
     
     demo_config = {
         "rc": "munoz",
-        "rc_manager": "anil",
+        "rc_manager": "Charlie",
         "production_version": "v2.3.1",
         "new_version": "v2.4.0",
         "service_name": "cer-cart",

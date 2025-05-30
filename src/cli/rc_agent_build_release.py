@@ -43,7 +43,7 @@ def get_release_inputs():
     
     rc_manager = questionary.text(
         "Who is the RC Manager?",
-        default="anil"
+        default="Charlie"
     ).ask()
 
     # Version validation

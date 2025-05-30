@@ -110,7 +110,10 @@ dashboard:
 
 ```bash
 # Test with mock data (no tokens required)
-python main.py --test-mode \
+python demo_cli_workflow.py
+
+# Alternative: Direct module execution
+python -m src.cli.run_release_agent --test-mode \
   --service-name demo-service \
   --prod-version v1.0.0 \
   --new-version v1.1.0 \
@@ -125,14 +128,15 @@ ls -la output/
 ### **Step 5: Real GitHub Integration Test (5 minutes)**
 
 ```bash
+# Install package for entry points
+pip install -e .
+
 # Test with your actual repository
 export GITHUB_TOKEN="ghp_your_token"
-python main.py \
-  --service-name your-service \
-  --prod-version v1.0.0 \
-  --new-version v1.1.0 \
-  --rc-name "Your Name" \
-  --rc-manager "Manager Name"
+rc-release-agent
+
+# Alternative: Direct module execution
+python -m src.cli.run_release_agent
 
 # Check generated files
 cat output/crq_day1.txt | head -20

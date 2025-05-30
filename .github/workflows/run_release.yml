@@ -125,7 +125,7 @@ jobs:
         mkdir -p release_output
         
         # Run the main CLI with extracted parameters
-        python main.py \
+        python -m src.cli.run_release_agent \
           --prod-version "${{ steps.params.outputs.prod_version }}" \
           --new-version "${{ steps.params.outputs.new_version }}" \
           --service-name "${{ steps.params.outputs.service_name }}" \

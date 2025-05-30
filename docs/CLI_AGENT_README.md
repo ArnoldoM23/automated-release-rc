@@ -19,7 +19,7 @@ The RC Release Agent CLI provides:
 
 ```bash
 # Install dependencies
-pip install questionary requests slack-sdk apscheduler
+pip install -r requirements.txt
 
 # Set environment variables
 export GITHUB_TOKEN="ghp_your_token_here"
@@ -29,14 +29,15 @@ export SLACK_BOT_TOKEN="xoxb-your-slack-token"
 ### Basic Usage
 
 ```bash
-# Run the interactive CLI agent
-python run_release_agent.py
+# Option 1: Install package and use entry point (recommended)
+pip install -e .
+rc-release-agent
 
-# Follow the prompts:
-# - RC name, RC Manager
-# - Version numbers (v2.3.1 → v2.4.0)
-# - Service name, release type
-# - Release dates and cutoff time
+# Option 2: Direct module execution
+python -m src.cli.run_release_agent
+
+# Demo workflow with example data
+python demo_cli_workflow.py
 ```
 
 The CLI will:
@@ -50,7 +51,12 @@ The CLI will:
 ### Step 1: Interactive Configuration
 
 ```bash
-python run_release_agent.py
+# Recommended: Use entry point after installing
+pip install -e .
+rc-release-agent
+
+# Alternative: Direct module execution
+python -m src.cli.run_release_agent
 ```
 
 **Example Interaction:**
@@ -59,7 +65,7 @@ python run_release_agent.py
 🛠  Let's gather details for this release.
 
 Who is the RC? munoz
-Who is the RC Manager? anil
+Who is the RC Manager? Charlie
 Production version (e.g. v2.3.1): v2.3.1
 New version (e.g. v2.4.0): v2.4.0
 Service name (e.g. cer-cart): cer-cart
@@ -89,11 +95,11 @@ The CLI triggers a GitHub repository dispatch event that:
     "service_name": "cer-cart",
     "release_type": "standard",
     "rc_name": "munoz",
-    "rc_manager": "anil",
+    "rc_manager": "Charlie",
     "day1_date": "2025-05-29",
     "day2_date": "2025-05-30",
     "slack_channel": "#engineering-release",
-    "slack_user": "anil"
+    "slack_user": "Charlie"
   }
 }
 ```
@@ -104,7 +110,7 @@ Once documents are generated, start the automated Slack workflow:
 
 ```bash
 # The GitHub Action will create a slack_config.json file
-python release_signoff_notifier.py --config output/slack_config.json
+python signoff_bot.py --config output/slack_config.json
 ```
 
 **Automated Message Schedule:**
@@ -131,7 +137,7 @@ output/
 ```json
 {
   "rc": "munoz",
-  "rc_manager": "anil",
+  "rc_manager": "Charlie",
   "production_version": "v2.3.1",
   "new_version": "v2.4.0",
   "service_name": "cer-cart",
@@ -149,7 +155,7 @@ output/
 {
   "channel": "#releases",
   "rc": "@munoz",
-  "rc_manager": "@anil",
+  "rc_manager": "@Charlie",
   "cutoff_time_utc": "2025-05-29T23:00:00Z",
   "reminder_intervals": [4, 1],
   "authors": ["@alice", "@bob", "@carol"],
@@ -207,7 +213,7 @@ The following PR authors have NOT signed off by the deadline `2025-05-29T23:00:0
 
 • @alice
 
-@munoz @anil, please follow up immediately or consider removing these changes before CRQ submission.
+@munoz @Charlie, please follow up immediately or consider removing these changes before CRQ submission.
 
 **Next Steps**:
 1. Contact authors directly for immediate sign-off
@@ -272,11 +278,11 @@ Edit `slack_config.json` to customize reminder timing:
 Run the CLI multiple times for different services:
 ```bash
 # Service 1
-python run_release_agent.py
+rc-release-agent
 # (Configure for cer-cart)
 
 # Service 2  
-python run_release_agent.py
+rc-release-agent
 # (Configure for payment-service)
 ```
 
@@ -284,7 +290,7 @@ python run_release_agent.py
 For production use, run the Slack notifier as a background service:
 ```bash
 # Start scheduled workflow (runs until cutoff)
-nohup python release_signoff_notifier.py --config output/slack_config.json > slack.log 2>&1 &
+nohup python signoff_bot.py --config output/slack_config.json > slack.log 2>&1 &
 ```
 
 ## 🔄 Integration with Existing Systems
@@ -305,7 +311,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Generate Release Documents
         run: |
-          python main.py \
+          python -m src.cli.run_release_agent \
             --prod-version ${{ github.event.client_payload.prod_version }} \
             --new-version ${{ github.event.client_payload.new_version }} \
             --service-name ${{ github.event.client_payload.service_name }}
@@ -313,9 +319,9 @@ jobs:
 
 ### Existing Document Generation
 The CLI integrates with your existing:
-- `main.py` - Document generation logic
-- `templates/` - Jinja2 templates for CRQ and Confluence
-- `config/settings.yaml` - Application configuration
+- `src/cli/run_release_agent.py` - Main CLI logic
+- `src/templates/` - Jinja2 templates for CRQ and Confluence
+- `src/config/settings.yaml` - Application configuration
 
 ## 🎯 Benefits
 
@@ -340,10 +346,11 @@ The CLI integrates with your existing:
 
 1. **Install dependencies**: `pip install -r requirements.txt`
 2. **Set environment variables** (GitHub and Slack tokens)
-3. **Run demo**: `python demo_cli_workflow.py`
-4. **Test with real data**: `python run_release_agent.py`
-5. **Set up GitHub Actions** workflow for document generation
-6. **Configure Slack channels** and permissions
+3. **Install package**: `pip install -e .`
+4. **Run demo**: `python demo_cli_workflow.py`
+5. **Test with real data**: `rc-release-agent`
+6. **Set up GitHub Actions** workflow for document generation
+7. **Configure Slack channels** and permissions
 
 ---
 
