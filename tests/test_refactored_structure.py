@@ -71,22 +71,20 @@ def test_src_imports():
     return True
 
 def test_main_entry_point():
-    """Test the main entry point."""
-    print("\n🎯 Testing Main Entry Point")
+    """Test the package entry points."""
+    print("\n🎯 Testing Package Entry Points")
     print("=" * 40)
     
     try:
-        main_py = project_root / 'main.py'
-        with open(main_py, 'r') as f:
+        pyproject_path = project_root / 'pyproject.toml'
+        with open(pyproject_path, 'r') as f:
             content = f.read()
         
-        # Check that the script has the required structure
+        # Check that the script has the required entry points
         required_elements = [
-            'import sys',
-            'import os',
-            'sys.path.insert',
-            'from src.cli.run_release_agent import main as cli_main',
-            'if __name__ == "__main__":'
+            '[project.scripts]',
+            'rc-release-agent = "src.cli.run_release_agent:main"',
+            'rc-slack-bot = "src.slack.release_signoff_notifier:main"'
         ]
         
         missing_elements = []
@@ -95,14 +93,14 @@ def test_main_entry_point():
                 missing_elements.append(element)
         
         if not missing_elements:
-            print("✅ Main Entry Point: Structure valid")
+            print("✅ Package Entry Points: Configuration valid")
             return True
         else:
-            print(f"❌ Main Entry Point: Missing elements - {missing_elements}")
+            print(f"❌ Package Entry Points: Missing elements - {missing_elements}")
             return False
             
     except Exception as e:
-        print(f"❌ Main Entry Point: Test failed - {e}")
+        print(f"❌ Package Entry Points: Test failed - {e}")
         return False
 
 def test_python_module_execution():
@@ -206,7 +204,7 @@ def main():
     tests = [
         ("Package Structure", test_package_structure),
         ("Src Module Imports", test_src_imports),
-        ("Main Entry Point", test_main_entry_point),
+        ("Package Entry Points", test_main_entry_point),
         ("Python Module Execution", test_python_module_execution),
         ("PyProject.toml", test_pyproject_toml),
         ("GitHub Integration", test_github_integration),
@@ -240,8 +238,8 @@ def main():
     if passed == total:
         print("🎉 ALL TESTS PASSED! Refactored structure is ready!")
         print("\n🚀 Usage:")
-        print("  python main.py                    # Main CLI entry point")
-        print("  python -m src.cli.run_release_agent  # Module execution")
+        print("  pip install -e . && rc-release-agent    # Package entry point (recommended)")
+        print("  python -m src.cli.run_release_agent     # Module execution")
         return 0
     else:
         print("⚠️  Some tests failed. Please review the output above.")
