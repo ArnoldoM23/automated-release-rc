@@ -10,11 +10,11 @@ This guide walks you through every step from initial setup to production deploym
 
 Before starting, ensure you have:
 
-- [ ] **Python 3.10+** installed (`python --version`)
+- [ ] **Python 3.8+** installed (`python --version`)
 - [ ] **Git** configured with your GitHub account
 - [ ] **GitHub repository** with Actions enabled
-- [ ] **API tokens** ready (GitHub, OpenAI optional)
-- [ ] **Slack workspace** access (for integration)
+- [ ] **GitHub Personal Access Token** ready
+- [ ] **Slack workspace** access (optional for integration)
 
 ---
 
@@ -27,121 +27,112 @@ Before starting, ensure you have:
 git clone https://github.com/ArnoldoM23/automated-release-rc.git
 cd automated-release-rc
 
-# Install Python dependencies
-pip install -r requirements.txt
+# Install the package and all dependencies in one step
+pip install -e .
 
 # Verify installation
-python --version  # Should be 3.10+
-python -c "import yaml, requests, jinja2; print('✅ Dependencies OK')"
+python --version  # Should be 3.8+
+rc-release-agent --help  # Should show CLI help
 ```
 
-### **Step 2: Basic Configuration (10 minutes)**
+**✅ What this does:**
+- Installs all Python dependencies automatically
+- Sets up the `rc-release-agent` command
+- Sets up the `rc-slack-bot` command  
+- Makes the package available for development
+
+### **Step 2: Environment Configuration (5 minutes)**
+
+Create your environment file with secrets:
 
 ```bash
-# Copy example configuration
-cp config/settings.example.yaml config/settings.yaml
-
 # Create environment file for secrets
 touch .env
 ```
 
-**Essential .env file setup:**
+**Add your tokens to `.env`:**
 
 ```bash
-# .env file (keep this private!)
+# .env file (keep this private and never commit!)
 GITHUB_TOKEN=ghp_your_github_personal_access_token
 OPENAI_API_KEY=sk-your_openai_api_key_optional
-SLACK_BOT_TOKEN=xoxb-your_slack_bot_token_if_using_slack
-SLACK_SIGNING_SECRET=your_slack_signing_secret_if_using_slack
+SLACK_BOT_TOKEN=xoxb-your_slack_bot_token_optional
 ```
 
-**Minimal config/settings.yaml:**
-
-```yaml
-# config/settings.yaml - Start with this
-github:
-  token: "${GITHUB_TOKEN}"
-  repo: "your-org/your-repo"  # Replace with your repository
-
-ai:
-  provider: "openai"
-  openai:
-    api_key: "${OPENAI_API_KEY}"
-
-organization:
-  name: "Your Company"
-  default_service: "your-service"
-  regions: ["EUS", "SCUS", "WUS"]  # Your deployment regions
-
-app:
-  environment: "production"
-  log_level: "INFO"
-  output_dir: "output"
-
-dashboard:
-  confluence_dashboard_url: "https://confluence.yourcompany.com/display/YOUR_SERVICE/Dashboards"
-  p0_dashboard_url: "https://grafana.yourcompany.com/d/your-service-p0"
-  l1_dashboard_url: "https://grafana.yourcompany.com/d/your-service-l1"
-  services_dashboard_url: "https://grafana.yourcompany.com/d/your-service-overview"
-  wcnp_dashboard_url: "https://grafana.yourcompany.com/d/your-service-wcnp"
-  istio_dashboard_url: "https://grafana.yourcompany.com/d/your-service-istio"
-```
+**⚠️ Important:** Add `.env` to your `.gitignore` to keep secrets safe!
 
 ### **Step 3: GitHub Token Setup (5 minutes)**
 
 1. **Generate GitHub Token:**
    - Visit: https://github.com/settings/tokens
-   - Click "Generate new token (classic)"
-   - Select scopes: `repo`, `read:org`, `read:user`
-   - Copy the token (starts with `ghp_`)
+   - Click **"Generate new token (classic)"**
+   - **Name:** `RC Release Automation`
+   - **Scopes:** Select these checkboxes:
+     - ✅ `repo` (Full repository access)
+     - ✅ `workflow` (GitHub Actions access)
+   - Click **"Generate token"**
+   - **Copy the token immediately** (starts with `ghp_`)
 
-2. **Test GitHub access:**
+2. **Add token to your environment:**
    ```bash
    export GITHUB_TOKEN="ghp_your_token_here"
+   
+   # Or add it to your .env file:
+   echo "GITHUB_TOKEN=ghp_your_token_here" >> .env
+   ```
+
+3. **Test GitHub access:**
+   ```bash
    python -c "
    import os
    from github import Github
    g = Github(os.getenv('GITHUB_TOKEN'))
-   print(f'✅ GitHub access OK: {g.get_user().login}')
+   user = g.get_user()
+   print(f'✅ GitHub access OK: {user.login}')
+   print(f'Rate limit: {g.get_rate_limit().core.remaining}/5000')
    "
    ```
 
-### **Step 4: Verify Basic Setup (2 minutes)**
+### **Step 4: Basic Verification (2 minutes)**
+
+Test that everything is working:
 
 ```bash
-# Test with mock data (no tokens required)
+# Test with demo data (no tokens required)
 python demo_cli_workflow.py
 
-# Alternative: Install package and use entry point
-pip install -e .
-rc-release-agent --test-mode \
-  --service-name demo-service \
-  --prod-version v1.0.0 \
-  --new-version v1.1.0 \
-  --rc-name "Your Name" \
-  --rc-manager "Manager Name"
+# Test the CLI entry point
+rc-release-agent --help
 
-# Check output
+# Verify output directory is created
 ls -la output/
 # Should see: crq_day1.txt, crq_day2.txt, release_notes.txt
 ```
 
-### **Step 5: Real GitHub Integration Test (5 minutes)**
+### **Step 5: Real Integration Test (5 minutes)**
+
+Test with your actual repository:
 
 ```bash
-# Install package for entry points
-pip install -e .
-
-# Test with your actual repository
+# Set your GitHub token
 export GITHUB_TOKEN="ghp_your_token"
+
+# Run the CLI interactively
 rc-release-agent
 
-# Alternative: Direct module execution
-python -m src.cli.run_release_agent
+# Follow the prompts:
+# - Service name: test-service
+# - Production version: v1.0.0  
+# - New version: v1.1.0
+# - RC name: Your Name
+# - RC Manager: Manager Name
+# - Dates: Use tomorrow and day after
 
 # Check generated files
-cat output/crq_day1.txt | head -20
-cat output/release_notes.txt | head -20
+echo "📄 Generated files:"
+ls -la output/
+echo "📋 CRQ Day 1 preview:"
+head -20 output/crq_day1.txt
 ```
 
 ---
