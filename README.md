@@ -109,7 +109,7 @@ Output folder: output/
 🔍 Analyzing PRs between v0.4.6 → v0.4.7...
 ✅ Found 10 PRs: 3 schema, 4 feature, 0 international
 📝 Generating release documentation...
-✅ Documentation generated in: output/ce-cartxo_v0.4.7_20240223_191554/
+✅ Documentation generated in: output/ce-cartxo_v0.4.7_20240223_191554/cu
 ```
 
 ### Testing & Validation
@@ -142,6 +142,27 @@ You can also trigger via GitHub Actions by setting up repository secrets and usi
      api_url: "https://api.github.com"
    ```
 
+### GitHub Enterprise Server (Corporate Users)
+If you're using **GitHub Enterprise Server** (common in corporate environments), you need to update the API URL:
+
+**Identify Your Setup:**
+- **Public GitHub**: URLs like `https://github.com/your-org/repo`
+- **Enterprise GitHub**: URLs like `https://github.company.com/your-org/repo`
+
+**Configuration for Enterprise:**
+```yaml
+github:
+  token: "your_enterprise_token"
+  repo: "your-org/your-repo" 
+  api_url: "https://github.company.com/api/v3"  # Note the /api/v3 suffix
+```
+
+**Examples:**
+- Microsoft: `"https://github.microsoft.com/api/v3"`
+- General pattern: `"https://[your-github-domain]/api/v3"`
+
+**⚠️ Common Error:** Using `"https://api.github.com"` with enterprise tokens causes **401 Unauthorized** errors.
+
 ### AI Provider (Optional)
 Edit `src/config/settings.yaml`:
 ```yaml
@@ -166,6 +187,7 @@ ai:
 output/
 └── service_v1.1.0_20240223_[timestamp]/
     ├── rc_config.json          # Complete release configuration
+    ├── pr_authors.json         # PR authors list for Slack bot
     ├── crq_day1.txt           # Day 1 CRQ document
     ├── crq_day2.txt           # Day 2 CRQ document
     ├── release_notes.txt      # Confluence-ready release notes
