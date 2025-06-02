@@ -342,12 +342,12 @@ def render_release_notes(prs: List, params: Dict[str, Any], output_dir: Path, co
         # Load and render template
         try:
             # Try to load custom template first
-            template_path = Path("templates/release_notes.j2")
+            template_path = Path("src/templates/release_notes.j2")
             logger.info(f"Checking template path: {template_path.absolute()}")
             logger.info(f"Template exists: {template_path.exists()}")
             
             if template_path.exists():
-                env = Environment(loader=FileSystemLoader("templates"))
+                env = Environment(loader=FileSystemLoader("src/templates"))
                 template = env.get_template("release_notes.j2")
                 logger.info("Loading custom template successfully")
                 rendered_content = template.render(**template_vars)

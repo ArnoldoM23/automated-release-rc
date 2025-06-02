@@ -114,7 +114,7 @@ Slack cutoff time (UTC ISO format): 2025-05-29T23:00:00Z
 python demo_cli_workflow.py
 
 # Run CLI module with Python path setup
-python -m src.cli.run_release_agent
+d
 ```
 
 ### Slack Automation

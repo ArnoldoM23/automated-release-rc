@@ -1,101 +1,52 @@
 # =============================================================================
-# Automated RC Release Workflow - Configuration Template
+# Automated RC Release Workflow - Configuration
 # =============================================================================
-# Copy this file to settings.yaml and customize for your organization
 
-# Slack Configuration
+# Slack Configuration (minimal for testing - UPDATE WITH REAL TOKENS WHEN AVAILABLE)
 slack:
-  bot_token: "${SLACK_BOT_TOKEN}"
-  signing_secret: "${SLACK_SIGNING_SECRET}"
-  app_token: "${SLACK_APP_TOKEN}"  # For Socket Mode
+  bot_token: "xoxb-000000000000-000000000000-placeholder-for-testing"  # Replace with real token
+  signing_secret: "placeholder-signing-secret"
+  app_token: ""  # Optional for Socket Mode
   default_channels:
     - "#releases"
-    - "#general"
   
 # GitHub Configuration  
 github:
-  token: "${GITHUB_TOKEN}"
-  repo: "${GITHUB_REPO}"  # Format: owner/repo
-  api_url: "https://api.github.com"  # For GitHub Enterprise: https://your-enterprise.github.com/api/v3
+  token: "xoxb-000000000000-000000000000-placeholder-for-testing"  # Your working token
+  repo: "ArnoldoM23/PerfCopilot"
+  api_url: "https://api.github.com"
   
-# AI Configuration (multiple providers supported)
+# AI Configuration
 ai:
-  provider: "openai"  # openai, azure, anthropic
+  provider: "openai"
   openai:
-    api_key: "${OPENAI_API_KEY}"
+    api_key: "placeholder"  # Set your OpenAI key here or use env var
     model: "gpt-4-1106-preview"
-    api_base: "https://api.openai.com/v1"
-  azure:
-    endpoint: "${AZURE_OPENAI_ENDPOINT}"
-    api_key: "${AZURE_OPENAI_API_KEY}"
-    api_version: "2023-12-01-preview"
-    deployment: "${AZURE_OPENAI_DEPLOYMENT}"
-  anthropic:
-    api_key: "${ANTHROPIC_API_KEY}"
-    model: "claude-3-sonnet-20240229"
+    max_tokens: 1000
 
 # Organization-specific Settings
 organization:
-  name: "${ORGANIZATION_NAME:Your Company}"
-  default_service: "${DEFAULT_SERVICE_NAME:your-service}"
-  timezone: "${TIMEZONE:UTC}"
+  name: "ArnoldoM23"
+  default_service: "ce-cartxo"
+  timezone: "UTC"
   regions:
-    - "EUS"  # East US
-    - "SCUS" # South Central US
-    - "WUS"  # West US
+    - "EUS"
+    - "SCUS" 
+    - "WUS"
+  platform: "Glass"
 
 # Application Settings
 app:
-  environment: "${ENVIRONMENT:development}"
-  log_level: "${LOG_LEVEL:INFO}"
-  deployment_mode: "${DEPLOYMENT_MODE:socket}"  # socket, http
-  port: ${PORT:3000}
-  output_dir: "${OUTPUT_DIR:output}"
-
-# Modal Field Configuration
-modal:
-  fields:
-    production_version:
-      required: true
-      validation: "^v?\\d+\\.\\d+\\.\\d+$"  # Semantic versioning
-      placeholder: "e.g., v1.2.3"
-    new_version:
-      required: true
-      validation: "^v?\\d+\\.\\d+\\.\\d+$"
-      placeholder: "e.g., v1.3.0"
-    service_name:
-      required: true
-      validation: "^[a-z][a-z0-9-]*[a-z0-9]$"  # kebab-case
-      placeholder: "e.g., cer-cart"
-    release_type:
-      required: true
-      options:
-        - "standard"
-        - "hotfix" 
-        - "ebf"  # Emergency Bug Fix
-      default: "standard"
-    rc_name:
-      required: true
-      placeholder: "Who's running the release"
-    rc_manager:
-      required: true
-      placeholder: "Who to escalate to"
-    day1_date:
-      required: true
-      type: "date"
-      description: "CRQ Day 1 (prep/setup)"
-    day2_date:
-      required: true
-      type: "date"
-      description: "CRQ Day 2 (actual release)"
+  environment: "development"
+  log_level: "INFO"
+  deployment_mode: "socket"
+  port: 3000
+  output_dir: "output"
 
 # CRQ Template Configuration
 crq:
   template_fields:
-    # These map to your CRQ template structure
     summary_format: "{service_name} Application Code deployment for {platform} ({regions}) - {day_type}"
-    
-    # Standard questions for Description section
     description_questions:
       - "What is the criticality of change or why is this change required?"
       - "How have we validated this change in the lower environment?"
@@ -104,8 +55,6 @@ crq:
       - "What happens if we encounter an issue during release?"
       - "What controls do we have to minimize the impact to our customers?"
       - "What monitoring is in place to determine the errors?"
-    
-    # Required fields for Implementation Plan
     implementation_fields:
       - "Application Name"
       - "Namespace"
@@ -116,16 +65,12 @@ crq:
       - "Forward Artifact Version"
       - "Rollback Artifact Version"
       - "Confluence link"
-    
-    # Dashboard links for Validation Plan
     validation_dashboards:
       - "P0 Dashboard – Grafana Link"
       - "L1 Dashboard – Grafana Link"
       - "Services dashboard – Grafana Link"
       - "WCNP - CPU - Memory – Link"
       - "Istio/ SM: Link"
-    
-    # Backout plan requirements
     backout_fields:
       - "Application Name"
       - "Namespace"
@@ -137,15 +82,11 @@ crq:
 
 # Template Configuration
 templates:
-  base_path: "templates"
+  base_path: "src/templates"
   release_notes: "release_notes.j2"
   crq_template: "crq_template.j2"
   slack_message: "slack_message.j2"
-  
-  # Custom template overrides
-  custom_path: "${CUSTOM_TEMPLATE_DIR:}"
-  
-  # Output formats
+  custom_path: ""
   formats:
     confluence: true
     markdown: true
@@ -154,26 +95,42 @@ templates:
 
 # Security & Access Control
 security:
-  allowed_users: []  # Empty means all workspace members
-  allowed_channels: []  # Empty means all channels
+  allowed_users: []
+  allowed_channels: []
   require_manager_approval: false
   
 # Monitoring & Alerting
 monitoring:
-  webhook_url: "${MONITORING_WEBHOOK_URL:}"
-  sentry_dsn: "${SENTRY_DSN:}"
+  webhook_url: ""
+  sentry_dsn: ""
   enable_metrics: true
 
 # Integration Settings
 integrations:
   jira:
     enabled: false
-    url: "${JIRA_URL:}"
-    username: "${JIRA_USERNAME:}"
-    api_token: "${JIRA_API_TOKEN:}"
-  
+    url: ""
+    username: ""
+    api_token: ""
   servicenow:
     enabled: false
-    instance: "${SERVICENOW_INSTANCE:}"
-    username: "${SERVICENOW_USERNAME:}"
-    password: "${SERVICENOW_PASSWORD:}" 
+    instance: ""
+    username: ""
+    password: ""
+
+# Dashboard Configuration
+dashboard:
+  confluence_dashboard_url: "https://confluence.charlie.com/display/SERVICE/Dashboards"
+  p0_dashboard_url: "https://grafana.charlie.com/d/service-p0"
+  l1_dashboard_url: "https://grafana.company.com/d/service-l1"
+  services_dashboard_url: "https://grafana.company.com/d/service-overview"
+  wcnp_dashboard_url: "https://grafana.company.com/d/service-wcnp"
+  istio_dashboard_url: "https://grafana.company.com/d/service-istio"
+
+# External CRQ Template Configuration
+external_template:
+  enabled: false
+  template_url: ""
+  template_type: "auto"
+  cache_duration: 3600
+  fallback_to_builtin: true 

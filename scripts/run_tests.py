@@ -6,13 +6,13 @@ Comprehensive test runner that executes all tests in the proper order
 with clear output and error handling.
 
 Usage:
-    python run_tests.py                    # Run all tests
-    python run_tests.py --unit             # Run unit tests only  
-    python run_tests.py --integration      # Run integration tests only
-    python run_tests.py --github           # Run GitHub tests only
-    python run_tests.py --slack            # Run Slack tests only
-    python run_tests.py --cli              # Run CLI tests only
-    python run_tests.py --external         # Run external template tests
+    python scripts/run_tests.py               # Run all tests
+    python scripts/run_tests.py --unit        # Run unit tests only  
+    python scripts/run_tests.py --integration # Run integration tests only
+    python scripts/run_tests.py --github      # Run GitHub tests only
+    python scripts/run_tests.py --slack       # Run Slack tests only
+    python scripts/run_tests.py --cli         # Run CLI tests only
+    python scripts/run_tests.py --external    # Run external template tests
 """
 
 import argparse
@@ -22,8 +22,8 @@ from pathlib import Path
 from typing import List, Dict, Any
 import os
 
-# Add project root to Python path
-project_root = Path(__file__).parent
+# Add project root to Python path (go up one level from scripts/)
+project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
 from src.utils.logging import get_logger
@@ -245,11 +245,11 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-    python run_tests.py                    # Run all tests
-    python run_tests.py --unit             # Unit tests only
-    python run_tests.py --integration      # Integration tests only
-    python run_tests.py --github           # GitHub tests only
-    python run_tests.py --slack            # Slack tests only
+    python scripts/run_tests.py                    # Run all tests
+    python scripts/run_tests.py --unit             # Unit tests only
+    python scripts/run_tests.py --integration      # Integration tests only
+    python scripts/run_tests.py --github           # GitHub tests only
+    python scripts/run_tests.py --slack            # Slack tests only
         """
     )
     
