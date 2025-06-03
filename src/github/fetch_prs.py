@@ -238,6 +238,8 @@ class GitHubClient:
                 
                 # Only include merged PRs
                 if pr.merged:
+                    # Enhance PR object with additional user info
+                    self._enhance_pr_user_info(pr)
                     prs.append(pr)
                     self.logger.debug(f"Fetched PR #{pr_number}: {pr.title}")
                 else:
@@ -249,6 +251,74 @@ class GitHubClient:
         
         self.logger.info(f"Successfully fetched {len(prs)} merged PRs")
         return prs
+    
+    def _enhance_pr_user_info(self, pr: PullRequest):
+        """
+        Enhance PR object with additional user information including full name.
+        
+        Args:
+            pr: PullRequest object to enhance
+        """
+        try:
+            # Get full user details
+            user = pr.user
+            if user:
+                # Try to get full name from user profile
+                user_details = self.github.get_user(user.login)
+                
+                # Add enhanced user info to the PR object
+                if not hasattr(pr.user, 'display_name'):
+                    pr.user.display_name = self._format_user_display_name(user_details)
+                if not hasattr(pr.user, 'full_name'):
+                    pr.user.full_name = user_details.name or user.login
+                    
+                self.logger.debug(f"Enhanced user info for {user.login}: {pr.user.display_name}")
+                
+        except Exception as e:
+            self.logger.debug(f"Could not enhance user info for PR #{pr.number}: {e}")
+            # Set fallback values
+            if not hasattr(pr.user, 'display_name'):
+                pr.user.display_name = f"@{pr.user.login}"
+            if not hasattr(pr.user, 'full_name'):
+                pr.user.full_name = pr.user.login
+    
+    def _format_user_display_name(self, user) -> str:
+        """
+        Format user display name as "Full Name (@username)" or fallback to "@username".
+        
+        Args:
+            user: GitHub User object
+            
+        Returns:
+            Formatted display name
+        """
+        try:
+            full_name = user.name
+            username = user.login
+            
+            if full_name and full_name.strip():
+                return f"{full_name} (@{username})"
+            else:
+                return f"@{username}"
+        except Exception:
+            return f"@{user.login}"
+    
+    def get_user_display_name(self, username: str) -> str:
+        """
+        Get enhanced display name for a GitHub user.
+        
+        Args:
+            username: GitHub username
+            
+        Returns:
+            Formatted display name "Full Name (@username)" or "@username"
+        """
+        try:
+            user = self.github.get_user(username)
+            return self._format_user_display_name(user)
+        except Exception as e:
+            self.logger.debug(f"Could not fetch user details for {username}: {e}")
+            return f"@{username}"
     
     def get_repository_info(self) -> Dict[str, Any]:
         """

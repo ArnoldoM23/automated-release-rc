@@ -34,6 +34,16 @@ organization:
     - "SCUS" 
     - "WUS"
   platform: "Glass"
+  
+  # International and tenant labels that should be included in section 9
+  international_labels:
+    - "international"
+    - "i18n"
+    - "localization"
+    - "locale"
+    - "tenant"
+    - "multi-tenant"
+    - "internationalization"
 
 # Application Settings
 app:

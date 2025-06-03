@@ -1,44 +1,65 @@
 # rc_agent_build_release.py
 
-import questionary
-import datetime
-import re
 import os
+import re
+from datetime import datetime
+import questionary
+from pathlib import Path
+
+from src.config.config import load_config, extract_service_name_from_repo
+from src.github.fetch_prs import GitHubClient
 
 def is_valid_version(version):
-    """Validate semantic version format (v1.2.3 or 1.2.3)"""
-    return re.match(r"^v?\d+\.\d+\.\d+$", version) is not None
+    """Validate version string format (semantic versioning)"""
+    pattern = r'^v?\d+\.\d+\.\d+$'
+    return bool(re.match(pattern, version))
 
-def validate_date(text):
-    """Validate date format YYYY-MM-DD"""
+def validate_date(date_str):
+    """Validate date string in YYYY-MM-DD format"""
     try:
-        datetime.datetime.strptime(text, "%Y-%m-%d")
+        datetime.strptime(date_str, '%Y-%m-%d')
         return True
     except ValueError:
         return "Date must be in YYYY-MM-DD format"
 
-def validate_iso_utc(text):
-    """Validate ISO UTC timestamp format"""
+def validate_iso_utc(time_str):
+    """Validate ISO UTC time string"""
     try:
-        # Basic validation for ISO format with Z
-        if "T" not in text or "Z" not in text:
-            return "Must be ISO UTC format (e.g., 2025-05-29T23:00:00Z)"
-        
-        # Try to parse the datetime
-        datetime.datetime.fromisoformat(text.replace('Z', '+00:00'))
+        datetime.fromisoformat(time_str.replace('Z', '+00:00'))
         return True
     except ValueError:
-        return "Invalid ISO UTC format. Use: YYYY-MM-DDTHH:MM:SSZ"
+        return "Time must be in ISO UTC format (e.g., 2025-05-29T23:00:00Z)"
 
 def get_release_inputs():
     """Collect release configuration via interactive prompts"""
     print("\n👋 Welcome to the RC Release Agent!")
     print("🛠  Let's gather details for this release.\n")
 
+    # Load config to get GitHub details and defaults
+    try:
+        config = load_config()
+        github_client = GitHubClient(config.github) if config.github.token != "xoxb-000000000000-000000000000-placeholder-for-testing" else None
+    except Exception as e:
+        print(f"⚠️ Warning: Could not load GitHub config: {e}")
+        github_client = None
+        config = None
+
+    # Get current user info for RC field
+    current_user = os.getenv("USER", "")
+    rc_display_name = current_user
+    
+    if github_client and current_user:
+        try:
+            # Try to get enhanced display name from GitHub
+            enhanced_name = github_client.get_user_display_name(current_user)
+            rc_display_name = enhanced_name
+        except Exception as e:
+            print(f"⚠️ Could not fetch GitHub user details: {e}")
+
     # Basic release info
     rc = questionary.text(
         "Who is the RC?",
-        default=os.getenv("USER", "")
+        default=rc_display_name
     ).ask()
     
     rc_manager = questionary.text(
@@ -57,15 +78,25 @@ def get_release_inputs():
         validate=lambda text: is_valid_version(text) or "Invalid semantic version format"
     ).ask()
 
-    # Service details
+    # Service details - pre-fill from GitHub repo if available
+    default_service = "ce-cart"
+    if config and hasattr(config, 'github') and config.github.repo:
+        try:
+            extracted_service = extract_service_name_from_repo(config.github.repo)
+            if extracted_service != "unknown-service":
+                default_service = extracted_service
+                print(f"💡 Pre-filling service name from GitHub repo: {default_service}")
+        except Exception:
+            pass
+
     service_name = questionary.text(
-        "Service name (e.g. cer-cart)",
-        default="cer-cart"
+        "Service name (e.g. ce-cart)",
+        default=default_service
     ).ask()
 
     release_type = questionary.select(
         "Release type",
-        choices=["standard", "hotfix", "ebf"]
+        choices=["standard", "hotfix", "release"]
     ).ask()
 
     # Release dates
@@ -105,8 +136,7 @@ def get_release_inputs():
         "day1_date": day1_date,
         "day2_date": day2_date,
         "cutoff_time": cutoff_time,
-        "output_folder": output_folder,
-        "timestamp": datetime.datetime.utcnow().strftime("%Y-%m-%dT%H%M%SZ")
+        "output_folder": output_folder
     }
 
 if __name__ == "__main__":

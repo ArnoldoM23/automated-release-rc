@@ -25,6 +25,7 @@ def categorize_prs(prs: List) -> Dict[str, List]:
         "dependencies": [],
         "documentation": [],
         "infrastructure": [],
+        "international": [],  # New category for international PRs
         "other": []
     }
     
@@ -35,7 +36,8 @@ def categorize_prs(prs: List) -> Dict[str, List]:
         "bugfixes": ["bug", "fix", "bugfix", "hotfix", "patch"],
         "dependencies": ["dependencies", "dependency", "deps", "bump"],
         "documentation": ["documentation", "docs", "readme"],
-        "infrastructure": ["infrastructure", "ci", "cd", "deploy", "devops", "infra"]
+        "infrastructure": ["infrastructure", "ci", "cd", "deploy", "devops", "infra"],
+        "international": ["international", "i18n", "localization", "locale", "tenant", "multi-tenant", "internationalization"]
     }
     
     for pr in prs:
@@ -44,7 +46,7 @@ def categorize_prs(prs: List) -> Dict[str, List]:
         pr_title_lower = pr.title.lower()
         pr_body_lower = getattr(pr, 'body', '').lower() if hasattr(pr, 'body') and pr.body else ''
         
-        # Check each category (schema first since it's highest priority)
+        # Check each category (schema first since it's highest priority, then international)
         for category, keywords in label_mappings.items():
             # Check in labels, title, and body
             if (any(keyword in " ".join(pr_labels) for keyword in keywords) or
@@ -95,6 +97,9 @@ This release includes {{ total_prs }} pull request(s) with the following changes
 {% if categories.infrastructure %}
 * 🔧 **{{ categories.infrastructure|length }} Infrastructure Changes**
 {%- endif %}
+{% if categories.international %}
+* 🌍 **{{ categories.international|length }} International Changes**
+{%- endif %}
 {% if categories.other %}
 * 🔹 **{{ categories.other|length }} Other Changes**
 {%- endif %}
@@ -106,7 +111,7 @@ h2. ✨ New Features
 
 {% for pr in categories.features %}
 * *PR #{{ pr.number }}:* {{ pr.title }}
-  * Author: @{{ pr.user.login }}
+  * Author: {{ pr.user.display_name if pr.user.display_name else '@' + pr.user.login }}
   * Labels: {{ pr.labels|map(attribute='name')|join(', ') or 'None' }}
   * [View PR|{{ pr.html_url }}]
 
@@ -118,7 +123,7 @@ h2. 🐛 Bug Fixes
 
 {% for pr in categories.bugfixes %}
 * *PR #{{ pr.number }}:* {{ pr.title }}
-  * Author: @{{ pr.user.login }}
+  * Author: {{ pr.user.display_name if pr.user.display_name else '@' + pr.user.login }}
   * Labels: {{ pr.labels|map(attribute='name')|join(', ') or 'None' }}
   * [View PR|{{ pr.html_url }}]
 
@@ -130,7 +135,7 @@ h2. 📦 Dependency Updates
 
 {% for pr in categories.dependencies %}
 * *PR #{{ pr.number }}:* {{ pr.title }}
-  * Author: @{{ pr.user.login }}
+  * Author: {{ pr.user.display_name if pr.user.display_name else '@' + pr.user.login }}
   * [View PR|{{ pr.html_url }}]
 
 {% endfor %}
@@ -141,7 +146,7 @@ h2. 📚 Documentation Updates
 
 {% for pr in categories.documentation %}
 * *PR #{{ pr.number }}:* {{ pr.title }}
-  * Author: @{{ pr.user.login }}
+  * Author: {{ pr.user.display_name if pr.user.display_name else '@' + pr.user.login }}
   * [View PR|{{ pr.html_url }}]
 
 {% endfor %}
@@ -152,7 +157,19 @@ h2. 🔧 Infrastructure Changes
 
 {% for pr in categories.infrastructure %}
 * *PR #{{ pr.number }}:* {{ pr.title }}
-  * Author: @{{ pr.user.login }}
+  * Author: {{ pr.user.display_name if pr.user.display_name else '@' + pr.user.login }}
+  * [View PR|{{ pr.html_url }}]
+
+{% endfor %}
+{% endif %}
+
+{% if categories.international %}
+h2. 🌍 International Changes
+
+{% for pr in categories.international %}
+* *PR #{{ pr.number }}:* {{ pr.title }}
+  * Author: {{ pr.user.display_name if pr.user.display_name else '@' + pr.user.login }}
+  * Labels: {{ pr.labels|map(attribute='name')|join(', ') or 'None' }}
   * [View PR|{{ pr.html_url }}]
 
 {% endfor %}
@@ -163,7 +180,7 @@ h2. 🔹 Other Changes
 
 {% for pr in categories.other %}
 * *PR #{{ pr.number }}:* {{ pr.title }}
-  * Author: @{{ pr.user.login }}
+  * Author: {{ pr.user.display_name if pr.user.display_name else '@' + pr.user.login }}
   * Labels: {{ pr.labels|map(attribute='name')|join(', ') or 'None' }}
   * [View PR|{{ pr.html_url }}]
 
@@ -197,7 +214,8 @@ h2. 📞 Contact Information
 
 ---
 
-*Generated automatically by RC Release Automation on {{ generation_timestamp }}*"""
+*Generated automatically by RC Release Automation on {{ generation_timestamp }}*
+"""
 
     return Template(template_content)
 
@@ -231,6 +249,10 @@ def render_release_notes(prs: List, params: Dict[str, Any], output_dir: Path, co
         logger.info(f"Categorizing {len(prs)} PRs...")
         categories = categorize_prs(prs)
         
+        # Filter international PRs based on configuration
+        international_prs = filter_international_prs(prs, config)
+        logger.info(f"Found {len(international_prs)} international/tenant PRs")
+        
         # Create PR categories mapping for template
         pr_categories = {}
         for category, prs_in_category in categories.items():
@@ -247,6 +269,8 @@ def render_release_notes(prs: List, params: Dict[str, Any], output_dir: Path, co
                     pr_categories[pr.number] = "docs"
                 elif category == "infrastructure":
                     pr_categories[pr.number] = "infra"
+                elif category == "international":
+                    pr_categories[pr.number] = "international"
                 else:
                     pr_categories[pr.number] = "feature"
         
@@ -313,8 +337,8 @@ def render_release_notes(prs: List, params: Dict[str, Any], output_dir: Path, co
             "pr_categories": pr_categories,
             "categories": categories,
             
-            # International PRs (use from params if provided, otherwise empty)
-            "international_prs": params.get("international_prs", []),
+            # International PRs (now properly filtered)
+            "international_prs": international_prs,
             "ccm_updates": [],  # Would come from external system
             
             # Schema and automation URLs
@@ -329,7 +353,7 @@ def render_release_notes(prs: List, params: Dict[str, Any], output_dir: Path, co
         
         # Generate section 8 and 9 using the new inline panel functions
         section_8_markup = generate_schema_and_features_section(prs, pr_categories)
-        section_9_markup = generate_international_section(template_vars.get('international_prs', []))
+        section_9_markup = generate_international_section(international_prs)  # Use filtered international PRs
         
         # Add pre-generated sections to template vars
         template_vars["section_8_markup"] = section_8_markup
@@ -531,19 +555,22 @@ def generate_schema_and_features_section(prs: List, pr_categories: Dict[int, str
     
     if schema_prs:
         for pr in schema_prs:
+            # Use enhanced display name if available, fallback to @username
+            author_display = getattr(pr.user, 'display_name', f"@{pr.user.login}")
+            
             row = [
                 "❌",
                 f"[#{pr.number}|{pr.html_url}]",
-                f"@{pr.user.login}",
+                author_display,
                 pr.title[:50] + ("..." if len(pr.title) > 50 else ""),
-                "✅",
-                "✅", 
+                "❌",
+                "❌", 
                 getattr(pr, 'image_url', 'None') or 'None'
             ]
             schema_rows.append(row)
     else:
         # Default empty row
-        schema_rows.append(["❌", "TBD", "TBD", "No schema changes in this release", "✅", "✅", "None"])
+        schema_rows.append(["❌", "TBD", "TBD", "No schema changes in this release", "✅", "❌", "None"])
     
     panels.append({
         'title': 'Schema Changes',
@@ -559,15 +586,18 @@ def generate_schema_and_features_section(prs: List, pr_categories: Dict[int, str
     for pr in (feature_bugfix_prs or prs):  # Use all PRs if no specific feature/bugfix PRs
         pr_type = pr_categories.get(pr.number, 'feature')
         
+        # Use enhanced display name if available, fallback to @username
+        author_display = getattr(pr.user, 'display_name', f"@{pr.user.login}")
+        
         row = [
             "❌",
             f"[#{pr.number}|{pr.html_url}]",
-            f"@{pr.user.login}",
-            pr.title[:50] + ("..." if len(pr.title) > 50 else ""),
+            author_display,
+            pr.title[:70] + ("..." if len(pr.title) > 70 else ""),
             pr_type,
             "TBD",
-            "✅",
-            "✅",
+            "❌",
+            "❌",
             "⭕",
             getattr(pr, 'image_url', 'None') or 'None',
             "✅" if getattr(pr, 'screenshots', {}).get('iOS') else "❌",
@@ -599,12 +629,15 @@ def generate_international_section(international_prs: List = None) -> str:
     
     if international_prs:
         for pr in international_prs:
+            # Use enhanced display name if available, fallback to username
+            author_display = getattr(pr.user, 'display_name', pr.user.login if hasattr(pr, 'user') and hasattr(pr.user, 'login') else "Unknown")
+            
             rows.append([
                 f"PR #{pr.number}",
-                pr.user.login if hasattr(pr, 'user') and hasattr(pr.user, 'login') else "Unknown",
+                author_display,
                 pr.title,
                 pr.html_url if hasattr(pr, 'html_url') else f"#PR{pr.number}",
-                "✅"
+                "❌"
             ])
     else:
         # Default row when no international changes
@@ -616,4 +649,48 @@ def generate_international_section(international_prs: List = None) -> str:
         'headers': ['PR', 'Developer', 'Description', 'Link', 'Status']
     }]
     
-    return generate_confluence_section_with_panels(9, "Internationalization & Localization Changes", panels) 
+    return generate_confluence_section_with_panels(9, "Internationalization & Localization Changes", panels)
+
+
+def filter_international_prs(prs: List, config=None) -> List:
+    """
+    Filter PRs that should be included in the international section based on labels.
+    
+    Args:
+        prs: List of all PRs
+        config: Configuration object with international_labels setting
+        
+    Returns:
+        List of PRs that are international/tenant-related
+    """
+    if not prs:
+        return []
+    
+    # Get international labels from config
+    international_labels = []
+    if config and hasattr(config, 'organization') and hasattr(config.organization, 'international_labels'):
+        international_labels = config.organization.international_labels
+    else:
+        # Default international labels
+        international_labels = ["international", "i18n", "localization", "locale", "tenant", "multi-tenant", "internationalization"]
+    
+    international_prs = []
+    
+    for pr in prs:
+        pr_labels = [label.name.lower() for label in pr.labels]
+        pr_title_lower = pr.title.lower()
+        pr_body_lower = getattr(pr, 'body', '').lower() if hasattr(pr, 'body') and pr.body else ''
+        
+        # Check if PR matches any international labels
+        is_international = False
+        for int_label in international_labels:
+            if (int_label.lower() in " ".join(pr_labels) or
+                int_label.lower() in pr_title_lower or
+                int_label.lower() in pr_body_lower):
+                is_international = True
+                break
+        
+        if is_international:
+            international_prs.append(pr)
+    
+    return international_prs 

@@ -105,6 +105,19 @@ class OrganizationConfig(BaseModel):
     default_service: str = Field(default="your-service", description="Default service name")
     timezone: str = Field(default="UTC", description="Default timezone")
     regions: List[str] = Field(default=["EUS", "SCUS", "WUS"], description="Deployment regions")
+    platform: str = Field(default="Glass", description="Platform type")
+    
+    # Release team defaults (optional)
+    idc_captain: Optional[str] = Field(default=None, description="IDC Release Captain")
+    idc_engineer: Optional[str] = Field(default=None, description="IDC Release Engineer")
+    us_captain: Optional[str] = Field(default=None, description="US Release Captain")
+    us_engineer: Optional[str] = Field(default=None, description="US Release Engineer")
+    
+    # International and tenant labels configuration
+    international_labels: List[str] = Field(
+        default=["international", "i18n", "localization", "locale", "tenant", "multi-tenant"],
+        description="List of labels that identify international or tenant-related PRs"
+    )
 
 
 class AppConfig(BaseModel):
@@ -468,6 +481,38 @@ def validate_modal_input(field_name: str, value: str, field_config: ModalFieldCo
         return False, f"{field_name} must be one of: {', '.join(field_config.options)}"
     
     return True, None
+
+
+def extract_service_name_from_repo(repo_url: str) -> str:
+    """
+    Extract service name from GitHub repository URL.
+    
+    Args:
+        repo_url: Repository URL in format "owner/repo-name"
+        
+    Returns:
+        Service name extracted from repo name
+    """
+    try:
+        # Handle both full URLs and owner/repo format
+        if "/" in repo_url:
+            repo_name = repo_url.split("/")[-1]
+        else:
+            repo_name = repo_url
+            
+        # Remove common prefixes and clean up name
+        service_name = repo_name.lower()
+        
+        # Remove common prefixes
+        prefixes_to_remove = ["service-", "app-", "api-", "microservice-"]
+        for prefix in prefixes_to_remove:
+            if service_name.startswith(prefix):
+                service_name = service_name[len(prefix):]
+                break
+                
+        return service_name
+    except Exception:
+        return "unknown-service"
 
 
 # Global configuration instance (loaded on import)
