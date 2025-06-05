@@ -62,6 +62,150 @@ python -m src.cli.run_release_agent
 
 Follow the prompts to generate professional release documentation!
 
+## 🏗️ How the RC Release Agent Works
+
+```mermaid
+graph TB
+    %% User Inputs
+    subgraph "🎯 Input Sources"
+        CLI[👨‍💻 Interactive CLI<br/>rc-release-agent]
+        SLACK[💬 Slack Modal<br/>Future Integration]
+        GITHUB[🐙 GitHub Repository<br/>Tags, Commits, PRs]
+    end
+
+    %% Configuration
+    subgraph "⚙️ Configuration Layer"
+        CONFIG[📋 settings.yaml<br/>• GitHub Token<br/>• Repository Info<br/>• LLM Settings<br/>• Templates]
+        ENV[🔐 Environment<br/>GITHUB_TOKEN<br/>WMT_LLM_API_KEY<br/>WMT_LLM_API_URL]
+    end
+
+    %% Core Processing Engine
+    subgraph "🧠 Core Processing Engine"
+        FETCH[📥 PR Fetcher<br/>• GitHub API Integration<br/>• Tag/Commit Comparison<br/>• Merge Commit Analysis]
+        ANALYZE[🔍 PR Analyzer<br/>• Label-based Categorization<br/>• Author Extraction<br/>• Change Classification]
+        LLM[🤖 LLM Processor<br/>• Walmart Gateway<br/>• OpenAI Integration<br/>• AI-Enhanced Summaries]
+    end
+
+    %% Document Generation
+    subgraph "📝 Document Generation"
+        NOTES[📄 Release Notes<br/>• Confluence Format<br/>• Markdown Format<br/>• Section-based Layout]
+        CRQ[📋 CRQ Documents<br/>• Day 1 Setup<br/>• Day 2 Release<br/>• Enterprise Format]
+        SLACK_MSG[💬 Slack Messages<br/>• Block Kit Format<br/>• Progress Tracking<br/>• Team Notifications]
+    end
+
+    %% Output & Integration
+    subgraph "📤 Output & Integration"
+        FILES[📁 Generated Files<br/>• /output/service_v1.0.0_timestamp/<br/>• release_notes.txt<br/>• release_notes.md<br/>• crq_day1.txt<br/>• crq_day2.txt<br/>• rc_config.json]
+        COPY[📋 Copy-Paste Ready<br/>• Confluence Wiki Markup<br/>• Enterprise CRQ Format<br/>• Professional Language]
+    end
+
+    %% Integrations & APIs
+    subgraph "🔗 External Integrations"
+        GH_API[🌐 GitHub API<br/>api.github.com<br/>Enterprise Support]
+        LLM_GW[🚀 LLM Gateway<br/>Walmart Internal<br/>SSL Certificates]
+        SLACK_API[💬 Slack API<br/>Block Kit Messages<br/>Socket Mode]
+    end
+
+    %% Workflow Connections
+    CLI --> CONFIG
+    CONFIG --> ENV
+    CLI --> FETCH
+    GITHUB --> FETCH
+    ENV --> FETCH
+    
+    FETCH --> GH_API
+    GH_API --> ANALYZE
+    
+    ANALYZE --> LLM
+    LLM --> LLM_GW
+    LLM_GW --> NOTES
+    
+    ANALYZE --> NOTES
+    ANALYZE --> CRQ
+    ANALYZE --> SLACK_MSG
+    
+    NOTES --> FILES
+    CRQ --> FILES
+    SLACK_MSG --> SLACK_API
+    
+    FILES --> COPY
+
+    %% Styling
+    classDef inputStyle fill:#e1f5fe,stroke:#01579b,stroke-width:2px,color:#000
+    classDef processStyle fill:#f3e5f5,stroke:#4a148c,stroke-width:2px,color:#000
+    classDef outputStyle fill:#e8f5e8,stroke:#1b5e20,stroke-width:2px,color:#000
+    classDef integrationStyle fill:#fff3e0,stroke:#e65100,stroke-width:2px,color:#000
+
+    class CLI,SLACK,GITHUB inputStyle
+    class CONFIG,ENV,FETCH,ANALYZE,LLM processStyle  
+    class NOTES,CRQ,SLACK_MSG,FILES,COPY outputStyle
+    class GH_API,LLM_GW,SLACK_API integrationStyle
+```
+
+### 🔄 Detailed Workflow Steps
+
+**1. 🎯 User Initiation**
+```
+User runs: python -m src.cli.run_release_agent
+↓
+Interactive prompts collect:
+• RC Name & Manager
+• Version range (v1.0.0 → v1.1.0)  
+• Service name
+• Release dates
+• Output preferences
+```
+
+**2. 🔍 GitHub Analysis**
+```
+GitHub API Integration:
+• Authenticate with personal access token
+• Compare version tags/commits
+• Fetch all merged PRs in range
+• Extract PR metadata (titles, labels, authors)
+• Categorize by type (feature/bug/schema/international)
+```
+
+**3. 🤖 AI Enhancement (Version 3.0)**
+```
+LLM Processing:
+• Send PR summaries to Walmart Gateway
+• Generate executive-friendly summaries
+• Enhance technical descriptions
+• Create professional language
+• Fallback to template-based if AI unavailable
+```
+
+**4. 📝 Document Generation**
+```
+Multi-Format Output:
+• Confluence release notes (wiki markup)
+• Markdown release notes (GitHub ready)
+• CRQ Day 1 document (setup instructions)
+• CRQ Day 2 document (release execution)
+• Configuration backup (JSON)
+```
+
+**5. 📤 Professional Output**
+```
+Enterprise-Ready Results:
+• Copy-paste ready for Confluence
+• Professional formatting and language
+• Complete audit trail
+• Timestamp-based organization
+• Zero manual formatting required
+```
+
+### ⚡ Key Advantages
+
+- **🚀 Speed**: 30-minute manual process → 5-minute automation
+- **📊 Accuracy**: Automated PR analysis eliminates human error  
+- **🎯 Consistency**: Template-based formatting ensures standards
+- **🔗 Integration**: Direct GitHub API connection for real-time data
+- **🤖 AI-Powered**: Smart categorization and executive summaries
+- **📋 Enterprise**: Professional CRQ and release documentation
+- **🔄 Flexible**: Works with tags, commits, branches, and date ranges
+
 ## 📁 Project Structure
 
 ```
