@@ -85,8 +85,37 @@ class ReleaseSignoffNotifier:
             logger.error(f"❌ Unexpected error: {e}")
             return False
 
-    def create_initial_message(self) -> str:
-        """Create the initial sign-off request message"""
+    def create_initial_message(self) -> tuple[str, list]:
+        """Create the initial sign-off request message with Block Kit formatting"""
+        # Try to use Block Kit messages if available
+        try:
+            from src.slack.block_kit_messages import create_initial_signoff_message
+            
+            # Format cutoff time for display
+            cutoff_time_display = self.config.cutoff_time_utc
+            
+            # Create Block Kit message
+            block_kit_message = create_initial_signoff_message(
+                service_name=self.config.service_name or "Service",
+                version=self.config.new_version or "Unknown",
+                day1_date=self.config.day1_date,
+                day2_date=self.config.day2_date,
+                cutoff_time=cutoff_time_display,
+                authors=self.config.authors,
+                rc_name=self.config.rc.replace('@', ''),  # Remove @ if present
+                rc_manager=self.config.rc_manager.replace('@', '')
+            )
+            
+            # Return both text and blocks
+            return block_kit_message["text"], block_kit_message["blocks"]
+            
+        except ImportError:
+            logger.warning("Block Kit messages not available, using fallback text")
+            # Fallback to original text-based message
+            return self._create_fallback_initial_message(), None
+    
+    def _create_fallback_initial_message(self) -> str:
+        """Create the original text-based initial message as fallback"""
         authors_list = "\n".join([f"• {author}" for author in self.config.authors])
         
         message = f"""🚀 **Release Sign-off Required**
@@ -107,8 +136,25 @@ Thank you for your prompt response!
         
         return message
 
-    def create_reminder_message(self, hours_remaining: int) -> str:
-        """Create reminder message"""
+    def create_reminder_message(self, hours_remaining: int) -> tuple[str, list]:
+        """Create reminder message with Block Kit formatting"""
+        try:
+            from src.slack.block_kit_messages import create_reminder_message
+            
+            # Format cutoff time for display
+            cutoff_time_display = self.config.cutoff_time_utc
+            
+            # Create Block Kit message
+            block_kit_message = create_reminder_message(cutoff_time_display)
+            
+            return block_kit_message["text"], block_kit_message["blocks"]
+            
+        except ImportError:
+            logger.warning("Block Kit messages not available, using fallback text")
+            return self._create_fallback_reminder_message(hours_remaining), None
+    
+    def _create_fallback_reminder_message(self, hours_remaining: int) -> str:
+        """Create the original text-based reminder message as fallback"""
         authors_list = "\n".join([f"• {author}" for author in self.config.authors])
         
         if hours_remaining <= 1:
@@ -134,8 +180,35 @@ If you don't sign off by the deadline, your changes may need to be removed from 
         
         return message
 
-    def create_final_message(self, all_signed_off: bool = False) -> str:
-        """Create final escalation or success message"""
+    def create_final_message(self, all_signed_off: bool = False) -> tuple[str, list]:
+        """Create final escalation or success message with Block Kit formatting"""
+        try:
+            if all_signed_off:
+                from src.slack.block_kit_messages import create_all_signed_off_message
+                
+                block_kit_message = create_all_signed_off_message(
+                    rc_name=self.config.rc.replace('@', ''),
+                    total_prs=len(self.config.authors) * 2,  # Estimate
+                    total_authors=len(self.config.authors)
+                )
+            else:
+                from src.slack.block_kit_messages import create_pending_signoffs_message
+                
+                block_kit_message = create_pending_signoffs_message(
+                    rc_name=self.config.rc.replace('@', ''),
+                    rc_manager=self.config.rc_manager.replace('@', ''),
+                    pending_authors=[author.replace('@', '') for author in self.config.authors],
+                    cutoff_time=self.config.cutoff_time_utc
+                )
+            
+            return block_kit_message["text"], block_kit_message["blocks"]
+            
+        except ImportError:
+            logger.warning("Block Kit messages not available, using fallback text")
+            return self._create_fallback_final_message(all_signed_off), None
+    
+    def _create_fallback_final_message(self, all_signed_off: bool = False) -> str:
+        """Create the original text-based final message as fallback"""
         if all_signed_off:
             message = f"""✅ **All Sign-offs Complete!**
 
@@ -165,45 +238,45 @@ The following PR authors have NOT signed off by the deadline `{self.config.cutof
         return message
 
     def send_initial_message(self):
-        """Send the initial sign-off request"""
+        """Send the initial sign-off request with Block Kit formatting"""
         logger.info("📤 Sending initial sign-off request...")
-        message = self.create_initial_message()
-        success = self.post_message(message)
+        text, blocks = self.create_initial_message()
+        success = self.post_message(text, blocks)
         
         if success:
-            logger.info("✅ Initial message sent successfully")
+            logger.info("✅ Initial Block Kit message sent successfully")
         else:
             logger.error("❌ Failed to send initial message")
         
         return success
 
     def send_reminder(self, hours_remaining: int):
-        """Send reminder message"""
+        """Send reminder message with Block Kit formatting"""
         logger.info(f"📤 Sending reminder ({hours_remaining}h remaining)...")
-        message = self.create_reminder_message(hours_remaining)
-        success = self.post_message(message)
+        text, blocks = self.create_reminder_message(hours_remaining)
+        success = self.post_message(text, blocks)
         
         if success:
-            logger.info(f"✅ Reminder sent ({hours_remaining}h remaining)")
+            logger.info(f"✅ Block Kit reminder sent ({hours_remaining}h remaining)")
         else:
             logger.error(f"❌ Failed to send reminder ({hours_remaining}h remaining)")
             # Retry once after 30 seconds
             time.sleep(30)
             logger.info("🔄 Retrying reminder...")
-            self.post_message(message)
+            self.post_message(text, blocks)
         
         return success
 
     def send_final_message(self, all_signed_off: bool = False):
-        """Send final message (escalation or success)"""
+        """Send final message (escalation or success) with Block Kit formatting"""
         logger.info("📤 Sending final message...")
-        message = self.create_final_message(all_signed_off)
+        text, blocks = self.create_final_message(all_signed_off)
         
         # Critical message - retry up to 3 times
         for attempt in range(3):
-            success = self.post_message(message)
+            success = self.post_message(text, blocks)
             if success:
-                logger.info("✅ Final message sent successfully")
+                logger.info("✅ Final Block Kit message sent successfully")
                 return True
             else:
                 logger.warning(f"⚠️ Final message failed (attempt {attempt + 1}/3)")

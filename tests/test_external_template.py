@@ -23,7 +23,7 @@ def test_dashboard_configuration():
     
     try:
         # Load test configuration
-        config = load_config("config/settings.test.yaml")
+        config = load_config("src/config/settings.test.yaml")
         
         # Test dashboard URL access
         dashboard_urls = config.dashboard.get_dashboard_urls()
@@ -56,7 +56,7 @@ def test_external_template_manager():
     
     try:
         # Load test configuration  
-        config = load_config("config/settings.test.yaml")
+        config = load_config("src/config/settings.test.yaml")
         
         # Create external template manager
         manager = ExternalTemplateManager(config)
@@ -99,7 +99,7 @@ def test_configuration_loading():
     
     try:
         # Load test configuration
-        config = load_config("config/settings.test.yaml")
+        config = load_config("src/config/settings.test.yaml")
         
         # Check dashboard config
         print(f"✅ Dashboard URLs configured:")

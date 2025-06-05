@@ -9,7 +9,7 @@ from datetime import datetime
 from .rc_agent_build_release import get_release_inputs
 
 # Import the main workflow functions
-from src.github.fetch_prs import fetch_prs
+from src.github_integration.fetch_prs import fetch_prs
 from src.release_notes.release_notes import render_release_notes, render_release_notes_markdown
 from src.crq.generate_crqs import generate_crqs
 from src.config.config import load_config, GitHubConfig, Settings, SlackConfig, OrganizationConfig, AIConfig

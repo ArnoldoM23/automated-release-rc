@@ -28,7 +28,7 @@ import json
 
 from src.utils.logging import get_logger
 from src.config.config import GitHubConfig
-from src.github.fetch_prs import GitHubClient, fetch_prs
+from src.github_integration.fetch_prs import GitHubClient, fetch_prs
 
 
 def check_github_environment():
@@ -381,16 +381,9 @@ Examples:
     args = parser.parse_args()
     
     if args.test_all:
-        setup = interactive_setup()
-        if setup:
-            success = run_comprehensive_test(
-                setup["repo_name"], 
-                setup["old_tag"], 
-                setup["new_tag"]
-            )
-            sys.exit(0 if success else 1)
-        else:
-            sys.exit(1)
+        # Use default test repository instead of interactive setup
+        success = run_comprehensive_test("ArnoldoM23/PerfCopilot", "v0.0.1", "v0.4.7")
+        sys.exit(0 if success else 1)
     
     elif args.list_tags:
         if not args.repo:

@@ -26,7 +26,7 @@ def test_package_structure():
         'src/cli/__init__.py',
         'src/cli/run_release_agent.py',
         'src/cli/rc_agent_build_release.py',
-        'src/github/__init__.py',
+        'src/github_integration/__init__.py',
         'src/slack/__init__.py',
         'src/slack/release_signoff_notifier.py',
         'src/crq/__init__.py',

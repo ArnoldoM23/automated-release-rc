@@ -39,9 +39,10 @@ h1. {{ service_name }} (release date {{ release_date }})
 - [ ] Regression and Validation
 - [ ] Clean-up CCMs from production ||
 || 7 || Fed services updated – KITT pipeline || {{ service_name }} ||
-{{ section_8_markup }}
+|| 8 || Release Summary || {{ section_8_markup|default('AI-generated release summary will appear here when LLM is enabled.') }} ||
 {{ section_9_markup }}
-|| 10 || CCM Prod Updates || {panel:title=CCM Prod Updates|borderStyle=solid|borderColor=#ccc|titleBGColor=#E0F7EA|bgColor=#FFFFFF}
+{{ section_10_markup }}
+|| 11 || CCM Prod Updates || {panel:title=CCM Prod Updates|borderStyle=solid|borderColor=#ccc|titleBGColor=#E0F7EA|bgColor=#FFFFFF}
 || CCM || Type || Value || Owner || Comments ||
 {% for ccm in ccm_updates|default([]) %}
 | {{ ccm.name }} | {{ ccm.type }} | {{ ccm.value }} | @{{ ccm.owner }} | {{ ccm.comments }} |
@@ -49,22 +50,22 @@ h1. {{ service_name }} (release date {{ release_date }})
 | N/A | N/A | No CCM updates required | @{{ rc_name }} | octo's to clean up |
 {% endfor %}
 {panel} ||
-|| 11 || URLs & Dashboards || 1. [Grafana|{{ p0_dashboard_url|default('https://grafana.company.com/d/service-dashboard') }}]  
+|| 12 || URLs & Dashboards || 1. [Grafana|{{ p0_dashboard_url|default('https://grafana.company.com/d/service-dashboard') }}]  
 2. [Service Dashboard|{{ dashboard_url|default('https://dashboard.company.com/' + service_name) }}]  
 3. [DataDog APM|{{ datadog_url|default('https://app.datadoghq.com/apm/services') }}]  
 4. [Alerts|{{ alerts_url|default('https://alerts.company.com/' + service_name) }}] ||
-|| 12 || Rollback Artifact Version || {panel:title=Rollback Artifact Version|borderStyle=solid|borderColor=#ccc|titleBGColor=#E0F7EA|bgColor=#FFFFFF}
+|| 13 || Rollback Artifact Version || {panel:title=Rollback Artifact Version|borderStyle=solid|borderColor=#ccc|titleBGColor=#E0F7EA|bgColor=#FFFFFF}
 || Field || Value ||
 | Branch | {{ rollback_branch|default(base_branch|default('main')) }} |
 | Version | {{ rollback_version|default(prod_version) }} |
 | Commit | `{{ rollback_sha|default(base_sha|default('TBD')) }}` |
 | Slack | [thread|{{ slack_thread_url|default('#release-rc') }}] |
 {panel} ||
-|| 13 || Git Code Diffs || [Compare {{ prod_version }}...{{ new_version }}|{{ diff_url|default('https://github.com/' + github_repo + '/compare/' + prod_version + '...' + new_version) }}] ||
-|| 14 || Schema & Automation || * [Combined Changes|{{ schema_report_url|default('TBD') }}]  
+|| 14 || Git Code Diffs || [Compare {{ prod_version }}...{{ new_version }}|{{ diff_url|default('https://github.com/' + github_repo + '/compare/' + prod_version + '...' + new_version) }}] ||
+|| 15 || Schema & Automation || * [Combined Changes|{{ schema_report_url|default('TBD') }}]  
 * [Automation Run|{{ automation_run_url|default('TBD') }}]  
 * [Test Results|{{ test_results_url|default('TBD') }}] ||
-|| 15 || Deployment Notes || {panel:title=Deployment Notes|borderStyle=solid|borderColor=#ccc|titleBGColor=#E0F7EA|bgColor=#FFFFFF}
+|| 16 || Deployment Notes || {panel:title=Deployment Notes|borderStyle=solid|borderColor=#ccc|titleBGColor=#E0F7EA|bgColor=#FFFFFF}
 || Cluster || Notes ||
 | {{ cluster1|default('EUS') }} | {{ cluster1_notes|default('Standard deployment - no special notes') }} |
 | {{ cluster2|default('SCUS') }} | {{ cluster2_notes|default('Standard deployment - no special notes') }} |

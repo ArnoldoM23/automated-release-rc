@@ -5,40 +5,46 @@
 
 # Slack Configuration
 slack:
-  bot_token: "${SLACK_BOT_TOKEN}"
-  signing_secret: "${SLACK_SIGNING_SECRET}"
-  app_token: "${SLACK_APP_TOKEN}"  # For Socket Mode
+  bot_token: "xoxb-test-token-123"
+  signing_secret: "test-signing-secret"
+  app_token: "xapp-test-app-token-123"  # For Socket Mode
   default_channels:
     - "#releases"
     - "#general"
   
 # GitHub Configuration  
 github:
-  token: "${GITHUB_TOKEN}"
-  repo: "${GITHUB_REPO}"  # Format: owner/repo
+  token: "ghp_test-token-123"
+  repo: "test-org/test-repo"  # Format: owner/repo
   api_url: "https://api.github.com"  # For GitHub Enterprise: https://your-enterprise.github.com/api/v3
   
 # AI Configuration (multiple providers supported)
 ai:
   provider: "openai"  # openai, azure, anthropic
   openai:
-    api_key: "${OPENAI_API_KEY}"
+    api_key: "test-openai-key-123"
     model: "gpt-4-1106-preview"
     api_base: "https://api.openai.com/v1"
   azure:
-    endpoint: "${AZURE_OPENAI_ENDPOINT}"
-    api_key: "${AZURE_OPENAI_API_KEY}"
+    endpoint: "https://test.openai.azure.com"
+    api_key: "test-azure-key-123"
     api_version: "2023-12-01-preview"
-    deployment: "${AZURE_OPENAI_DEPLOYMENT}"
+    deployment: "test-deployment"
   anthropic:
-    api_key: "${ANTHROPIC_API_KEY}"
+    api_key: "test-anthropic-key-123"
     model: "claude-3-sonnet-20240229"
+
+# LLM Gateway Configuration
+llm:
+  gateway_url: "https://test-llm-gateway.example.com"
+  timeout: 30
+  max_retries: 3
 
 # Organization-specific Settings
 organization:
-  name: "${ORGANIZATION_NAME:Your Company}"
-  default_service: "${DEFAULT_SERVICE_NAME:your-service}"
-  timezone: "${TIMEZONE:UTC}"
+  name: "Test Company"
+  default_service: "test-service"
+  timezone: "UTC"
   regions:
     - "EUS"  # East US
     - "SCUS" # South Central US
@@ -56,11 +62,11 @@ organization:
 
 # Application Settings
 app:
-  environment: "${ENVIRONMENT:development}"
-  log_level: "${LOG_LEVEL:INFO}"
-  deployment_mode: "${DEPLOYMENT_MODE:socket}"  # socket, http
-  port: ${PORT:3000}
-  output_dir: "${OUTPUT_DIR:output}"
+  environment: "development"
+  log_level: "INFO"
+  deployment_mode: "socket"  # socket, http
+  port: 3000
+  output_dir: "test_output"
 
 # Modal Field Configuration
 modal:
@@ -186,4 +192,20 @@ integrations:
     enabled: false
     instance: "${SERVICENOW_INSTANCE:}"
     username: "${SERVICENOW_USERNAME:}"
-    password: "${SERVICENOW_PASSWORD:}" 
+    password: "${SERVICENOW_PASSWORD:}"
+
+# Dashboard Configuration
+dashboard:
+  confluence_dashboard_url: "https://confluence.test.com/display/SERVICE/Dashboards"
+  p0_dashboard_url: "https://grafana.test.com/d/service-p0"
+  l1_dashboard_url: "https://grafana.test.com/d/service-l1"
+  services_dashboard_url: "https://grafana.test.com/d/services"
+  wcnp_dashboard_url: "https://grafana.test.com/d/wcnp"
+  istio_dashboard_url: "https://grafana.test.com/d/istio"
+
+# External Template Configuration
+external_template:
+  enabled: false  # Disabled for testing to avoid download errors
+  template_url: "https://sharepoint.test.com/CRQ_Template.docx"
+  fallback_to_builtin: true
+  cache_duration: 3600 

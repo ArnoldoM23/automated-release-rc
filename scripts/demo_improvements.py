@@ -17,7 +17,7 @@ project_root = Path(__file__).parent
 sys.path.insert(0, str(project_root))
 
 from src.config.config import load_config, extract_service_name_from_repo
-from src.github.fetch_prs import GitHubClient
+from src.github_integration.fetch_prs import GitHubClient
 from src.release_notes.release_notes import filter_international_prs
 
 
@@ -192,12 +192,13 @@ def main():
     print("\n" + "=" * 60)
     print("✅ ALL IMPROVEMENTS IMPLEMENTED!")
     print("=" * 60)
-    print("🚀 Ready for major demo to the whole organization!")
-    print("\nTo test with real GitHub data:")
-    print("1. Set GITHUB_TOKEN environment variable")
-    print("2. Run: python main.py")
-    print("3. See enhanced RC names and service pre-filling in action")
-    
+    print("🚀 Version 2.0 Demo Complete!")
+    print("\n📋 Next Steps:")
+    print("1. Set up your GitHub token: export GITHUB_TOKEN='ghp_...'")
+    print("2. Run: rc-release-agent")
+    print("3. Test the improvements with real data")
+    print("4. Deploy to production!")
+
 
 if __name__ == "__main__":
     main() 

@@ -24,7 +24,7 @@ from datetime import datetime, timedelta
 from typing import List, Dict, Any, Optional
 
 from src.utils.logging import get_logger
-from src.github.fetch_prs import fetch_prs
+from src.github_integration.fetch_prs import fetch_prs
 from src.release_notes.release_notes import render_release_notes, render_release_notes_markdown
 from src.crq.generate_crqs import generate_crqs
 from src.config.config import load_config, GitHubConfig
@@ -95,7 +95,7 @@ class RealGitHubWorkflowTester:
             
             # Step 4: Load configuration
             self.logger.info("🔧 Step 3: Loading configuration...")
-            config = load_config("config/settings.test.yaml")
+            config = load_config("src/config/settings.test.yaml")
             self.logger.info("✅ Configuration loaded")
             
             # Step 5: Generate release notes

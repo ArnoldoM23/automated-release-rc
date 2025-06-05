@@ -12,11 +12,25 @@ slack:
   
 # GitHub Configuration  
 github:
-  token: "xoxb-000000000000-000000000000-placeholder-for-testing"  # Your working token
+  token: "${GITHUB_TOKEN}"  # Set your GitHub token as environment variable
   repo: "ArnoldoM23/PerfCopilot"
   api_url: "https://api.github.com"
   
-# AI Configuration
+# LLM Configuration - Enhanced for Version 3.0
+llm:
+  provider: "walmart_sandbox"          # walmart_sandbox, openai, anthropic
+  model: "gpt-4o-mini"
+  api_key: "${WMT_LLM_API_KEY}"       # Use environment variable
+  gateway_url: "${WMT_LLM_API_URL}"   # Walmart LLM Gateway URL
+  enabled: true
+  fallback_enabled: true              # Use existing logic if LLM fails
+  cache_duration: 3600                # Cache responses to reduce API usage
+  max_tokens: 2000
+  temperature: 0.1                    # Lower temperature for consistent output
+  require_llm_for_crq: false         # Optional: enforce LLM for CRQ
+  cache_summaries: true               # Reuse summaries to reduce API calls
+
+# Legacy AI Configuration (for backward compatibility)
 ai:
   provider: "openai"
   openai:

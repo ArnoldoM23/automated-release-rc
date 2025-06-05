@@ -99,6 +99,33 @@ class AIConfig(BaseModel):
         return self
 
 
+class LLMConfig(BaseModel):
+    """Version 3.0 LLM configuration for enhanced AI features."""
+    provider: str = Field(default="walmart_sandbox", description="LLM provider: walmart_sandbox, openai, anthropic")
+    model: str = Field(default="gpt-4o-mini", description="Model to use")
+    api_key: Optional[str] = Field(None, description="API key for the LLM provider")
+    gateway_url: Optional[str] = Field(None, description="Gateway URL for Walmart LLM")
+    enabled: bool = Field(default=True, description="Enable LLM features")
+    fallback_enabled: bool = Field(default=True, description="Use fallback logic if LLM fails")
+    cache_duration: int = Field(default=3600, description="Cache duration in seconds")
+    max_tokens: int = Field(default=2000, description="Maximum tokens for responses")
+    temperature: float = Field(default=0.1, description="Temperature for response generation")
+    require_llm_for_crq: bool = Field(default=False, description="Require LLM for CRQ generation")
+    cache_summaries: bool = Field(default=True, description="Cache summaries to reduce API calls")
+
+    @validator('provider')
+    def validate_provider(cls, v):
+        if v not in ['walmart_sandbox', 'openai', 'anthropic']:
+            raise ValueError('Provider must be one of: walmart_sandbox, openai, anthropic')
+        return v
+
+    @validator('temperature')
+    def validate_temperature(cls, v):
+        if v < 0.0 or v > 2.0:
+            raise ValueError('Temperature must be between 0.0 and 2.0')
+        return v
+
+
 class OrganizationConfig(BaseModel):
     """Organization-specific configuration."""
     name: str = Field(default="Your Company", description="Organization name")
@@ -367,6 +394,7 @@ class Settings(BaseModel):
     slack: SlackConfig
     github: GitHubConfig
     ai: AIConfig
+    llm: LLMConfig = Field(default_factory=LLMConfig)  # Version 3.0 LLM configuration
     organization: OrganizationConfig = Field(default_factory=OrganizationConfig)
     app: AppConfig = Field(default_factory=AppConfig)
     modal: ModalConfig = Field(default_factory=ModalConfig)

@@ -19,16 +19,42 @@ source .venv/bin/activate  # On Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-### 2. Configure GitHub Token
+### 2. Setup GitHub Authentication
+
+**🔑 Creating a Classic GitHub Personal Access Token**
+
+The RC Agent requires a GitHub Personal Access Token to fetch PR data and interact with your repository. Follow these steps to create one:
+
+1. **Navigate to GitHub Token Settings:**
+   - Go to https://github.com/settings/tokens
+   - Or: GitHub → Settings → Developer settings → Personal access tokens → Tokens (classic)
+
+2. **Generate New Token:**
+   - Click **"Generate new token (classic)"**
+   - **Note/Description:** `RC Release Automation Agent`
+   - **Expiration:** 90 days (recommended) or your preferred duration
+
+3. **Select Required Scopes:**
+   - ✅ **`repo`** - Full control of private repositories
+     - Includes: repo:status, repo_deployment, public_repo, repo:invite
+   - ✅ **`workflow`** - Update GitHub Action workflows (if using GitHub Actions)
+   - ⚠️ **Important:** Do not select unnecessary scopes for security
+
+4. **Generate and Copy Token:**
+   - Click **"Generate token"**
+   - **IMMEDIATELY COPY** the token (format: `ghp_xxxxxxxxxxxx`)
+   - You won't be able to see it again!
+
+### 3. Configure GitHub Token
 Edit `src/config/settings.yaml`:
 ```yaml
 github:
-  token: "your_github_token_here"  # Replace with your actual token
-  repo: "your-org/your-repo"       # Update to your repository
+  token: "ghp_your_actual_token_here"  # Replace with your copied token
+  repo: "your-org/your-repo"           # Update to your repository
   api_url: "https://api.github.com"
 ```
 
-### 3. Run Interactive CLI
+### 4. Run Interactive CLI
 ```bash
 # Primary CLI command
 python -m src.cli.run_release_agent
@@ -130,17 +156,54 @@ You can also trigger via GitHub Actions by setting up repository secrets and usi
 ## 🔧 Configuration Setup
 
 ### GitHub Token (Required)
-1. Go to https://github.com/settings/tokens
-2. Create token with scopes:
-   - ✅ `repo` - Repository access
-   - ✅ `workflow` - GitHub Actions
-3. Update `src/config/settings.yaml`:
+
+**Step-by-Step Token Creation:**
+
+1. **Go to GitHub Token Settings:**
+   - Direct link: https://github.com/settings/tokens
+   - Or navigate: GitHub → Settings → Developer settings → Personal access tokens → Tokens (classic)
+
+2. **Create New Token:**
+   - Click **"Generate new token (classic)"**
+   - **Note:** `RC Release Automation Agent`
+   - **Expiration:** 90 days (recommended)
+
+3. **Required Scopes:**
+   - ✅ **`repo`** - Full control of private repositories
+     - This includes: repo:status, repo_deployment, public_repo, repo:invite, security_events
+   - ✅ **`workflow`** - Update GitHub Action workflows (optional, only if using GitHub Actions)
+
+4. **Token Format:**
+   - Classic tokens start with `ghp_` (e.g., `ghp_1234567890abcdef...`)
+   - Fine-grained tokens start with `github_pat_` (not recommended for this tool)
+
+5. **Update Configuration:**
    ```yaml
    github:
-     token: "ghp_your_token_here"
-     repo: "your-org/your-repo"
+     token: "ghp_your_token_here"    # Your actual token
+     repo: "your-org/your-repo"      # Your repository
      api_url: "https://api.github.com"
    ```
+
+**🔍 Troubleshooting Common Issues:**
+
+**401 Unauthorized:**
+- ❌ Token expired or invalid
+- ❌ Missing `repo` scope
+- ❌ Using fine-grained token instead of classic
+- ❌ Wrong API URL for enterprise GitHub
+
+**403 Forbidden:**
+- ❌ Repository doesn't exist or no access
+- ❌ Token lacks required permissions
+- ❌ Rate limiting (wait a few minutes)
+
+**Token Validation Test:**
+```bash
+# Test your token and repository access
+curl -H "Authorization: token YOUR_TOKEN" \
+     https://api.github.com/repos/YOUR_ORG/YOUR_REPO
+```
 
 ### GitHub Enterprise Server (Corporate Users)
 If you're using **GitHub Enterprise Server** (common in corporate environments), you need to update the API URL:
@@ -173,6 +236,50 @@ ai:
     model: "gpt-4-1106-preview"
     max_tokens: 1000
 ```
+
+## 🧠 Version 3.0 - LLM Integration Features
+
+**Enhanced AI-Powered Release Automation**
+
+Version 3.0 introduces advanced LLM integration for intelligent release documentation:
+
+### **🎯 Multi-Provider LLM Support**
+- **Walmart Enterprise Gateway** - Internal LLM access with SSL certificates
+- **OpenAI** - GPT-4o-mini and other OpenAI models  
+- **Anthropic** - Claude models for enterprise use
+- **Automatic Fallback** - Graceful degradation when LLM unavailable
+
+### **📊 AI-Generated Release Summaries**
+- **Section 8 Enhancement** - AI-powered release summaries for leadership
+- **International PR Filtering** - Smart detection of tenant/localization changes
+- **Executive-Friendly Language** - Optimized for non-technical stakeholders
+
+### **🔧 LLM Configuration**
+Edit `src/config/settings.yaml`:
+```yaml
+llm:
+  provider: "walmart_sandbox"          # walmart_sandbox, openai, anthropic
+  model: "gpt-4o-mini"
+  api_key: "${WMT_LLM_API_KEY}"       # Use environment variable
+  gateway_url: "${WMT_LLM_API_URL}"   # Walmart LLM Gateway URL
+  enabled: true
+  fallback_enabled: true              # Use existing logic if LLM fails
+  temperature: 0.1                    # Lower temperature for consistent output
+```
+
+### **🛡️ Enterprise Security Features**
+- **Environment Variable Integration** - Secure API key management
+- **SSL Certificate Support** - Walmart enterprise certificate handling
+- **Graceful Fallback** - Continues working when LLM unavailable
+- **Rate Limiting Protection** - Built-in request throttling
+
+### **📈 Enhanced Output Quality**
+- **Intelligent PR Categorization** - AI-assisted feature/bug/schema detection
+- **Rich Slack Block Kit Messages** - Modern Slack formatting with progress bars
+- **CRQ Generation** - AI-powered change request documentation
+- **Professional Language** - Enterprise-appropriate tone and terminology
+
+**🚀 Version 3.0 brings enterprise-grade AI to release automation while maintaining backward compatibility!**
 
 ## 🎉 What This Generates
 

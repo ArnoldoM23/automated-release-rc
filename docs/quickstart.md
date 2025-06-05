@@ -45,27 +45,141 @@ python -m src.cli.run_release_agent --help
 
 ## 🔑 **Step 2: GitHub Setup (2 minutes)**
 
-### **2.1 Create GitHub Personal Access Token**
-1. Go to: **GitHub** → **Settings** → **Developer settings** → **Personal access tokens** → **Tokens (classic)**
-2. Click **"Generate new token (classic)"**
-3. **Note:** `RC Release Automation`
-4. **Expiration:** 90 days (or your preference)
-5. **Scopes:** Select these checkboxes:
-   - ✅ `repo` (Full control of private repositories)
-   - ✅ `workflow` (Update GitHub Action workflows)
-6. Click **"Generate token"**
-7. **Copy the token immediately** (you won't see it again)
+### **2.1 Create GitHub Personal Access Token (Classic)**
 
-### **2.2 Update Configuration**
-Edit `src/config/settings.yaml` and replace the GitHub token:
+**Why Classic Tokens?** The RC Agent requires a classic Personal Access Token (PAT) for reliable repository access across different GitHub configurations.
+
+**📋 Step-by-Step Instructions:**
+
+1. **Navigate to Token Settings:**
+   - **Direct Link:** https://github.com/settings/tokens
+   - **Or Navigate:** GitHub → Profile Photo → Settings → Developer settings → Personal access tokens → Tokens (classic)
+
+2. **Generate New Token:**
+   - Click **"Generate new token (classic)"**
+   - **Note/Description:** `RC Release Automation Agent`
+   - **Expiration:** Select `90 days` (recommended) or your organization's policy
+   
+3. **⚠️ Critical: Select Required Scopes**
+   
+   **Required Scopes (check these boxes):**
+   - ✅ **`repo`** - Full control of private repositories
+     - ✅ `repo:status` (automatically included)
+     - ✅ `repo_deployment` (automatically included) 
+     - ✅ `public_repo` (automatically included)
+     - ✅ `repo:invite` (automatically included)
+     - ✅ `security_events` (automatically included)
+   
+   **Optional Scopes:**
+   - ✅ **`workflow`** - Update GitHub Action workflows (only if you plan to use GitHub Actions automation)
+   
+   **❌ Do NOT Select:**
+   - ❌ `admin:*` scopes (unnecessary and security risk)
+   - ❌ `delete_repo` (security risk)
+   - ❌ Fine-grained permissions (not supported)
+
+4. **Generate and Secure Token:**
+   - Click **"Generate token"**
+   - **🚨 IMMEDIATELY COPY** the token that appears
+   - Token format: `ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxx`
+   - **⚠️ You will NOT see this token again!**
+   - Store it securely (password manager recommended)
+
+**🔍 Token Validation (Optional but Recommended):**
+```bash
+# Test your token immediately after creation
+curl -H "Authorization: token ghp_your_token_here" \
+     https://api.github.com/user
+
+# Expected response: Your GitHub user info (200 OK)
+# Error response: {"message": "Bad credentials"} (401)
+```
+
+### **2.2 Update Configuration File**
+
+Edit `src/config/settings.yaml` and replace the placeholder values:
 
 ```yaml
 # GitHub Configuration  
 github:
-  token: "your_github_token_here"  # Replace with your actual token
-  repo: "YOUR_USERNAME/automated-release-rc"  # Update to your forked repo
+  token: "ghp_your_actual_token_here"  # Paste your copied token here
+  repo: "YOUR_USERNAME/automated-release-rc"  # Update to your forked repository
   api_url: "https://api.github.com"
 ```
+
+**📝 Configuration Examples:**
+
+**For Personal Fork:**
+```yaml
+github:
+  token: "ghp_1234567890abcdefghijklmnopqrstuvwxyz123"
+  repo: "john-doe/automated-release-rc"  
+  api_url: "https://api.github.com"
+```
+
+**For Organization Repository:**
+```yaml
+github:
+  token: "ghp_1234567890abcdefghijklmnopqrstuvwxyz123"
+  repo: "my-company/automated-release-rc"
+  api_url: "https://api.github.com"
+```
+
+**For GitHub Enterprise Server:**
+```yaml
+github:
+  token: "ghp_enterprise_token_here"
+  repo: "my-org/automated-release-rc"
+  api_url: "https://github.company.com/api/v3"  # Note the /api/v3 suffix
+```
+
+### **2.3 Verify Token Setup**
+
+Test your configuration before proceeding:
+
+```bash
+# Test configuration loading
+python -c "
+import sys
+sys.path.insert(0, 'src')
+from config.config import load_config
+config = load_config()
+print(f'✅ Config loaded: {config.github.repo}')
+print(f'🔑 Token format: {config.github.token[:8]}...')
+"
+
+# Test GitHub API access
+python -c "
+import sys
+sys.path.insert(0, 'src')
+from github.fetch_prs import test_github_connection
+test_github_connection()
+"
+```
+
+**Expected Output:**
+```
+✅ Config loaded: your-username/automated-release-rc
+🔑 Token format: ghp_1234...
+✅ GitHub API connection successful
+✅ Repository access confirmed
+```
+
+**🚨 Common Issues & Solutions:**
+
+**❌ "Bad credentials" (401 Error):**
+- Check token was copied correctly (no extra spaces)
+- Verify token hasn't expired
+- Ensure you're using a classic token (`ghp_` prefix)
+
+**❌ "Not Found" (404 Error):**
+- Check repository name format: `owner/repo-name`
+- Verify repository exists and is accessible
+- Ensure token has `repo` scope selected
+
+**❌ "API rate limit exceeded":**
+- Wait 60 minutes for rate limit reset
+- Or use a different GitHub account temporarily
 
 ---
 

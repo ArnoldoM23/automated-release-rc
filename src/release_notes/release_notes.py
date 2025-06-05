@@ -351,17 +351,23 @@ def render_release_notes(prs: List, params: Dict[str, Any], output_dir: Path, co
             "day2_time": "09:00"
         }
         
-        # Generate section 8 and 9 using the new inline panel functions
-        section_8_markup = generate_schema_and_features_section(prs, pr_categories)
-        section_9_markup = generate_international_section(international_prs)  # Use filtered international PRs
+        # === VERSION 3.0 - AI-POWERED RELEASE SUMMARY GENERATION ===
+        logger.info("Generating AI-powered release summary...")
+        section_8_markup = generate_ai_release_summary(prs, config)
+        
+        # Generate section 9 (schema/features) and section 10 (international)
+        section_9_markup = generate_schema_and_features_section_markup(prs, pr_categories)  # Now section 9 - Schema & Features
+        section_10_markup = generate_international_section_markup(international_prs)  # Now section 10 - International
         
         # Add pre-generated sections to template vars
         template_vars["section_8_markup"] = section_8_markup
         template_vars["section_9_markup"] = section_9_markup
+        template_vars["section_10_markup"] = section_10_markup
         
         # Debug: Log the pre-generated sections
-        logger.info(f"Section 8 markup preview: {section_8_markup[:150]}...")
-        logger.info(f"Section 9 markup preview: {section_9_markup[:150]}...")
+        logger.info(f"Section 8 (AI Summary) preview: {section_8_markup[:150]}...")
+        logger.info(f"Section 9 (Schema/Features) preview: {section_9_markup[:150]}...")
+        logger.info(f"Section 10 (International) preview: {section_10_markup[:150]}...")
         
         # Load and render template
         try:
@@ -399,6 +405,139 @@ def render_release_notes(prs: List, params: Dict[str, Any], output_dir: Path, co
     except Exception as e:
         logger.error(f"Failed to generate release notes: {e}")
         raise
+
+
+def generate_ai_release_summary(prs: List, config) -> str:
+    """
+    Generate AI-powered release summary for Section 8.
+    
+    Args:
+        prs: List of PR objects
+        config: Configuration object with LLM settings
+        
+    Returns:
+        Formatted release summary markup
+    """
+    logger = get_logger(__name__)
+    
+    try:
+        # Check if LLM is enabled in config
+        llm_config = getattr(config, 'llm', None)
+        if not llm_config or not getattr(llm_config, 'enabled', False):
+            logger.info("LLM is disabled, using fallback summary")
+            return generate_fallback_summary(prs)
+        
+        # Import LLM client
+        from src.llm.llm_client import LLMClient
+        
+        # Convert PRs to format expected by LLM
+        pr_list = []
+        for pr in prs:
+            pr_data = {
+                "number": pr.number,
+                "title": pr.title,
+                "author": getattr(pr.user, 'display_name', None) or f"@{pr.user.login}",
+                "is_international": is_international_pr(pr, config)
+            }
+            pr_list.append(pr_data)
+        
+        # Initialize LLM client
+        llm_client = LLMClient(llm_config.__dict__)
+        
+        # Generate release summary
+        logger.info(f"Requesting AI summary for {len(pr_list)} PRs...")
+        ai_summary = llm_client.generate_release_summary(pr_list, exclude_international=True)
+        
+        if ai_summary:
+            logger.info("AI-generated summary received successfully")
+            return ai_summary.strip()
+        else:
+            logger.warning("AI summary generation failed, using fallback")
+            return generate_fallback_summary(prs)
+            
+    except Exception as e:
+        logger.error(f"Error generating AI summary: {e}")
+        return generate_fallback_summary(prs)
+
+
+def generate_fallback_summary(prs: List) -> str:
+    """
+    Generate a basic fallback summary when LLM is unavailable.
+    
+    Args:
+        prs: List of PR objects
+        
+    Returns:
+        Basic summary string
+    """
+    categories = categorize_prs(prs)
+    
+    # Count different types of changes
+    feature_count = len(categories.get('features', []))
+    bugfix_count = len(categories.get('bugfixes', []))
+    schema_count = len(categories.get('schema', []))
+    
+    # Generate basic summary
+    summary_parts = []
+    
+    if feature_count > 0:
+        summary_parts.append(f"{feature_count} new feature{'s' if feature_count != 1 else ''}")
+    
+    if bugfix_count > 0:
+        summary_parts.append(f"{bugfix_count} bug fix{'es' if bugfix_count != 1 else ''}")
+    
+    if schema_count > 0:
+        summary_parts.append(f"{schema_count} schema change{'s' if schema_count != 1 else ''}")
+    
+    if summary_parts:
+        summary = f"This release includes {', '.join(summary_parts[:-1])}"
+        if len(summary_parts) > 1:
+            summary += f" and {summary_parts[-1]}"
+        else:
+            summary += summary_parts[0]
+        summary += " to improve system functionality and user experience."
+    else:
+        summary = f"This release includes {len(prs)} change{'s' if len(prs) != 1 else ''} to improve system functionality."
+    
+    return summary
+
+
+def is_international_pr(pr, config) -> bool:
+    """
+    Check if a PR is related to international/tenant features.
+    
+    Args:
+        pr: PR object from GitHub API
+        config: Configuration object
+        
+    Returns:
+        True if PR is international/tenant related
+    """
+    try:
+        # Get international labels from config
+        international_labels = getattr(config.organization, 'international_labels', [
+            'international', 'i18n', 'localization', 'locale', 'tenant', 'multi-tenant'
+        ])
+        
+        # Check PR labels, title, and body
+        pr_labels = [label.name.lower() for label in pr.labels] if hasattr(pr, 'labels') else []
+        pr_title = pr.title.lower() if hasattr(pr, 'title') else ''
+        pr_body = getattr(pr, 'body', '').lower() if hasattr(pr, 'body') and pr.body else ''
+        
+        # Check if any international label/keyword is present
+        for label in international_labels:
+            label_lower = label.lower()
+            if (label_lower in ' '.join(pr_labels) or 
+                label_lower in pr_title or 
+                label_lower in pr_body):
+                return True
+        
+        return False
+        
+    except Exception as e:
+        logger = get_logger(__name__)
+        logger.warning(f"Error checking international PR status: {e}")
+        return False
 
 
 def render_release_notes_markdown(prs: List, params: Dict[str, Any], output_dir: Path, config=None) -> Path:
@@ -531,16 +670,16 @@ def generate_confluence_section_with_panels(section_num: int, section_title: str
     return markup
 
 
-def generate_schema_and_features_section(prs: List, pr_categories: Dict[int, str]) -> str:
+def generate_schema_and_features_section_markup(prs: List, pr_categories: Dict[int, str]) -> str:
     """
-    Generate Section 8 (GraphQL Schema Changes) with both Schema and Features/Bugfixes panels.
+    Generate Section 9 (GraphQL Schema Changes) with both Schema and Features/Bugfixes panels.
     
     Args:
         prs: List of GitHub PR objects
         pr_categories: Dictionary mapping PR numbers to categories
         
     Returns:
-        Confluence wiki markup for section 8
+        Confluence wiki markup for section 9
     """
     
     # Separate schema PRs from feature/bugfix PRs
@@ -612,12 +751,12 @@ def generate_schema_and_features_section(prs: List, pr_categories: Dict[int, str
         'rows': feature_rows
     })
     
-    return generate_confluence_section_with_panels(8, "GraphQL Schema Changes", panels)
+    return generate_confluence_section_with_panels(9, "GraphQL Schema Changes", panels)
 
 
-def generate_international_section(international_prs: List = None) -> str:
+def generate_international_section_markup(international_prs: List = None) -> str:
     """
-    Generate Section 9 (Internationalization & Localization Changes).
+    Generate Section 10 (Internationalization & Localization Changes).
     
     Args:
         international_prs: List of international-related PRs
@@ -649,7 +788,7 @@ def generate_international_section(international_prs: List = None) -> str:
         'headers': ['PR', 'Developer', 'Description', 'Link', 'Status']
     }]
     
-    return generate_confluence_section_with_panels(9, "Internationalization & Localization Changes", panels)
+    return generate_confluence_section_with_panels(10, "Internationalization & Localization Changes", panels)
 
 
 def filter_international_prs(prs: List, config=None) -> List:

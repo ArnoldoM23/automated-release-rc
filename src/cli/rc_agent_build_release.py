@@ -7,7 +7,7 @@ import questionary
 from pathlib import Path
 
 from src.config.config import load_config, extract_service_name_from_repo
-from src.github.fetch_prs import GitHubClient
+from src.github_integration.fetch_prs import GitHubClient
 
 def is_valid_version(version):
     """Validate version string format (semantic versioning)"""

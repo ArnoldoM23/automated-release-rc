@@ -109,7 +109,7 @@ All improvements are now implemented and tested. The tool provides:
 
 1. Set `GITHUB_TOKEN` environment variable for full functionality
 2. Customize `international_labels` in your `settings.yaml` as needed
-3. Run `python main.py` to test with real GitHub data
+3. Run `rc-release-agent` to test with real GitHub data
 4. Ready for major organization demo! 🎉
 
 ## 🔧 Technical Details
@@ -131,4 +131,11 @@ All improvements are now implemented and tested. The tool provides:
 
 ---
 
-*All improvements implemented based on leadership feedback from initial demo session.* 
+*All improvements implemented based on leadership feedback from initial demo session.*
+
+### **📋 How to Test the Improvements**
+
+1. Install dependencies: `pip install -r requirements.txt`
+2. Set environment variable: `export GITHUB_TOKEN='ghp_your_token_here'`
+3. Run `rc-release-agent` to test with real GitHub data
+4. Observe the 4 key improvements in action 
