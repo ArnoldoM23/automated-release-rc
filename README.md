@@ -60,6 +60,35 @@ github:
 python -m src.cli.run_release_agent
 ```
 
+## 🎯 Usage
+
+### Interactive CLI (Primary Workflow)
+```bash
+# Main CLI command
+python -m src.cli.run_release_agent
+```
+
+**Example Session:**
+```
+👋 Welcome to the RC Release Agent!
+🛠  Let's gather details for this release.
+
+Who is the RC? Your Name
+Who is the RC Manager? Manager Name  
+Production version (e.g. v2.3.1): v0.4.6
+New version (e.g. v2.4.0): v0.4.7
+Service name (e.g. cer-cart): ce-cartxo
+Release type: standard
+Day 1 Date (YYYY-MM-DD): 2024-02-23
+Day 2 Date (YYYY-MM-DD): 2024-02-24
+Output folder: output/
+
+🔍 Analyzing PRs between v0.4.6 → v0.4.7...
+✅ Found 10 PRs: 3 schema, 4 feature, 0 international
+📝 Generating release documentation...
+✅ Documentation generated in: output/ce-cartxo_v0.4.7_20240223_191554/cu
+```
+
 Follow the prompts to generate professional release documentation!
 
 ## 🏗️ How the RC Release Agent Works
@@ -197,7 +226,7 @@ Enterprise-Ready Results:
 
 ### ⚡ Key Advantages
 
-- **🚀 Speed**: 30-minute manual process → 5-minute automation
+- **🚀 Speed**: 3-hour manual process → 5-minute automation
 - **📊 Accuracy**: Automated PR analysis eliminates human error  
 - **🎯 Consistency**: Template-based formatting ensures standards
 - **🔗 Integration**: Direct GitHub API connection for real-time data
@@ -250,35 +279,6 @@ automated-release-rc/
 ├── 📁 cache/                      # Template cache directory
 ├── 📋 requirements.txt            # Python dependencies
 └── 📋 pyproject.toml              # Python package metadata
-```
-
-## 🎯 Usage
-
-### Interactive CLI (Primary Workflow)
-```bash
-# Main CLI command
-python -m src.cli.run_release_agent
-```
-
-**Example Session:**
-```
-👋 Welcome to the RC Release Agent!
-🛠  Let's gather details for this release.
-
-Who is the RC? Your Name
-Who is the RC Manager? Manager Name  
-Production version (e.g. v2.3.1): v0.4.6
-New version (e.g. v2.4.0): v0.4.7
-Service name (e.g. cer-cart): ce-cartxo
-Release type: standard
-Day 1 Date (YYYY-MM-DD): 2024-02-23
-Day 2 Date (YYYY-MM-DD): 2024-02-24
-Output folder: output/
-
-🔍 Analyzing PRs between v0.4.6 → v0.4.7...
-✅ Found 10 PRs: 3 schema, 4 feature, 0 international
-📝 Generating release documentation...
-✅ Documentation generated in: output/ce-cartxo_v0.4.7_20240223_191554/cu
 ```
 
 ### Testing & Validation
