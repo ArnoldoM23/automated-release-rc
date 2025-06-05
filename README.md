@@ -67,48 +67,48 @@ Follow the prompts to generate professional release documentation!
 ```mermaid
 graph TB
     %% User Inputs
-    subgraph "🎯 Input Sources"
-        CLI[👨‍💻 Interactive CLI<br/>rc-release-agent]
-        SLACK[💬 Slack Modal<br/>Future Integration]
-        GITHUB[🐙 GitHub Repository<br/>Tags, Commits, PRs]
+    subgraph Input["🎯 Input Sources"]
+        CLI["👨‍💻 Interactive CLI<br/>rc-release-agent"]
+        SLACK["💬 Slack Modal<br/>Future Integration"]
+        GITHUB["🐙 GitHub Repository<br/>Tags, Commits, PRs"]
     end
 
     %% Configuration
-    subgraph "⚙️ Configuration Layer"
-        CONFIG[📋 settings.yaml<br/>• GitHub Token<br/>• Repository Info<br/>• LLM Settings<br/>• Templates]
-        ENV[🔐 Environment<br/>GITHUB_TOKEN<br/>WMT_LLM_API_KEY<br/>WMT_LLM_API_URL]
+    subgraph Config["⚙️ Configuration Layer"]
+        SETTINGS["📋 settings.yaml<br/>• GitHub Token<br/>• Repository Info<br/>• LLM Settings<br/>• Templates"]
+        ENV["🔐 Environment Variables<br/>GITHUB_TOKEN<br/>WMT_LLM_API_KEY<br/>WMT_LLM_API_URL"]
     end
 
     %% Core Processing Engine
-    subgraph "🧠 Core Processing Engine"
-        FETCH[📥 PR Fetcher<br/>• GitHub API Integration<br/>• Tag/Commit Comparison<br/>• Merge Commit Analysis]
-        ANALYZE[🔍 PR Analyzer<br/>• Label-based Categorization<br/>• Author Extraction<br/>• Change Classification]
-        LLM[🤖 LLM Processor<br/>• Walmart Gateway<br/>• OpenAI Integration<br/>• AI-Enhanced Summaries]
+    subgraph Engine["🧠 Core Processing Engine"]
+        FETCH["📥 PR Fetcher<br/>• GitHub API Integration<br/>• Tag/Commit Comparison<br/>• Merge Commit Analysis"]
+        ANALYZE["🔍 PR Analyzer<br/>• Label-based Categorization<br/>• Author Extraction<br/>• Change Classification"]
+        LLM["🤖 LLM Processor<br/>• Walmart Gateway<br/>• OpenAI Integration<br/>• AI-Enhanced Summaries"]
     end
 
     %% Document Generation
-    subgraph "📝 Document Generation"
-        NOTES[📄 Release Notes<br/>• Confluence Format<br/>• Markdown Format<br/>• Section-based Layout]
-        CRQ[📋 CRQ Documents<br/>• Day 1 Setup<br/>• Day 2 Release<br/>• Enterprise Format]
-        SLACK_MSG[💬 Slack Messages<br/>• Block Kit Format<br/>• Progress Tracking<br/>• Team Notifications]
+    subgraph Generation["📝 Document Generation"]
+        NOTES["📄 Release Notes<br/>• Confluence Format<br/>• Markdown Format<br/>• Section-based Layout"]
+        CRQ["📋 CRQ Documents<br/>• Day 1 Setup<br/>• Day 2 Release<br/>• Enterprise Format"]
+        SLACK_MSG["💬 Slack Messages<br/>• Block Kit Format<br/>• Progress Tracking<br/>• Team Notifications"]
     end
 
     %% Output & Integration
-    subgraph "📤 Output & Integration"
-        FILES[📁 Generated Files<br/>• /output/service_v1.0.0_timestamp/<br/>• release_notes.txt<br/>• release_notes.md<br/>• crq_day1.txt<br/>• crq_day2.txt<br/>• rc_config.json]
-        COPY[📋 Copy-Paste Ready<br/>• Confluence Wiki Markup<br/>• Enterprise CRQ Format<br/>• Professional Language]
+    subgraph Output["📤 Output & Integration"]
+        FILES["📁 Generated Files<br/>• /output/service_v1.0.0_timestamp/<br/>• release_notes.txt<br/>• release_notes.md<br/>• crq_day1.txt<br/>• crq_day2.txt<br/>• rc_config.json"]
+        COPY["📋 Copy-Paste Ready<br/>• Confluence Wiki Markup<br/>• Enterprise CRQ Format<br/>• Professional Language"]
     end
 
     %% Integrations & APIs
-    subgraph "🔗 External Integrations"
-        GH_API[🌐 GitHub API<br/>api.github.com<br/>Enterprise Support]
-        LLM_GW[🚀 LLM Gateway<br/>Walmart Internal<br/>SSL Certificates]
-        SLACK_API[💬 Slack API<br/>Block Kit Messages<br/>Socket Mode]
+    subgraph APIs["🔗 External Integrations"]
+        GH_API["🌐 GitHub API<br/>api.github.com<br/>Enterprise Support"]
+        LLM_GW["🚀 LLM Gateway<br/>Walmart Internal<br/>SSL Certificates"]
+        SLACK_API["💬 Slack API<br/>Block Kit Messages<br/>Socket Mode"]
     end
 
     %% Workflow Connections
-    CLI --> CONFIG
-    CONFIG --> ENV
+    CLI --> SETTINGS
+    SETTINGS --> ENV
     CLI --> FETCH
     GITHUB --> FETCH
     ENV --> FETCH
@@ -129,17 +129,6 @@ graph TB
     SLACK_MSG --> SLACK_API
     
     FILES --> COPY
-
-    %% Styling
-    classDef inputStyle fill:#e1f5fe,stroke:#01579b,stroke-width:2px,color:#000
-    classDef processStyle fill:#f3e5f5,stroke:#4a148c,stroke-width:2px,color:#000
-    classDef outputStyle fill:#e8f5e8,stroke:#1b5e20,stroke-width:2px,color:#000
-    classDef integrationStyle fill:#fff3e0,stroke:#e65100,stroke-width:2px,color:#000
-
-    class CLI,SLACK,GITHUB inputStyle
-    class CONFIG,ENV,FETCH,ANALYZE,LLM processStyle  
-    class NOTES,CRQ,SLACK_MSG,FILES,COPY outputStyle
-    class GH_API,LLM_GW,SLACK_API integrationStyle
 ```
 
 ### 🔄 Detailed Workflow Steps
