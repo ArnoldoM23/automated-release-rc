@@ -83,7 +83,7 @@ graph TB
     subgraph Engine["🧠 Core Processing Engine"]
         FETCH["📥 PR Fetcher<br/>• GitHub API Integration<br/>• Tag/Commit Comparison<br/>• Merge Commit Analysis"]
         ANALYZE["🔍 PR Analyzer<br/>• Label-based Categorization<br/>• Author Extraction<br/>• Change Classification"]
-        LLM["🤖 LLM Processor<br/>• Walmart Gateway<br/>• OpenAI Integration<br/>• AI-Enhanced Summaries"]
+        LLM["🤖 LLM Processor<br/>• Walmart Gateway<br/>• OpenAI Integration<br/>• AI-Enhanced Summaries & CRQs"]
     end
 
     %% Document Generation
@@ -106,29 +106,39 @@ graph TB
         SLACK_API["💬 Slack API<br/>Block Kit Messages<br/>Socket Mode"]
     end
 
+    %% Optional CI/CD Trigger
+    subgraph CI["🚀 GitHub Workflow Trigger (Optional)"]
+        GH_ACTIONS["📦 Dispatch GitHub Action<br/>Trigger CI/CD Pipeline"]
+    end
+
     %% Workflow Connections
     CLI --> SETTINGS
     SETTINGS --> ENV
+    SETTINGS --> ANALYZE
     CLI --> FETCH
+    CLI --> GH_ACTIONS
     GITHUB --> FETCH
     ENV --> FETCH
-    
+
     FETCH --> GH_API
     GH_API --> ANALYZE
-    
+
     ANALYZE --> LLM
     LLM --> LLM_GW
     LLM_GW --> NOTES
-    
+
     ANALYZE --> NOTES
     ANALYZE --> CRQ
     ANALYZE --> SLACK_MSG
-    
+    LLM --> CRQ
+
     NOTES --> FILES
     CRQ --> FILES
     SLACK_MSG --> SLACK_API
-    
+
     FILES --> COPY
+
+    SLACK --> SLACK_API
 ```
 
 ### 🔄 Detailed Workflow Steps
