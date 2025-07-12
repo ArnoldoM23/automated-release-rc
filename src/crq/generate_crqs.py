@@ -451,7 +451,10 @@ def generate_crqs(prs: List, params: Dict[str, Any], output_dir: Path, config=No
         # Try to load enterprise template
         try:
             from jinja2 import Environment, FileSystemLoader, Template
-            template_path = Path("templates")
+            
+            # Get the correct template path relative to the project root
+            project_root = Path(__file__).parent.parent.parent
+            template_path = project_root / "src" / "templates"
             template = None
             
             # First, try external template if enabled
@@ -473,7 +476,7 @@ def generate_crqs(prs: List, params: Dict[str, Any], output_dir: Path, config=No
             # If no external template, use enterprise template
             if template is None and (template_path / "crq_template.j2").exists():
                 logger.info("Using enterprise CRQ template")
-                env = Environment(loader=FileSystemLoader("templates"))
+                env = Environment(loader=FileSystemLoader(str(template_path)))
                 template = env.get_template("crq_template.j2")
             
             if template:
