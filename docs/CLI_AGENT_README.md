@@ -1,8 +1,17 @@
-# RC Release Agent CLI - Complete Automation Workflow
+# RC Release Agent CLI v4.0 - Complete Automation Workflow
 
 **Interactive CLI → Document Generation → Automated Slack Sign-off Collection**
 
 This system transforms release coordination from manual document creation and sign-off tracking into a fully automated workflow that runs from a single interactive command.
+
+## 🆕 What's New in v4.0
+
+- **🔒 Enhanced Security**: Environment-only secrets, no configuration file exposure
+- **📝 Multiple Version Formats**: Support for v1.2.3, 1.2.3-sha, SHA-only
+- **🎯 Enhanced CLI**: Release type prompts with helpful tips and validation
+- **⚡ Performance Optimizations**: LLM timeout (10s) prevents hanging
+- **🤖 Smart Service Detection**: Auto-extraction from GitHub repo names
+- **🛡️ Configuration Hygiene**: Clean separation of system config and secrets
 
 ## 🎯 Overview
 
@@ -15,30 +24,65 @@ The RC Release Agent CLI provides:
 
 ## 🚀 Quick Start
 
-### Prerequisites
+### Prerequisites (v4.0)
 
 ```bash
 # Install dependencies
 pip install -r requirements.txt
 
-# Set environment variables
-export GITHUB_TOKEN="ghp_your_token_here"
-export SLACK_BOT_TOKEN="xoxb-your-slack-token"
+# Create environment configuration (v4.0 security)
+cp .rc_env_checkout.sh ~/.rc_env_checkout.sh
+# Edit ~/.rc_env_checkout.sh with your actual credentials
+
+# Load environment
+source ~/.rc_env_checkout.sh
+
+# Verify setup
+echo "✅ GitHub Token: ${GITHUB_TOKEN:0:8}..."
+echo "✅ GitHub Repo: $GITHUB_REPO"
 ```
 
-### Basic Usage
+**v4.0 Environment File (`~/.rc_env_checkout.sh`):**
+```bash
+#!/bin/bash
+# GitHub Configuration (Required)
+export GITHUB_TOKEN="ghp_your_token_here"
+export GITHUB_REPO="your-org/your-repo"
+
+# Service Configuration (Auto-detected if not specified)
+export SERVICE_NAME="your-service"
+
+# Optional: LLM and Slack Configuration
+export OPENAI_API_KEY="sk-your-openai-key"
+export SLACK_BOT_TOKEN="xoxb-your-slack-token"
+export SLACK_SIGNING_SECRET="your-slack-secret"
+```
+
+### Basic Usage (v4.0)
 
 ```bash
-# Option 1: Install package and use entry point (recommended)
-pip install -e .
-rc-release-agent
+# Option 1: Automated wrapper (v4.0 - Recommended)
+chmod +x run_rc_agent.sh
+./run_rc_agent.sh
 
-# Option 2: Direct module execution
+# Option 2: Manual environment loading
+source ~/.rc_env_checkout.sh
 python -m src.cli.run_release_agent
 
-# Demo workflow with example data
-python demo_cli_workflow.py
+# Option 3: Custom environment file
+RC_ENV_FILE=~/.my-secrets.sh ./run_rc_agent.sh
+
+# Option 4: Install package and use entry point
+pip install -e .
+source ~/.rc_env_checkout.sh
+rc-release-agent
 ```
+
+**🎯 v4.0 Wrapper Script Benefits:**
+- ✅ Automatic environment loading
+- ✅ Error handling for missing environment files
+- ✅ Support for custom environment file names
+- ✅ Security validation (home directory only)
 
 The CLI will:
 1. ✅ Collect all release information via interactive prompts
@@ -59,21 +103,41 @@ rc-release-agent
 python -m src.cli.run_release_agent
 ```
 
-**Example Interaction:**
+**Example Interaction (v4.0 Enhanced):**
 ```
+🔧 RC Agent v4.0 - Loading Environment...
+✅ Loading environment from ~/.rc_env_checkout.sh
+🔐 GitHub Token: ghp_1234...
+📋 GitHub Repo: your-org/your-repo
+
+🚀 Starting RC Agent v4.0...
+
 👋 Welcome to the RC Release Agent!
 🛠  Let's gather details for this release.
 
-Who is the RC? munoz
+Who is the RC? @munoz
 Who is the RC Manager? Charlie
-Production version (e.g. v2.3.1): v2.3.1
-New version (e.g. v2.4.0): v2.4.0
-Service name (e.g. cer-cart): cer-cart
+Production version (e.g., v1.2.3, 1.2.3-abcdef, or SHA): v2.3.1
+New version (e.g., v1.2.4, 1.2.4-abcdef, or SHA): v2.4.0
+💡 Pre-filling service name from GitHub repo: your-service
+Service name (e.g. ce-cart): your-service
+
+Select a release type:
+  - standard: 🟢 Regular feature or service release (non-urgent)
+  - hotfix: 🔴 Urgent bug fix going directly to prod
+  - release: 📦 Formal versioned rollout for larger release cycles
 Release type: standard
+
 Day 1 Date (YYYY-MM-DD): 2025-05-29
 Day 2 Date (YYYY-MM-DD): 2025-05-30
 Slack cutoff time (UTC ISO format): 2025-05-29T23:00:00Z
 Output folder: output/
+
+🔍 Analyzing PRs between v2.3.1 → v2.4.0...
+✅ Found 15 PRs to process
+🤖 Requesting AI summary for 15 PRs... (completed in 3.2s)
+📝 Generating release documentation...
+✅ Documentation generated in: output/your-service_v2.4.0_20250528_111102/
 ```
 
 ### Step 2: GitHub Actions Integration

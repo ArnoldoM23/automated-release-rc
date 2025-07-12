@@ -1,19 +1,52 @@
-# ⚙️ Configuration Reference
+# ⚙️ Configuration Reference - v4.0
 
-**Complete guide to configuring the RC Release Automation Agent**
+**Complete guide to configuring the RC Release Automation Agent v4.0**
 
 ---
 
-## 📋 **Configuration Overview**
+## 📋 **v4.0 Configuration Overview**
 
-The RC Release Automation Agent uses YAML configuration files for customization. This allows you to:
-- Customize organization-specific settings
-- Configure AI providers and models
-- Set up GitHub enterprise integration
-- Define regional deployment clusters
-- Customize output templates and branding
+RC Release Agent v4.0 uses a **hybrid configuration approach** with enhanced security:
 
-**Main Configuration File:** `config/settings.yaml`
+- **🔒 Secrets & Credentials**: Environment variables only (never in config files)
+- **⚙️ System Configuration**: YAML files for non-sensitive settings
+- **🛡️ Security First**: Clean separation prevents accidental credential exposure
+
+**Configuration Structure:**
+- **Environment File**: `~/.rc_env_checkout.sh` (secrets, credentials)
+- **System Config**: `src/config/settings.yaml` (non-sensitive settings)
+- **Wrapper Script**: `run_rc_agent.sh` (automated environment loading)
+
+## 🔐 **Environment Configuration (v4.0 Security)**
+
+All sensitive credentials are stored in environment variables:
+
+### 🚀 **Quick Setup (v4.0)**
+
+```bash
+# 1. Copy environment template to home directory
+cp .rc_env_checkout.sh ~/.rc_env_checkout.sh
+
+# 2. Edit with your actual credentials (never commit this file!)
+nano ~/.rc_env_checkout.sh
+
+# 3. Option A: Use automated wrapper (recommended)
+chmod +x run_rc_agent.sh
+./run_rc_agent.sh
+
+# 3. Option B: Manual environment loading
+source ~/.rc_env_checkout.sh
+python -m src.cli.run_release_agent
+
+# 3. Option C: Custom environment file
+RC_ENV_FILE=~/.my-secrets.sh ./run_rc_agent.sh
+```
+
+**🛡️ v4.0 Security Benefits:**
+- ✅ Secrets never committed to git
+- ✅ Environment file stays in home directory only
+- ✅ Configuration files safe to share and commit
+- ✅ Automatic .gitignore protection
 
 ---
 
@@ -52,88 +85,91 @@ organization:
 
 ---
 
-## 🔗 **GitHub Integration**
+### 🔗 **GitHub Integration (v4.0)**
 
-Configure GitHub API access and repository settings:
-
-```yaml
-github:
-  # Repository configuration
-  repo: "your-org/your-repo"
-  base_url: "https://api.github.com"  # For GitHub Enterprise: https://github.yourcompany.com/api/v3
-  
-  # Branch configuration
-  default_branch: "main"
-  release_branch_pattern: "release/*"
-  
-  # PR filtering
-  pr_filters:
-    ignore_labels: ["dependabot", "automated", "skip-release"]
-    require_labels: []  # Optional: only include PRs with these labels
-    
-  # Enterprise features
-  enterprise:
-    enabled: false
-    saml_sso: false
-    advanced_security: false
-```
-
-**Environment Variables:**
+**Environment Configuration (`~/.rc_env_checkout.sh`):**
 ```bash
-# Required
-GITHUB_TOKEN="ghp_your_personal_access_token"
+#!/bin/bash
+# GitHub Authentication (Required)
+export GITHUB_TOKEN="ghp_your_personal_access_token"
+export GITHUB_REPO="your-org/your-repo"
 
-# Optional for GitHub Enterprise
-GITHUB_ENTERPRISE_URL="https://github.yourcompany.com"
+# GitHub Enterprise (Optional)
+export GITHUB_API_URL="https://github.yourcompany.com/api/v3"  # Only for enterprise
+
+# Service Configuration (Optional - auto-detected from repo if not set)
+export SERVICE_NAME="your-service-name"
+export SERVICE_NAMESPACE="your-namespace"
+export SERVICE_REGIONS="us-east-1,us-west-2"
+export PLATFORM="kubernetes"
 ```
+
+**System Configuration (`src/config/settings.yaml`):**
+```yaml
+# GitHub system settings (no secrets)
+github:
+  api_url: "https://api.github.com"  # Default for public GitHub
+  
+# Organization settings  
+organization:
+  name: "Your Company"
+  default_service: "your-default-service"
+  timezone: "UTC"
+  regions: ["EUS", "SCUS", "WUS"]
+  platform: "Kubernetes"
+```
+
+**🎯 v4.0 Benefits:**
+- ✅ No tokens in configuration files
+- ✅ Environment variables injected at runtime
+- ✅ Automatic service name detection from repo
+- ✅ Safe to commit configuration files
 
 ---
 
-## 🤖 **AI Provider Configuration**
+### 🤖 **LLM Provider Configuration (v4.0)**
 
-Configure multiple AI providers with automatic fallback:
+**Environment Configuration (`~/.rc_env_checkout.sh`):**
+```bash
+# LLM Provider Selection (Optional - AI features)
+export LLM_PROVIDER="openai"                    # openai, walmart_sandbox
+export OPENAI_API_KEY="sk-your_openai_key"      # OpenAI API key
+export WMT_LLM_API_KEY="your_wmt_key"           # Walmart LLM key (optional)
+export WMT_LLM_API_URL="http://llm-internal.walmart.com:8000"  # Walmart LLM URL
+```
 
+**System Configuration (`src/config/settings.yaml`):**
 ```yaml
+# LLM system settings (no secrets)
+llm:
+  provider: "openai"                  # Default provider
+  model: "gpt-4o-mini"
+  enabled: false                      # v4.0: Disabled by default for performance
+  fallback_enabled: true              # Use existing logic if LLM fails
+  timeout: 10                         # v4.0: 10-second timeout prevents hanging
+  cache_duration: 3600                # Cache responses to reduce API usage
+  max_tokens: 2000
+  temperature: 0.1                    # Lower temperature for consistent output
+
+# Legacy AI configuration (for backward compatibility)
 ai:
-  # Provider priority order (will try in this order)
-  providers: ["openai", "azure_openai", "anthropic"]
-  
-  # Enable/disable AI features
-  enabled: true
-  fallback_enabled: true
-  timeout: 30  # seconds
-  
-  # OpenAI Configuration
+  provider: "openai"
+  model: "gpt-4-1106-preview"
+  max_tokens: 1000
   openai:
     model: "gpt-4-1106-preview"
-    max_tokens: 2000
-    temperature: 0.3
-    
-  # Azure OpenAI Configuration  
-  azure_openai:
-    model: "gpt-4"
-    deployment_name: "gpt-4-deployment"
-    api_version: "2024-02-15-preview"
-    
-  # Anthropic Configuration
+  azure:
+    deployment: "gpt-4"               # Required field for Azure validation
   anthropic:
-    model: "claude-3-sonnet-20240229"
-    max_tokens: 2000
-    temperature: 0.3
+    api_key: "dummy-key"              # Will be overridden by environment variable
 ```
 
-**Environment Variables:**
-```bash
-# OpenAI
-OPENAI_API_KEY="sk-your_openai_key"
-
-# Azure OpenAI
-AZURE_OPENAI_API_KEY="your_azure_key"
-AZURE_OPENAI_ENDPOINT="https://your-resource.openai.azure.com/"
-
-# Anthropic
-ANTHROPIC_API_KEY="your_anthropic_key"
-```
+**🎯 v4.0 LLM Enhancements:**
+- ✅ 10-second timeout prevents hanging (was 75+ seconds)
+- ✅ Disabled by default for better performance
+- ✅ All API keys in environment variables only
+- ✅ Graceful fallback when LLM unavailable
+- ✅ Smart caching to reduce API costs
 
 ---
 

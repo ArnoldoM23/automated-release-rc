@@ -15,7 +15,7 @@ from src.utils.logging import get_logger
 
 
 def categorize_prs(prs: List) -> Dict[str, List]:
-    """Categorize PRs by their labels for better organization."""
+    """Categorize PRs by their labels for better organization with proper priority."""
     logger = get_logger(__name__)
     
     categories = {
@@ -25,40 +25,87 @@ def categorize_prs(prs: List) -> Dict[str, List]:
         "dependencies": [],
         "documentation": [],
         "infrastructure": [],
-        "international": [],  # New category for international PRs
+        "international": [],
         "other": []
     }
     
-    # Define label mappings
+    # Define label mappings with priority order
+    # Schema gets highest priority, then international, then others
     label_mappings = {
-        "schema": ["schema", "graphql", "api", "breaking", "migration", "database"],
+        "schema": ["schema", "graphql", "graphql schema", "schema change"],
+        "international": ["international", "i18n", "localization", "locale", "tenant", "multi-tenant", "internationalization"],
         "features": ["feature", "enhancement", "new feature", "feat"],
         "bugfixes": ["bug", "fix", "bugfix", "hotfix", "patch"],
         "dependencies": ["dependencies", "dependency", "deps", "bump"],
         "documentation": ["documentation", "docs", "readme"],
-        "infrastructure": ["infrastructure", "ci", "cd", "deploy", "devops", "infra"],
-        "international": ["international", "i18n", "localization", "locale", "tenant", "multi-tenant", "internationalization"]
+        "infrastructure": ["infrastructure", "ci", "cd", "deploy", "devops", "infra"]
     }
     
     for pr in prs:
         categorized = False
-        pr_labels = [label.name.lower() for label in pr.labels]
-        pr_title_lower = pr.title.lower()
+        
+        # Handle different PR object types (GitHub API objects, mock objects, etc.)
+        if hasattr(pr, 'labels') and pr.labels:
+            pr_labels = [label.name.lower() for label in pr.labels]
+        elif hasattr(pr, 'labels') and isinstance(pr.labels, list):
+            # Handle case where labels is a list of strings
+            pr_labels = [label.lower() if isinstance(label, str) else label.name.lower() for label in pr.labels]
+        else:
+            pr_labels = []
+        
+        pr_title_lower = pr.title.lower() if hasattr(pr, 'title') else ''
         pr_body_lower = getattr(pr, 'body', '').lower() if hasattr(pr, 'body') and pr.body else ''
         
-        # Check each category (schema first since it's highest priority, then international)
-        for category, keywords in label_mappings.items():
-            # Check in labels, title, and body
-            if (any(keyword in " ".join(pr_labels) for keyword in keywords) or
-                any(keyword in pr_title_lower for keyword in keywords) or
-                any(keyword in pr_body_lower for keyword in keywords)):
+        # Priority-based categorization: Check schema first, then international, then others
+        # Schema changes take precedence over everything else (including international)
+        priority_order = ["schema", "international", "features", "bugfixes", "dependencies", "documentation", "infrastructure"]
+        
+        for category in priority_order:
+            if category not in label_mappings:
+                continue
+                
+            keywords = label_mappings[category]
+            
+            # Check for matches in labels (both exact and substring), title, and body
+            category_matched = False
+            
+            # Enhanced label matching: check both exact label names and substring matches
+            for keyword in keywords:
+                # Check for exact label matches (e.g., label named exactly "schema")
+                if keyword in pr_labels:
+                    category_matched = True
+                    break
+                
+                # Check for substring matches in label names (e.g., "schema-update" contains "schema")  
+                if any(keyword in label for label in pr_labels):
+                    category_matched = True
+                    break
+                
+                # Check in title and body as fallback - but only for schema category use word boundaries
+                # to avoid false positives like "api" in "analyzer"
+                if category == "schema":
+                    # Use word boundaries for schema keywords to avoid false positives
+                    import re
+                    pattern = r'\b' + re.escape(keyword) + r'\b'
+                    if re.search(pattern, pr_title_lower) or re.search(pattern, pr_body_lower):
+                        category_matched = True
+                        break
+                else:
+                    # For other categories, use substring matching
+                    if keyword in pr_title_lower or keyword in pr_body_lower:
+                        category_matched = True
+                        break
+            
+            if category_matched:
                 categories[category].append(pr)
                 categorized = True
+                logger.debug(f"PR #{pr.number} categorized as '{category}' based on labels: {[label.name for label in pr.labels]}")
                 break
         
         # If no category found, put in "other"
         if not categorized:
             categories["other"].append(pr)
+            logger.debug(f"PR #{pr.number} categorized as 'other' - no matching labels found")
     
     # Log categorization results
     for category, prs_in_category in categories.items():
@@ -249,9 +296,9 @@ def render_release_notes(prs: List, params: Dict[str, Any], output_dir: Path, co
         logger.info(f"Categorizing {len(prs)} PRs...")
         categories = categorize_prs(prs)
         
-        # Filter international PRs based on configuration
-        international_prs = filter_international_prs(prs, config)
-        logger.info(f"Found {len(international_prs)} international/tenant PRs")
+        # Use only PRs that were categorized as "international" (not moved to "schema" due to priority)
+        international_prs = categories.get('international', [])
+        logger.info(f"Found {len(international_prs)} international/tenant PRs (after priority filtering)")
         
         # Create PR categories mapping for template
         pr_categories = {}
@@ -524,12 +571,20 @@ def is_international_pr(pr, config) -> bool:
         pr_title = pr.title.lower() if hasattr(pr, 'title') else ''
         pr_body = getattr(pr, 'body', '').lower() if hasattr(pr, 'body') and pr.body else ''
         
-        # Check if any international label/keyword is present
+        # Check if any international label/keyword is present using enhanced matching
         for label in international_labels:
-            label_lower = label.lower()
-            if (label_lower in ' '.join(pr_labels) or 
-                label_lower in pr_title or 
-                label_lower in pr_body):
+            keyword = label.lower()
+            
+            # Check for exact label matches (e.g., label named exactly "international")
+            if keyword in pr_labels:
+                return True
+            
+            # Check for substring matches in label names (e.g., "international-feature" contains "international")
+            if any(keyword in pr_label for pr_label in pr_labels):
+                return True
+            
+            # Check in title and body as fallback
+            if keyword in pr_title or keyword in pr_body:
                 return True
         
         return False
@@ -684,7 +739,7 @@ def generate_schema_and_features_section_markup(prs: List, pr_categories: Dict[i
     
     # Separate schema PRs from feature/bugfix PRs
     schema_prs = [pr for pr in prs if pr_categories.get(pr.number) == 'schema']
-    feature_bugfix_prs = [pr for pr in prs if pr_categories.get(pr.number) in ['feature', 'bugfix', 'enhancement']]
+    feature_bugfix_prs = [pr for pr in prs if pr_categories.get(pr.number) in ['feature', 'bugfix', 'enhancement', 'other']]
     
     panels = []
     
@@ -722,28 +777,33 @@ def generate_schema_and_features_section_markup(prs: List, pr_categories: Dict[i
     feature_headers = ["Sign-off", "PR link", "Author", "Description", "Type (bugfix, schema, feature)", "Feature CCM", "Pre-Prod Testing", "CCM ON", "CCM OFF", "Image / Query", "iOS Screenshots", "Android Screenshots", "Comments"]
     feature_rows = []
     
-    for pr in (feature_bugfix_prs or prs):  # Use all PRs if no specific feature/bugfix PRs
-        pr_type = pr_categories.get(pr.number, 'feature')
-        
-        # Use enhanced display name if available, fallback to @username
-        author_display = getattr(pr.user, 'display_name', f"@{pr.user.login}")
-        
-        row = [
-            "❌",
-            f"[#{pr.number}|{pr.html_url}]",
-            author_display,
-            pr.title[:70] + ("..." if len(pr.title) > 70 else ""),
-            pr_type,
-            "TBD",
-            "❌",
-            "❌",
-            "⭕",
-            getattr(pr, 'image_url', 'None') or 'None',
-            "✅" if getattr(pr, 'screenshots', {}).get('iOS') else "❌",
-            "✅" if getattr(pr, 'screenshots', {}).get('Android') else "❌",
-            getattr(pr, 'comments', '') or ''
-        ]
-        feature_rows.append(row)
+    # Only use properly categorized PRs, not all PRs
+    if feature_bugfix_prs:
+        for pr in feature_bugfix_prs:
+            pr_type = pr_categories.get(pr.number, 'feature')
+            
+            # Use enhanced display name if available, fallback to @username
+            author_display = getattr(pr.user, 'display_name', f"@{pr.user.login}")
+            
+            row = [
+                "❌",
+                f"[#{pr.number}|{pr.html_url}]",
+                author_display,
+                pr.title[:70] + ("..." if len(pr.title) > 70 else ""),
+                pr_type,
+                "TBD",
+                "❌",
+                "❌",
+                "⭕",
+                getattr(pr, 'image_url', 'None') or 'None',
+                "✅" if getattr(pr, 'screenshots', {}).get('iOS') else "❌",
+                "✅" if getattr(pr, 'screenshots', {}).get('Android') else "❌",
+                getattr(pr, 'comments', '') or ''
+            ]
+            feature_rows.append(row)
+    else:
+        # Default row when no feature/bugfix PRs
+        feature_rows.append(["❌", "TBD", "TBD", "No feature/bugfix changes in this release", "feature", "TBD", "❌", "❌", "⭕", "None", "❌", "❌", ""])
     
     panels.append({
         'title': 'Features / Bugfixes',
@@ -794,6 +854,8 @@ def generate_international_section_markup(international_prs: List = None) -> str
 def filter_international_prs(prs: List, config=None) -> List:
     """
     Filter PRs that should be included in the international section based on labels.
+    NOTE: This function returns PRs that would be categorized as international,
+    but the actual categorization may place them in schema if they have schema labels too.
     
     Args:
         prs: List of all PRs
@@ -820,12 +882,23 @@ def filter_international_prs(prs: List, config=None) -> List:
         pr_title_lower = pr.title.lower()
         pr_body_lower = getattr(pr, 'body', '').lower() if hasattr(pr, 'body') and pr.body else ''
         
-        # Check if PR matches any international labels
+        # Check if PR matches any international labels using enhanced matching
         is_international = False
         for int_label in international_labels:
-            if (int_label.lower() in " ".join(pr_labels) or
-                int_label.lower() in pr_title_lower or
-                int_label.lower() in pr_body_lower):
+            keyword = int_label.lower()
+            
+            # Check for exact label matches (e.g., label named exactly "international")
+            if keyword in pr_labels:
+                is_international = True
+                break
+            
+            # Check for substring matches in label names (e.g., "international-feature" contains "international")
+            if any(keyword in label for label in pr_labels):
+                is_international = True
+                break
+            
+            # Check in title and body as fallback
+            if keyword in pr_title_lower or keyword in pr_body_lower:
                 is_international = True
                 break
         

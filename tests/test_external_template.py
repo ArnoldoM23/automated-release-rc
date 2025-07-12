@@ -38,17 +38,18 @@ def test_dashboard_configuration():
             'services_dashboard_url', 'wcnp_dashboard_url', 'istio_dashboard_url'
         ]
         
+        missing_urls = []
         for url_key in required_urls:
             if url_key not in dashboard_urls:
                 print(f"❌ Missing required dashboard URL: {url_key}")
-                return False
+                missing_urls.append(url_key)
         
+        assert not missing_urls, f"Missing required dashboard URLs: {missing_urls}"
         print(f"✅ All {len(required_urls)} dashboard URLs configured correctly")
-        return True
         
     except Exception as e:
         print(f"❌ Dashboard configuration test failed: {e}")
-        return False
+        assert False, f"Dashboard configuration test failed: {e}"
 
 def test_external_template_manager():
     """Test external template manager functionality."""
@@ -87,11 +88,11 @@ def test_external_template_manager():
         print(f"📁 Cache directory: {manager.cache_dir}")
         print(f"✅ Cache directory exists: {manager.cache_dir.exists()}")
         
-        return True
+        assert converted is not None, "Template conversion should not return None"
         
     except Exception as e:
         print(f"❌ External template manager test failed: {e}")
-        return False
+        assert False, f"External template manager test failed: {e}"
 
 def test_configuration_loading():
     """Test loading configuration with new sections."""
@@ -113,11 +114,13 @@ def test_configuration_loading():
         print(f"  - Fallback: {config.external_template.fallback_to_builtin}")
         print(f"  - Cache duration: {config.external_template.cache_duration}s")
         
-        return True
+        assert config is not None, "Configuration should not be None"
+        assert hasattr(config, 'dashboard'), "Configuration should have dashboard section"
+        assert hasattr(config, 'external_template'), "Configuration should have external_template section"
         
     except Exception as e:
         print(f"❌ Configuration loading test failed: {e}")
-        return False
+        assert False, f"Configuration loading test failed: {e}"
 
 def main():
     """Run all tests."""

@@ -564,8 +564,8 @@ def parse_args():
                        default="test_outputs",
                        help="Output directory for test results (default: test_outputs)")
     parser.add_argument("--config-path",
-                       default="config/settings.yaml",
-                       help="Path to configuration file (default: config/settings.yaml)")
+                       default="src/config/settings.yaml",
+                       help="Path to configuration file (default: src/config/settings.yaml)")
                        
     return parser.parse_args()
 

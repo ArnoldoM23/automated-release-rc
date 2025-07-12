@@ -1,28 +1,24 @@
 # =============================================================================
-# Automated RC Release Workflow - Configuration
+# Automated RC Release Workflow - Configuration v4.0
 # =============================================================================
+# v4.0 Enhancement: Configuration Hygiene
+# All secrets and dynamic values moved to environment variables (.rc_env_checkout.sh)
+# This file contains only system-level configuration
 
-# Slack Configuration (minimal for testing - UPDATE WITH REAL TOKENS WHEN AVAILABLE)
+# Slack Configuration (system-level settings only)
 slack:
-  bot_token: "xoxb-000000000000-000000000000-placeholder-for-testing"  # Replace with real token
-  signing_secret: "placeholder-signing-secret"
-  app_token: ""  # Optional for Socket Mode
   default_channels:
     - "#releases"
   
-# GitHub Configuration  
+# GitHub Configuration (system-level settings only)
 github:
-  token: "${GITHUB_TOKEN}"  # Set your GitHub token as environment variable
-  repo: "ArnoldoM23/PerfCopilot"
   api_url: "https://api.github.com"
   
-# LLM Configuration - Enhanced for Version 3.0
+# LLM Configuration - System settings only (secrets in environment)
 llm:
   provider: "walmart_sandbox"          # walmart_sandbox, openai, anthropic
   model: "gpt-4o-mini"
-  api_key: "${WMT_LLM_API_KEY}"       # Use environment variable
-  gateway_url: "${WMT_LLM_API_URL}"   # Walmart LLM Gateway URL
-  enabled: true
+  enabled: false                      # v4.0: Disabled by default (Walmart internal services)
   fallback_enabled: true              # Use existing logic if LLM fails
   cache_duration: 3600                # Cache responses to reduce API usage
   max_tokens: 2000
@@ -30,13 +26,20 @@ llm:
   require_llm_for_crq: false         # Optional: enforce LLM for CRQ
   cache_summaries: true               # Reuse summaries to reduce API calls
 
-# Legacy AI Configuration (for backward compatibility)
+# Legacy AI Configuration (for backward compatibility) - System settings only
 ai:
   provider: "openai"
+  model: "gpt-4-1106-preview"
+  max_tokens: 1000
   openai:
-    api_key: "placeholder"  # Set your OpenAI key here or use env var
+    api_key: "dummy-key"  # Will be overridden by environment variable
     model: "gpt-4-1106-preview"
-    max_tokens: 1000
+  azure:
+    api_key: "dummy-key"  # Will be overridden by environment variable
+    endpoint: "https://dummy.openai.azure.com"  # Will be overridden by environment variable
+    deployment: "gpt-4"  # Required field for Azure validation
+  anthropic:
+    api_key: "dummy-key"  # Will be overridden by environment variable
 
 # Organization-specific Settings
 organization:
@@ -59,9 +62,8 @@ organization:
     - "multi-tenant"
     - "internationalization"
 
-# Application Settings
+# Application Settings (system-level only)
 app:
-  environment: "development"
   log_level: "INFO"
   deployment_mode: "socket"
   port: 3000

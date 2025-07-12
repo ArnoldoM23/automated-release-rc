@@ -19,13 +19,9 @@ def test_pr_counts():
     print(f'✅ International PRs: {len(intl)} (expected: 0 in demo)')
 
     # For demo test, we expect 3 schema, 4 feature, 0 international
-    if len(prs) == 10:  # Total should be 10
-        print('🎉 DEMO TEST PASSED: PR demo structure is correct!')
-        return True
-    else:
-        print('❌ DEMO TEST FAILED: Unexpected PR structure!')
-        return False
+    assert len(prs) == 10, f"Expected 10 PRs but got {len(prs)}"
+    print('🎉 DEMO TEST PASSED: PR demo structure is correct!')
 
 if __name__ == "__main__":
-    success = test_pr_counts()
-    sys.exit(0 if success else 1) 
+    test_pr_counts()
+    print("Test completed successfully!") 

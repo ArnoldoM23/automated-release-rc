@@ -50,7 +50,8 @@ def call_llm(prompt: str, max_tokens: int = 300, temperature: float = 0.7) -> Op
     }
 
     try:
-        response = requests.post(LLM_GATEWAY_URL, headers=headers, json=payload)
+        # v4.0 Fix: Add short timeout to prevent hanging on unreachable internal URLs
+        response = requests.post(LLM_GATEWAY_URL, headers=headers, json=payload, timeout=10)
         response.raise_for_status()
         return response.json()["choices"][0]["message"]["content"]
     except requests.exceptions.RequestException as e:
