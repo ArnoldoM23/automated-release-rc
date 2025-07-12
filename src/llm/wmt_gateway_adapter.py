@@ -9,10 +9,16 @@ from typing import Optional
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
-# Walmart-specific certificate setup
-WMT_CA_PATH = "/etc/ssl/certs/ca-bundle.crt"
-os.environ["SSL_CERT_FILE"] = WMT_CA_PATH
-os.environ["REQUESTS_CA_BUNDLE"] = WMT_CA_PATH
+# Walmart-specific certificate setup (cross-platform compatible)
+# Only set custom SSL paths if running on expected corporate environment
+if os.path.exists("/etc/ssl/certs/ca-bundle.crt"):
+    WMT_CA_PATH = "/etc/ssl/certs/ca-bundle.crt"
+    os.environ["SSL_CERT_FILE"] = WMT_CA_PATH
+    os.environ["REQUESTS_CA_BUNDLE"] = WMT_CA_PATH
+    logger.info("Using corporate SSL certificate bundle")
+else:
+    # Use system default SSL certificates on macOS/Windows/other systems
+    logger.info("Using system default SSL certificates")
 
 # LLM Gateway config
 LLM_GATEWAY_URL = os.getenv("WMT_LLM_API_URL")  # Get URL from environment variable

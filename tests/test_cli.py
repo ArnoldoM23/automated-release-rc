@@ -67,9 +67,9 @@ def validate_crq_format(content: str, day_type: str) -> bool:
         "Application Name:",
         "Namespace:",
         "Region of deployment:",
-        "What is the criticality of change",
-        "How have we validated this change",
-        "What is the blast radius",
+        "What is the criticality of change or why is this change required?",
+        "How have we validated this change in the lower environment?",
+        "What is the blast radius of this change?",
         "===== Implementation Plan Section ======",
         "Assembly:",
         "Service name:",
@@ -84,8 +84,8 @@ def validate_crq_format(content: str, day_type: str) -> bool:
         "L1 Dashboard", 
         "Services dashboard",
         "===== Backout Plan Section ======",
-        "What are the rollback criteria",
-        "What are the rollback steps"
+        "What are the rollback criteria?",
+        "What are the rollback steps and how long does rollback take?"
     ]
     
     for element in required_elements:
@@ -144,11 +144,12 @@ def test_configuration():
             else:
                 logger.warning(f"⚠️ {var} environment variable missing")
                 
-        return True
+        # Configuration loaded successfully
+        assert config is not None, "Configuration should not be None"
         
     except Exception as e:
         logger.error(f"❌ Configuration test failed: {e}")
-        return False
+        assert False, f"Configuration test failed: {e}"
 
 
 def test_github_integration(params: Dict[str, Any]):
@@ -177,7 +178,7 @@ def test_github_integration(params: Dict[str, Any]):
         else:
             # Load config and use real GitHub integration
             try:
-                config = load_config()
+                config = load_config(allow_missing_token=True)
                 prs = fetch_prs(params["prod_version"], params["new_version"], config.github)
                 logger.info(f"✅ GitHub integration successful: {len(prs)} PRs fetched")
             except Exception as github_error:
@@ -195,11 +196,12 @@ def test_github_integration(params: Dict[str, Any]):
                 prs = [mock_pr]
                 logger.info(f"✅ Using fallback mock data: {len(prs)} PRs")
             
+        # Return PRs for other tests to use
         return prs
         
     except Exception as e:
         logger.error(f"❌ GitHub test failed: {e}")
-        return []
+        assert False, f"GitHub test failed: {e}"
 
 
 def test_release_notes(prs: list, params: Dict[str, Any], output_dir: Path):
@@ -208,9 +210,9 @@ def test_release_notes(prs: list, params: Dict[str, Any], output_dir: Path):
     logger.info("📝 Testing release notes generation...")
     
     try:
-        # Load config using the specified path
+        # Load config using the specified path with token allowance for testing
         config_path = params.get("config_path", "config/settings.yaml")
-        config = load_config(config_path)
+        config = load_config(config_path, allow_missing_token=True)
         
         # Test Confluence format only (enterprise standard)
         confluence_file = render_release_notes(prs, params, output_dir, config=config)
@@ -226,16 +228,16 @@ def test_release_notes(prs: list, params: Dict[str, Any], output_dir: Path):
                 logger.info("✅ Confluence markup format validation passed")
             else:
                 logger.error("❌ Confluence markup format validation failed")
-                return False
+                assert False, "Confluence markup format validation failed"
         else:
             logger.error(f"❌ {confluence_file.name} is empty or missing")
-            return False
+            assert False, f"{confluence_file.name} is empty or missing"
                 
-        return True
+        logger.info("✅ Release notes generation successful")
         
     except Exception as e:
         logger.error(f"❌ Release notes test failed: {e}")
-        return False
+        assert False, f"Release notes test failed: {e}"
 
 
 def test_crq_generation(prs: list, params: Dict[str, Any], output_dir: Path):
@@ -244,9 +246,9 @@ def test_crq_generation(prs: list, params: Dict[str, Any], output_dir: Path):
     logger.info("📋 Testing CRQ generation...")
     
     try:
-        # Load config using the specified path
+        # Load config using the specified path with token allowance for testing
         config_path = params.get("config_path", "config/settings.yaml")
-        config = load_config(config_path)
+        config = load_config(config_path, allow_missing_token=True)
         
         crq_files = generate_crqs(prs, params, output_dir, config=config)
         logger.info(f"✅ CRQ generation successful: {len(crq_files)} files")
@@ -268,16 +270,16 @@ def test_crq_generation(prs: list, params: Dict[str, Any], output_dir: Path):
                     logger.info(f"✅ {expected_file} format validation passed")
                 else:
                     logger.error(f"❌ {expected_file} format validation failed")
-                    return False
+                    assert False, f"{expected_file} format validation failed"
             else:
                 logger.error(f"❌ {expected_file} is empty or missing")
-                return False
+                assert False, f"{expected_file} is empty or missing"
                 
-        return True
+        logger.info("✅ CRQ generation successful")
         
     except Exception as e:
         logger.error(f"❌ CRQ generation test failed: {e}")
-        return False
+        assert False, f"CRQ generation test failed: {e}"
 
 
 def test_ai_integration():
@@ -288,10 +290,10 @@ def test_ai_integration():
     try:
         if not os.environ.get("OPENAI_API_KEY"):
             logger.warning("⚠️ OPENAI_API_KEY not set - AI features will use fallback")
-            return True
+            return  # Skip test if no API key
             
         from src.utils.ai_client import AIClient
-        config = load_config()
+        config = load_config(allow_missing_token=True)
         ai_client = AIClient(config.ai)
         
         # Test with simple prompt
@@ -300,14 +302,13 @@ def test_ai_integration():
         
         if response and len(response) > 10:
             logger.info(f"✅ AI integration successful (response: {len(response)} chars)")
-            return True
         else:
             logger.error("❌ AI response is too short or empty")
-            return False
+            assert False, "AI response is too short or empty"
             
     except Exception as e:
         logger.error(f"❌ AI integration test failed: {e}")
-        return False
+        assert False, f"AI integration test failed: {e}"
 
 
 def create_comprehensive_mock_prs():
@@ -396,70 +397,72 @@ def create_comprehensive_mock_prs():
 
 
 def test_comprehensive_release_notes(params: Dict[str, Any]):
-    """Test comprehensive document generation with realistic mock data."""
+    """Test comprehensive release notes generation with multiple PR categories."""
     logger = get_logger(__name__)
-    logger.info("🔍 Testing comprehensive document generation with realistic data...")
+    logger.info("📝 Testing comprehensive release notes generation...")
     
     try:
-        # Create comprehensive mock data
+        # Create comprehensive mock PRs
         prs, international_prs = create_comprehensive_mock_prs()
-        logger.info(f"Created {len(prs)} main PRs and {len(international_prs)} international PRs")
+        # Combine all PRs for comprehensive testing
+        all_prs = prs + international_prs
+        logger.info(f"✅ Created {len(all_prs)} comprehensive mock PRs ({len(prs)} main + {len(international_prs)} international)")
         
-        # Setup output directory
-        output_dir = Path(params["output_dir"])
+        # Create temporary output directory
+        output_dir = Path("test_outputs") / "comprehensive_test"
         output_dir.mkdir(parents=True, exist_ok=True)
         
-        # Update params to include international PRs
-        params["international_prs"] = international_prs
+        # Load config using the specified path with token allowance for testing
+        config_path = params.get("config_path", "config/settings.yaml")
+        config = load_config(config_path, allow_missing_token=True)
         
-        # Test 1: Release notes generation
-        logger.info("📝 Testing release notes generation...")
-        release_notes_success = test_release_notes(prs, params, output_dir)
+        # Test Confluence format only (enterprise standard)
+        confluence_file = render_release_notes(all_prs, params, output_dir, config=config)
+        logger.info(f"✅ Confluence release notes: {confluence_file}")
         
-        # Test 2: CRQ generation  
-        logger.info("📋 Testing CRQ generation...")
-        crq_success = test_crq_generation(prs, params, output_dir)
-        
-        # Overall validation
-        if release_notes_success and crq_success:
-            logger.info("✅ Comprehensive document generation test passed!")
+        # Validate file exists and has content
+        if confluence_file.exists() and confluence_file.stat().st_size > 0:
+            logger.info(f"✅ {confluence_file.name} generated successfully ({confluence_file.stat().st_size} bytes)")
             
-            # Validate all expected files are present
-            expected_files = ["release_notes.txt", "crq_day1.txt", "crq_day2.txt"]
-            all_files_present = True
-            
-            for expected_file in expected_files:
-                file_path = output_dir / expected_file
-                if file_path.exists():
-                    logger.info(f"✅ {expected_file}: {file_path.stat().st_size:,} bytes")
-                else:
-                    logger.error(f"❌ Missing: {expected_file}")
-                    all_files_present = False
-            
-            if all_files_present:
-                # Show content analysis for release notes
-                release_notes_file = output_dir / "release_notes.txt"
-                content = release_notes_file.read_text()
-                schema_count = content.count("schema")
-                feature_count = content.count("feature")
-                international_count = content.count("i18n") + content.count("locale")
-                
-                logger.info(f"📊 Release Notes Content Analysis:")
-                logger.info(f"  - Schema references: {schema_count}")
-                logger.info(f"  - Feature references: {feature_count}")
-                logger.info(f"  - International references: {international_count}")
-                logger.info(f"  - Total size: {release_notes_file.stat().st_size:,} bytes")
-                
-                return True
+            # Validate Confluence format
+            content = confluence_file.read_text()
+            if validate_confluence_format(content):
+                logger.info("✅ Confluence markup format validation passed")
             else:
-                return False
+                logger.error("❌ Confluence markup format validation failed")
+                assert False, "Confluence markup format validation failed"
         else:
-            logger.error("❌ Document generation failed")
-            return False
+            logger.error(f"❌ {confluence_file.name} is empty or missing")
+            assert False, f"{confluence_file.name} is empty or missing"
+            
+        # Test specific content for comprehensive PRs
+        content = confluence_file.read_text()
+        
+        # Should contain multiple categories
+        expected_sections = [
+            "Schema Changes",
+            "Feature Changes", 
+            "Bug Fixes",
+            "Dependencies",
+            "Documentation",
+            "Infrastructure"
+        ]
+        
+        missing_sections = []
+        for section in expected_sections:
+            if section not in content:
+                missing_sections.append(section)
+        
+        if missing_sections:
+            logger.warning(f"⚠️ Missing sections in comprehensive notes: {missing_sections}")
+        else:
+            logger.info("✅ All expected sections present in comprehensive notes")
+            
+        logger.info("✅ Comprehensive release notes generation successful")
         
     except Exception as e:
-        logger.error(f"❌ Comprehensive document generation test failed: {e}")
-        return False
+        logger.error(f"❌ Comprehensive release notes test failed: {e}")
+        assert False, f"Comprehensive release notes test failed: {e}"
 
 
 def run_all_tests(params: Dict[str, Any]):
