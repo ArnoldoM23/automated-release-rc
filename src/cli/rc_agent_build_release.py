@@ -9,10 +9,36 @@ from pathlib import Path
 from src.config.config import load_config, extract_service_name_from_repo
 from src.github_integration.fetch_prs import GitHubClient
 
-def is_valid_version(version):
-    """Validate version string format (semantic versioning)"""
-    pattern = r'^v?\d+\.\d+\.\d+$'
-    return bool(re.match(pattern, version))
+# v4.0 Enhancement: Release Types with Tips
+RELEASE_TYPES = {
+    "standard": "🟢 Regular feature or service release (non-urgent)",
+    "hotfix": "🔴 Urgent bug fix going directly to prod",
+    "release": "📦 Formal versioned rollout for larger release cycles"
+}
+
+def normalize_version(version: str) -> str:
+    """Normalize version string by removing v/V prefix"""
+    return version.lstrip("vV")
+
+def is_valid_version(version: str) -> bool:
+    """Validate version string format - supports multiple formats for v4.0"""
+    version = normalize_version(version)
+    
+    # v4.0 Enhancement: Support multiple version formats
+    patterns = [
+        r'^\d+\.\d+\.\d+$',                         # SemVer: 1.2.3
+        r'^\d+\.\d+\.\d+-[a-fA-F0-9]{6,40}$',       # SemVer + SHA: 1.2.3-abcdef (6+ chars, case insensitive)
+        r'^[a-fA-F0-9]{6,40}$',                     # SHA-only: abcdef123 (6-40 chars, case insensitive)
+    ]
+    
+    return any(re.match(pattern, version) for pattern in patterns)
+
+def get_version_format_examples() -> str:
+    """Return formatted examples for version input"""
+    return """Invalid version format. Examples:
+  - v1.2.3 or 1.2.3 (SemVer)
+  - 1.2.3-abcdef (SemVer + SHA, 6+ chars)
+  - abcdef123 (SHA only, 6-40 chars)"""
 
 def validate_date(date_str):
     """Validate date string in YYYY-MM-DD format"""
@@ -79,19 +105,32 @@ def get_release_inputs():
         default="Charlie"
     ).ask()
 
-    # Version validation
+    # v4.0 Enhancement: Enhanced version validation with multiple formats
+    def version_validator(text):
+        if not text.strip():
+            return "Version cannot be empty"
+        if not is_valid_version(text):
+            return get_version_format_examples()
+        return True
+
     production_version = questionary.text(
-        "Production version (e.g. v2.3.1)",
-        validate=lambda text: is_valid_version(text) or "Invalid semantic version format"
+        "Production version (e.g., v1.2.3, 1.2.3-abcdef, or SHA)",
+        validate=version_validator
     ).ask()
 
     new_version = questionary.text(
-        "New version (e.g. v2.4.0)",
-        validate=lambda text: is_valid_version(text) or "Invalid semantic version format"
+        "New version (e.g., v1.2.4, 1.2.4-abcdef, or SHA)",
+        validate=version_validator
     ).ask()
+
+    # Normalize versions for storage
+    production_version = normalize_version(production_version)
+    new_version = normalize_version(new_version)
 
     # Service details - pre-fill from GitHub repo if available
     default_service = "ce-cart"
+    
+    # v4.0 Enhancement: Try config first, then fallback to environment variables
     if config and hasattr(config, 'github') and config.github.repo:
         try:
             extracted_service = extract_service_name_from_repo(config.github.repo)
@@ -100,16 +139,37 @@ def get_release_inputs():
                 print(f"💡 Pre-filling service name from GitHub repo: {default_service}")
         except Exception:
             pass
+    else:
+        # Fallback: Extract from environment variables when config fails
+        github_repo = os.getenv("GITHUB_REPO")
+        if github_repo:
+            try:
+                extracted_service = extract_service_name_from_repo(github_repo)
+                if extracted_service != "unknown-service":
+                    default_service = extracted_service
+                    print(f"💡 Pre-filling service name from environment GITHUB_REPO: {default_service}")
+            except Exception:
+                pass
 
     service_name = questionary.text(
         "Service name (e.g. ce-cart)",
         default=default_service
     ).ask()
 
+    # v4.0 Enhancement: Release type selection with tips
+    print("\nSelect a release type:")
+    for rtype, tip in RELEASE_TYPES.items():
+        print(f"  - {rtype}: {tip}")
+    
     release_type = questionary.select(
         "Release type",
-        choices=["standard", "hotfix", "release"]
+        choices=list(RELEASE_TYPES.keys())
     ).ask()
+
+    # Validate release type (extra safety)
+    if release_type not in RELEASE_TYPES:
+        print(f"❌ Invalid release type. Choose one of: {list(RELEASE_TYPES.keys())}")
+        return None
 
     # Release dates
     day1_date = questionary.text(
@@ -154,6 +214,9 @@ def get_release_inputs():
 if __name__ == "__main__":
     # Test the input collection
     config = get_release_inputs()
-    print("\n🎯 Collected configuration:")
-    for key, value in config.items():
-        print(f"  {key}: {value}") 
+    if config:
+        print("\n🎯 Collected configuration:")
+        for key, value in config.items():
+            print(f"  {key}: {value}")
+    else:
+        print("❌ Failed to collect configuration") 

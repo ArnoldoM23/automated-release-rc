@@ -10,7 +10,7 @@ from typing import List, Optional, Dict, Any, Union
 from pathlib import Path
 
 import yaml
-from pydantic import BaseModel, Field, validator, model_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 from pydantic_settings import BaseSettings
 
 
@@ -21,13 +21,15 @@ class SlackConfig(BaseModel):
     app_token: Optional[str] = Field(None, description="Slack app token for Socket Mode (xapp-...)")
     default_channels: List[str] = Field(default=["#releases"], description="Default notification channels")
 
-    @validator('bot_token')
+    @field_validator('bot_token')
+    @classmethod
     def validate_bot_token(cls, v):
         if not v.startswith('xoxb-'):
             raise ValueError('Bot token must start with xoxb-')
         return v
 
-    @validator('app_token')
+    @field_validator('app_token')
+    @classmethod
     def validate_app_token(cls, v):
         if v and not v.startswith('xapp-'):
             raise ValueError('App token must start with xapp-')
@@ -40,14 +42,19 @@ class GitHubConfig(BaseModel):
     repo: str = Field(..., description="Repository in format owner/repo")
     api_url: str = Field(default="https://api.github.com", description="GitHub API base URL")
 
-    @validator('repo')
+    @field_validator('repo')
+    @classmethod
     def validate_repo_format(cls, v):
         if not re.match(r'^[a-zA-Z0-9._-]+/[a-zA-Z0-9._-]+$', v):
             raise ValueError('Repository must be in format owner/repo')
         return v
 
-    @validator('token')
+    @field_validator('token')
+    @classmethod
     def validate_token(cls, v):
+        # Allow dummy token for testing/development
+        if v == "dummy-token-for-testing":
+            return v
         if not v or len(v) < 10:
             raise ValueError('GitHub token must be provided and valid')
         return v
@@ -82,7 +89,8 @@ class AIConfig(BaseModel):
     azure: Optional[AzureOpenAIConfig] = None
     anthropic: Optional[AnthropicConfig] = None
 
-    @validator('provider')
+    @field_validator('provider')
+    @classmethod
     def validate_provider(cls, v):
         if v not in ['openai', 'azure', 'anthropic']:
             raise ValueError('Provider must be one of: openai, azure, anthropic')
@@ -113,13 +121,15 @@ class LLMConfig(BaseModel):
     require_llm_for_crq: bool = Field(default=False, description="Require LLM for CRQ generation")
     cache_summaries: bool = Field(default=True, description="Cache summaries to reduce API calls")
 
-    @validator('provider')
+    @field_validator('provider')
+    @classmethod
     def validate_provider(cls, v):
         if v not in ['walmart_sandbox', 'openai', 'anthropic']:
             raise ValueError('Provider must be one of: walmart_sandbox, openai, anthropic')
         return v
 
-    @validator('temperature')
+    @field_validator('temperature')
+    @classmethod
     def validate_temperature(cls, v):
         if v < 0.0 or v > 2.0:
             raise ValueError('Temperature must be between 0.0 and 2.0')
@@ -155,19 +165,22 @@ class AppConfig(BaseModel):
     port: int = Field(default=3000, description="Server port for HTTP mode")
     output_dir: str = Field(default="output", description="Output directory for generated files")
 
-    @validator('environment')
+    @field_validator('environment')
+    @classmethod
     def validate_environment(cls, v):
         if v not in ['development', 'staging', 'production']:
             raise ValueError('Environment must be one of: development, staging, production')
         return v
 
-    @validator('log_level')
+    @field_validator('log_level')
+    @classmethod
     def validate_log_level(cls, v):
         if v not in ['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL']:
             raise ValueError('Log level must be one of: DEBUG, INFO, WARNING, ERROR, CRITICAL')
         return v
 
-    @validator('deployment_mode')
+    @field_validator('deployment_mode')
+    @classmethod
     def validate_deployment_mode(cls, v):
         if v not in ['socket', 'http']:
             raise ValueError('Deployment mode must be one of: socket, http')
@@ -382,7 +395,8 @@ class ExternalTemplateConfig(BaseModel):
     cache_duration: int = Field(default=3600, description="Cache duration in seconds (1 hour default)")
     fallback_to_builtin: bool = Field(default=True, description="Fall back to built-in template if download fails")
     
-    @validator('template_type')
+    @field_validator('template_type')
+    @classmethod
     def validate_template_type(cls, v):
         if v not in ['auto', 'word', 'text', 'markdown', 'html']:
             raise ValueError('Template type must be one of: auto, word, text, markdown, html')
@@ -428,15 +442,17 @@ def substitute_env_vars(data: Any) -> Any:
         return data
 
 
-def load_config(config_path: Optional[Union[str, Path]] = None) -> Settings:
+def load_config(config_path: Optional[Union[str, Path]] = None, allow_missing_token: bool = False) -> Settings:
     """
     Load configuration from YAML file with environment variable substitution.
+    v4.0 Enhancement: All secrets come from environment variables, YAML contains system config only.
     
     Args:
         config_path: Path to configuration file. If None, looks for:
                     - config/settings.local.yaml (for local overrides)
                     - config/settings.yaml
                     - config/settings.example.yaml (fallback)
+        allow_missing_token: If True, allows missing GitHub token for testing/development
     
     Returns:
         Settings instance with validated configuration.
@@ -476,11 +492,98 @@ def load_config(config_path: Optional[Union[str, Path]] = None) -> Settings:
     # Substitute environment variables
     processed_config = substitute_env_vars(raw_config)
     
+    # v4.0 Enhancement: Inject environment variables for secrets
+    # GitHub Configuration
+    if 'github' not in processed_config:
+        processed_config['github'] = {}
+    processed_config['github']['token'] = os.getenv('GITHUB_TOKEN', 'dummy-token-for-testing' if allow_missing_token else '')
+    processed_config['github']['repo'] = os.getenv('GITHUB_REPO', 'ArnoldoM23/PerfCopilot')
+    
+    # Slack Configuration
+    if 'slack' not in processed_config:
+        processed_config['slack'] = {}
+    processed_config['slack']['bot_token'] = os.getenv('SLACK_BOT_TOKEN', 'xoxb-000000000000-000000000000-placeholder-for-testing' if allow_missing_token else 'xoxb-missing-token')
+    processed_config['slack']['signing_secret'] = os.getenv('SLACK_SIGNING_SECRET', 'placeholder-signing-secret' if allow_missing_token else 'missing-secret')
+    processed_config['slack']['app_token'] = os.getenv('SLACK_APP_TOKEN', '')
+    
+    # LLM Configuration (v3.0/v4.0)
+    if 'llm' not in processed_config:
+        processed_config['llm'] = {}
+    processed_config['llm']['api_key'] = os.getenv('WMT_LLM_API_KEY', 'dummy-llm-key' if allow_missing_token else '')
+    processed_config['llm']['gateway_url'] = os.getenv('WMT_LLM_API_URL', 'https://llm-internal.walmart.com/gateway')
+    
+    # AI Configuration (Legacy)
+    if 'ai' not in processed_config:
+        processed_config['ai'] = {}
+    if 'openai' not in processed_config['ai']:
+        processed_config['ai']['openai'] = {}
+    processed_config['ai']['openai']['api_key'] = os.getenv('OPENAI_API_KEY', 'dummy-openai-key' if allow_missing_token else 'sk-missing-key')
+    
+    # Azure OpenAI Configuration
+    if 'azure' not in processed_config['ai']:
+        processed_config['ai']['azure'] = {}
+    processed_config['ai']['azure']['api_key'] = os.getenv('AZURE_OPENAI_API_KEY', 'dummy-azure-key' if allow_missing_token else '')
+    processed_config['ai']['azure']['endpoint'] = os.getenv('AZURE_OPENAI_ENDPOINT', 'https://your-instance.openai.azure.com')
+    processed_config['ai']['azure']['deployment'] = os.getenv('AZURE_OPENAI_DEPLOYMENT', 'gpt-4')
+    
+    # Anthropic Configuration
+    if 'anthropic' not in processed_config['ai']:
+        processed_config['ai']['anthropic'] = {}
+    processed_config['ai']['anthropic']['api_key'] = os.getenv('ANTHROPIC_API_KEY', 'dummy-anthropic-key' if allow_missing_token else '')
+    
+    # Handle missing GitHub token gracefully for development/testing
+    if allow_missing_token and not processed_config.get('github', {}).get('token'):
+        # Provide a dummy token for development/testing
+        if 'github' not in processed_config:
+            processed_config['github'] = {}
+        processed_config['github']['token'] = 'dummy-token-for-testing'
+    
     # Validate with Pydantic
     try:
         return Settings(**processed_config)
     except Exception as e:
-        raise ValueError(f"Configuration validation failed: {e}")
+        # Enhanced error message for GitHub token issues
+        if "GitHub token must be provided and valid" in str(e):
+            raise ValueError(
+                f"GitHub token configuration error: {e}\n\n"
+                "v4.0 Configuration Setup:\n"
+                "1. Create .rc_env_checkout.sh from template\n"
+                "2. Set your GitHub token:\n"
+                "   export GITHUB_TOKEN='your-token-here'\n"
+                "3. Source the environment file:\n"
+                "   source .rc_env_checkout.sh\n\n"
+                "To get a GitHub token:\n"
+                "   - Go to https://github.com/settings/tokens\n"
+                "   - Click 'Generate new token (classic)'\n"
+                "   - Select 'repo' scope for private repos or 'public_repo' for public repos\n"
+                "   - Copy the token (starts with 'ghp_' or 'github_pat_')\n\n"
+                "For testing/development without a token, use load_config(allow_missing_token=True)"
+            )
+        else:
+            raise ValueError(f"Configuration validation failed: {e}")
+
+
+def load_config_safe() -> Optional[Settings]:
+    """
+    Load configuration safely without raising exceptions.
+    
+    Returns:
+        Settings instance if successful, None if configuration cannot be loaded.
+    """
+    try:
+        return load_config(allow_missing_token=True)
+    except Exception as e:
+        import warnings
+        warnings.warn(
+            f"Configuration could not be loaded: {e}\n"
+            "This is expected during development/testing when GitHub token is not set.",
+            UserWarning
+        )
+        return None
+
+
+# Global configuration instance (loaded on import with safe loading)
+config = load_config_safe()
 
 
 def validate_modal_input(field_name: str, value: str, field_config: ModalFieldConfig) -> tuple[bool, Optional[str]]:
@@ -540,14 +643,4 @@ def extract_service_name_from_repo(repo_url: str) -> str:
                 
         return service_name
     except Exception:
-        return "unknown-service"
-
-
-# Global configuration instance (loaded on import)
-try:
-    config = load_config()
-except (FileNotFoundError, ValueError) as e:
-    # In development/testing, we might not have a config file yet
-    import warnings
-    warnings.warn(f"Could not load configuration: {e}")
-    config = None 
+        return "unknown-service" 

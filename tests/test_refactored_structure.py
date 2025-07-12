@@ -37,15 +37,16 @@ def test_package_structure():
         'README.md'
     ]
     
+    missing_files = []
     for file_path in required_files:
         full_path = project_root / file_path
         if full_path.exists():
             print(f"✅ {file_path}: Found")
         else:
             print(f"❌ {file_path}: Missing")
-            return False
+            missing_files.append(file_path)
     
-    return True
+    assert not missing_files, f"Missing required files: {missing_files}"
 
 def test_src_imports():
     """Test that all src modules can be imported correctly."""
@@ -65,9 +66,7 @@ def test_src_imports():
             print(f"✅ {name}: Import successful")
         except Exception as e:
             print(f"❌ {name}: Import failed - {e}")
-            return False
-    
-    return True
+            assert False, f"Import failed for {name}: {e}"
 
 def test_main_entry_point():
     """Test the package entry points."""
@@ -93,14 +92,13 @@ def test_main_entry_point():
         
         if not missing_elements:
             print("✅ Package Entry Points: Configuration valid")
-            return True
         else:
             print(f"❌ Package Entry Points: Missing elements - {missing_elements}")
-            return False
+            assert False, f"Missing required elements in pyproject.toml: {missing_elements}"
             
     except Exception as e:
         print(f"❌ Package Entry Points: Test failed - {e}")
-        return False
+        assert False, f"Package entry point test failed: {e}"
 
 def test_python_module_execution():
     """Test Python module execution standards."""
@@ -125,14 +123,13 @@ except Exception as e:
         
         if result.returncode == 0 and 'MODULE_IMPORT_SUCCESS' in result.stdout:
             print("✅ Python Module Execution: Import successful")
-            return True
         else:
             print(f"❌ Python Module Execution: Failed - {result.stderr or result.stdout}")
-            return False
+            assert False, f"Python module execution failed: {result.stderr or result.stdout}"
             
     except Exception as e:
         print(f"❌ Python Module Execution: Test failed - {e}")
-        return False
+        assert False, f"Python module execution test failed: {e}"
 
 def test_github_integration():
     """Test GitHub integration if token is available."""
@@ -141,7 +138,7 @@ def test_github_integration():
     
     if not os.getenv('GITHUB_TOKEN'):
         print("⚠️  GITHUB_TOKEN not set - skipping GitHub tests")
-        return True
+        return  # Skip test if no token
     
     try:
         script_path = project_root / 'scripts' / 'test_github_trigger.py'
@@ -151,13 +148,12 @@ def test_github_integration():
         
         if result.returncode == 0:
             print("✅ GitHub integration test PASSED")
-            return True
         else:
             print(f"❌ GitHub integration test FAILED: {result.stderr}")
-            return False
+            assert False, f"GitHub integration test failed: {result.stderr}"
     except Exception as e:
         print(f"❌ GitHub test execution failed: {e}")
-        return False
+        assert False, f"GitHub test execution failed: {e}"
 
 def test_pyproject_toml():
     """Test that pyproject.toml is properly configured."""
@@ -185,14 +181,13 @@ def test_pyproject_toml():
         
         if not missing_sections:
             print("✅ PyProject.toml: Configuration valid")
-            return True
         else:
             print(f"❌ PyProject.toml: Missing sections - {missing_sections}")
-            return False
+            assert False, f"Missing required sections in pyproject.toml: {missing_sections}"
             
     except Exception as e:
         print(f"❌ PyProject.toml: Test failed - {e}")
-        return False
+        assert False, f"PyProject.toml test failed: {e}"
 
 def main():
     """Run all tests and report results."""

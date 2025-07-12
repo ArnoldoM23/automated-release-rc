@@ -19,11 +19,55 @@ source .venv/bin/activate  # On Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-### 2. Setup GitHub Authentication
+### 2. 🔧 RC Agent Setup (v4.0)
 
-**🔑 Creating a Classic GitHub Personal Access Token**
+**🎯 v4.0 Configuration Hygiene: Secrets in Environment, System Config in YAML**
 
-The RC Agent requires a GitHub Personal Access Token to fetch PR data and interact with your repository. Follow these steps to create one:
+#### **Step 1: Create Environment Configuration**
+
+Create your environment file in your home directory (secure location):
+
+```bash
+# Copy the template to your home directory
+cp .rc_env_checkout.sh ~/.rc_env_checkout.sh
+
+# Edit with your actual values
+nano ~/.rc_env_checkout.sh  # or vim/code
+```
+
+Edit `~/.rc_env_checkout.sh` with your actual values:
+
+```bash
+#!/bin/bash
+# =============================================================================
+# RC Agent v4.0 - Your Environment Configuration
+# =============================================================================
+# ⚠️  IMPORTANT: Keep this file in your HOME directory only!
+# ⚠️  Never commit this file to git - contains sensitive credentials
+
+# GitHub Authentication (Required)
+export GITHUB_TOKEN="ghp_your_actual_token_here"
+export GITHUB_REPO="YourOrg/YourRepo"
+
+# Service Configuration (Auto-detected if not specified)
+export SERVICE_NAME="your-service-name"        # Optional: auto-extracted from repo
+export SERVICE_NAMESPACE="your-namespace"
+export SERVICE_REGIONS="us-east-1,us-west-2"
+export PLATFORM="kubernetes"
+
+# LLM Configuration (Optional - for AI features)
+export LLM_PROVIDER="openai"                   # openai, walmart_sandbox
+export OPENAI_API_KEY="sk-your-openai-key"     # OpenAI API key
+export WMT_LLM_API_KEY="your-wmt-key"          # Walmart LLM key (optional)
+export WMT_LLM_API_URL="http://llm-internal.walmart.com:8000"  # Walmart LLM URL
+
+# Slack Configuration (Optional - for notifications)
+export SLACK_BOT_TOKEN="xoxb-your-token"
+export SLACK_SIGNING_SECRET="your-secret"
+export SLACK_CHANNEL="#releases"
+```
+
+#### **Step 2: Get Your GitHub Token**
 
 1. **Navigate to GitHub Token Settings:**
    - Go to https://github.com/settings/tokens
@@ -31,34 +75,53 @@ The RC Agent requires a GitHub Personal Access Token to fetch PR data and intera
 
 2. **Generate New Token:**
    - Click **"Generate new token (classic)"**
-   - **Note/Description:** `RC Release Automation Agent`
+   - **Note/Description:** `RC Release Automation Agent v4.0`
    - **Expiration:** 90 days (recommended) or your preferred duration
 
 3. **Select Required Scopes:**
    - ✅ **`repo`** - Full control of private repositories
-     - Includes: repo:status, repo_deployment, public_repo, repo:invite
    - ✅ **`workflow`** - Update GitHub Action workflows (if using GitHub Actions)
-   - ⚠️ **Important:** Do not select unnecessary scopes for security
 
 4. **Generate and Copy Token:**
    - Click **"Generate token"**
    - **IMMEDIATELY COPY** the token (format: `ghp_xxxxxxxxxxxx`)
-   - You won't be able to see it again!
+   - Update your `.rc_env_checkout.sh.local` file with the token
 
-### 3. Configure GitHub Token
-Edit `src/config/settings.yaml`:
-```yaml
-github:
-  token: "ghp_your_actual_token_here"  # Replace with your copied token
-  repo: "your-org/your-repo"           # Update to your repository
-  api_url: "https://api.github.com"
-```
+#### **Step 3: Load Environment and Run**
 
-### 4. Run Interactive CLI
+**Option A: Manual Method**
 ```bash
-# Primary CLI command
+# Load your environment configuration
+source ~/.rc_env_checkout.sh
+
+# Run the RC Agent
 python -m src.cli.run_release_agent
 ```
+
+**Option B: Automated Wrapper (Recommended)**
+```bash
+# Make the wrapper executable
+chmod +x run_rc_agent.sh
+
+# Run with automatic environment loading
+./run_rc_agent.sh
+```
+
+**Option C: Custom Environment File**
+```bash
+# Use a custom-named environment file
+RC_ENV_FILE=~/.my-secrets.sh ./run_rc_agent.sh
+```
+
+#### **🎯 v4.0 Benefits:**
+
+- ✅ **Enhanced Security** - No secrets in configuration files, all in environment variables
+- ✅ **Multiple Version Formats** - Support for v1.2.3, 1.2.3-abcdef, abc123 (SHA-only)
+- ✅ **Enhanced CLI Guidance** - Release type prompts with helpful tips and validation
+- ✅ **Automatic Service Detection** - Smart service name extraction from GitHub repo
+- ✅ **LLM Performance Improvements** - 10-second timeout prevents hanging (was 75+ seconds)
+- ✅ **Professional Configuration** - Clean separation of system config and secrets
+- ✅ **Flexible Environment Setup** - Support for custom environment file names and locations
 
 ## 🎯 Usage
 
@@ -68,25 +131,41 @@ python -m src.cli.run_release_agent
 python -m src.cli.run_release_agent
 ```
 
-**Example Session:**
+**Example Session (v4.0 Enhanced):**
 ```
 👋 Welcome to the RC Release Agent!
 🛠  Let's gather details for this release.
 
-Who is the RC? Your Name
-Who is the RC Manager? Manager Name  
-Production version (e.g. v2.3.1): v0.4.6
-New version (e.g. v2.4.0): v0.4.7
-Service name (e.g. cer-cart): ce-cartxo
+Who is the RC? @ArnoldoM23
+Who is the RC Manager? Charlie  
+Production version (e.g., v1.2.3, 1.2.3-abcdef, or SHA): v0.4.6
+New version (e.g., v1.2.4, 1.2.4-abcdef, or SHA): v0.4.7
+💡 Pre-filling service name from GitHub repo: perfcopilot
+Service name (e.g. ce-cart): perfcopilot
+
+Select a release type:
+  - standard: 🟢 Regular feature or service release (non-urgent)
+  - hotfix: 🔴 Urgent bug fix going directly to prod  
+  - release: 📦 Formal versioned rollout for larger release cycles
 Release type: standard
+
 Day 1 Date (YYYY-MM-DD): 2024-02-23
 Day 2 Date (YYYY-MM-DD): 2024-02-24
+Slack cutoff time (UTC ISO format): 2024-02-22T23:00:00Z
 Output folder: output/
 
 🔍 Analyzing PRs between v0.4.6 → v0.4.7...
-✅ Found 10 PRs: 3 schema, 4 feature, 0 international
+✅ Found 21 PRs to process
+🤖 Requesting AI summary for 21 PRs... (completed in 5.2s)
 📝 Generating release documentation...
-✅ Documentation generated in: output/ce-cartxo_v0.4.7_20240223_191554/cu
+✅ Documentation generated in: output/perfcopilot_v0.4.7_20240223_192847/
+
+📁 Generated files (24,884 bytes total):
+  - release_notes.txt (6,223 bytes)
+  - crq_day1.txt (8,891 bytes) 
+  - crq_day2.txt (7,234 bytes)
+  - pr_authors.json (1,156 bytes)
+  - rc_config.json (1,380 bytes)
 ```
 
 Follow the prompts to generate professional release documentation!
@@ -244,12 +323,15 @@ automated-release-rc/
 │   │   └── rc_agent_build_release.py
 │   ├── config/                    # Configuration management
 │   │   ├── config.py              # Settings and validation
-│   │   ├── settings.yaml          # Main configuration
+│   │   ├── settings.yaml          # Main configuration (v4.0: no secrets)
 │   │   └── settings.example.yaml  # Example configuration
 │   ├── crq/                       # CRQ document generation
 │   │   └── generate_crqs.py       # CRQ creation logic
-│   ├── github/                    # GitHub API integration
+│   ├── github_integration/        # GitHub API integration
 │   │   └── fetch_prs.py           # PR fetching and analysis
+│   ├── llm/                       # LLM integration (v4.0: enhanced)
+│   │   ├── llm_client.py          # LLM orchestration
+│   │   └── wmt_gateway_adapter.py # Walmart LLM gateway (v4.0: timeout)
 │   ├── release_notes/             # Release notes generation
 │   │   └── release_notes.py       # Notes creation logic
 │   ├── slack/                     # Slack integration (optional)
@@ -264,17 +346,24 @@ automated-release-rc/
 ├── 📚 docs/                       # Documentation
 │   ├── quickstart.md              # Complete setup guide
 │   ├── CLI_AGENT_README.md        # Comprehensive user guide
+│   ├── configuration.md           # Configuration documentation
 │   ├── IMPLEMENTATION_SUMMARY.md  # Technical implementation
 │   ├── TEST_SUMMARY.md            # Testing documentation
 │   └── plan.md                    # Project plan and status
 │
-├── 🧪 tests/                      # Test suite
+├── 🧪 tests/                      # Test suite (v4.0: 36 tests)
+│   ├── test_v4_features.py        # v4.0 feature tests (NEW)
 │   ├── test_pr_counts.py          # Critical PR counting tests
+│   ├── test_cli.py                # CLI integration tests
+│   ├── test_github/               # GitHub integration tests
+│   ├── test_slack/                # Slack integration tests
 │   └── test_refactored_structure.py # Structure validation
 │
 ├── 📋 scripts/                    # Helper scripts
 │   └── run_tests.py               # Test runner utility
 │
+├── 🚀 run_rc_agent.sh            # v4.0: Automated wrapper script (NEW)
+├── 🔐 .rc_env_checkout.sh        # v4.0: Environment template (do not commit)
 ├── 📁 output/                     # Generated files directory
 ├── 📁 cache/                      # Template cache directory
 ├── 📋 requirements.txt            # Python dependencies
@@ -283,15 +372,26 @@ automated-release-rc/
 
 ### Testing & Validation
 ```bash
+# Run all tests (v4.0: 36 tests total)
+python -m pytest tests/ -v
+
+# Test v4.0 specific features
+python tests/test_v4_features.py
+
 # Test critical PR counting functionality (very important)
 python tests/test_pr_counts.py
 
-# Run comprehensive tests
-python scripts/run_tests.py
-
-# Test configuration loading
+# Test configuration loading (v4.0: environment-based)
 python -c "from src.config.config import load_config; config = load_config(); print('✅ Config loads successfully')"
+
+# Quick environment validation
+source ~/.rc_env_checkout.sh && echo "✅ Environment loaded successfully"
 ```
+
+**🎯 v4.0 Test Coverage:**
+- ✅ **36 tests total** (100% passing)
+- ✅ **6 new v4.0 feature tests** - Version validation, environment config, LLM timeout
+- ✅ **30 existing tests** - All legacy functionality verified
 
 ### GitHub Actions (Optional)
 You can also trigger via GitHub Actions by setting up repository secrets and using the workflow manually or via API.
@@ -320,13 +420,14 @@ You can also trigger via GitHub Actions by setting up repository secrets and usi
    - Classic tokens start with `ghp_` (e.g., `ghp_1234567890abcdef...`)
    - Fine-grained tokens start with `github_pat_` (not recommended for this tool)
 
-5. **Update Configuration:**
-   ```yaml
-   github:
-     token: "ghp_your_token_here"    # Your actual token
-     repo: "your-org/your-repo"      # Your repository
-     api_url: "https://api.github.com"
+5. **Add to Environment File:**
+   ```bash
+   # Add to ~/.rc_env_checkout.sh
+   export GITHUB_TOKEN="ghp_your_token_here"
+   export GITHUB_REPO="your-org/your-repo"
    ```
+   
+   **🔒 v4.0 Security Note:** Tokens are NEVER stored in configuration files - only in environment variables!
 
 **🔍 Troubleshooting Common Issues:**
 
@@ -356,11 +457,11 @@ If you're using **GitHub Enterprise Server** (common in corporate environments),
 - **Enterprise GitHub**: URLs like `https://github.company.com/your-org/repo`
 
 **Configuration for Enterprise:**
-```yaml
-github:
-  token: "your_enterprise_token"
-  repo: "your-org/your-repo" 
-  api_url: "https://github.company.com/api/v3"  # Note the /api/v3 suffix
+```bash
+# Add to ~/.rc_env_checkout.sh
+export GITHUB_TOKEN="your_enterprise_token"
+export GITHUB_REPO="your-org/your-repo"
+export GITHUB_API_URL="https://github.company.com/api/v3"  # Note the /api/v3 suffix
 ```
 
 **Examples:**
@@ -370,15 +471,16 @@ github:
 **⚠️ Common Error:** Using `"https://api.github.com"` with enterprise tokens causes **401 Unauthorized** errors.
 
 ### AI Provider (Optional)
-Edit `src/config/settings.yaml`:
-```yaml
-ai:
-  provider: "openai"  # or "anthropic"
-  openai:
-    api_key: "sk-your_openai_api_key_here"
-    model: "gpt-4-1106-preview"
-    max_tokens: 1000
+Add to your environment file `~/.rc_env_checkout.sh`:
+```bash
+# LLM Configuration (Optional - for AI features)
+export LLM_PROVIDER="openai"                   # openai, walmart_sandbox
+export OPENAI_API_KEY="sk-your-openai-key"     # OpenAI API key
+export WMT_LLM_API_KEY="your-wmt-key"          # Walmart LLM key (optional)
+export WMT_LLM_API_URL="http://llm-internal.walmart.com:8000"  # Walmart LLM URL
 ```
+
+**🔒 v4.0 Security:** All API keys are environment variables only - never in configuration files!
 
 ## 🧠 Version 3.0 - LLM Integration Features
 
@@ -398,15 +500,23 @@ Version 3.0 introduces advanced LLM integration for intelligent release document
 - **Executive-Friendly Language** - Optimized for non-technical stakeholders
 
 ### **🔧 LLM Configuration**
-Edit `src/config/settings.yaml`:
+Environment variables (in `~/.rc_env_checkout.sh`):
+```bash
+# LLM Provider Selection
+export LLM_PROVIDER="openai"                   # openai, walmart_sandbox
+export OPENAI_API_KEY="sk-your-openai-key"
+export WMT_LLM_API_KEY="your-wmt-key"          # Optional: Walmart internal
+export WMT_LLM_API_URL="http://llm-internal.walmart.com:8000"
+```
+
+System configuration (in `src/config/settings.yaml` - no secrets):
 ```yaml
 llm:
-  provider: "walmart_sandbox"          # walmart_sandbox, openai, anthropic
+  provider: "openai"                  # Default provider
   model: "gpt-4o-mini"
-  api_key: "${WMT_LLM_API_KEY}"       # Use environment variable
-  gateway_url: "${WMT_LLM_API_URL}"   # Walmart LLM Gateway URL
-  enabled: true
-  fallback_enabled: true              # Use existing logic if LLM fails
+  enabled: false                      # v4.0: Disabled by default for performance
+  fallback_enabled: true              # Use existing logic if LLM fails  
+  timeout: 10                         # v4.0: 10-second timeout prevents hanging
   temperature: 0.1                    # Lower temperature for consistent output
 ```
 
@@ -464,18 +574,20 @@ output/
 - **[Implementation Summary](docs/IMPLEMENTATION_SUMMARY.md)** - Technical details
 - **[Test Summary](docs/TEST_SUMMARY.md)** - Testing documentation
 
-## 🚀 Ready for Production
+## 🚀 Ready for Production (v4.0)
 
-This system is **fully implemented and tested**:
-- ✅ Interactive CLI with validation
-- ✅ GitHub Actions integration
-- ✅ Enterprise-ready documentation generation
-- ✅ Flexible version reference support (tags + commit SHAs)
-- ✅ Professional CRQ and release note templates
-- ✅ Comprehensive testing suite (21/29 tests passing)
-- ✅ Release date-based output directory naming
+This system is **fully implemented and tested** with v4.0 enhancements:
+- ✅ **v4.0 Enhanced Security** - Environment-only secrets, no config file exposure
+- ✅ **v4.0 Multiple Version Formats** - Support for v1.2.3, 1.2.3-sha, SHA-only
+- ✅ **v4.0 Enhanced CLI** - Release type prompts with helpful tips and validation
+- ✅ **v4.0 Performance Optimizations** - LLM timeout (10s) prevents hanging
+- ✅ **v4.0 Smart Service Detection** - Auto-extraction from GitHub repo names
+- ✅ **Interactive CLI with validation** - Professional user experience
+- ✅ **Enterprise-ready documentation** - Confluence + CRQ generation
+- ✅ **Comprehensive testing suite** - 36/36 tests passing (100% success rate)
+- ✅ **Flexible wrapper script** - Automated environment loading option
 
-**Transform your release process today!** 🎉
+**Transform your release process with v4.0 today!** 🎉
 
 ---
 

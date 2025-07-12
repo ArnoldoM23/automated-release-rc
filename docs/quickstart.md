@@ -1,6 +1,6 @@
-# 🚀 Complete Quickstart Guide
+# 🚀 Complete Quickstart Guide - v4.0
 
-**Get your RC Release Automation Agent running in under 10 minutes**
+**Get your RC Release Automation Agent v4.0 running in under 10 minutes**
 
 ---
 
@@ -95,74 +95,107 @@ curl -H "Authorization: token ghp_your_token_here" \
 # Error response: {"message": "Bad credentials"} (401)
 ```
 
-### **2.2 Update Configuration File**
+### **2.2 Create Environment Configuration (v4.0 Security)**
 
-Edit `src/config/settings.yaml` and replace the placeholder values:
+**🔒 v4.0 Enhancement:** All secrets are now in environment variables, never in configuration files!
 
-```yaml
-# GitHub Configuration  
-github:
-  token: "ghp_your_actual_token_here"  # Paste your copied token here
-  repo: "YOUR_USERNAME/automated-release-rc"  # Update to your forked repository
-  api_url: "https://api.github.com"
+Create your environment file in your home directory:
+
+```bash
+# Copy the template to your home directory
+cp .rc_env_checkout.sh ~/.rc_env_checkout.sh
+
+# Edit with your actual values
+nano ~/.rc_env_checkout.sh  # or vim/code/vscode
+```
+
+Edit `~/.rc_env_checkout.sh` with your actual values:
+
+```bash
+#!/bin/bash
+# =============================================================================
+# RC Agent v4.0 - Your Environment Configuration
+# =============================================================================
+# ⚠️  IMPORTANT: Keep this file in your HOME directory only!
+# ⚠️  Never commit this file to git - contains sensitive credentials
+
+# GitHub Authentication (Required)
+export GITHUB_TOKEN="ghp_your_actual_token_here"  # Paste your copied token here
+export GITHUB_REPO="YOUR_USERNAME/automated-release-rc"  # Your forked repository
+
+# Optional: Service Configuration (auto-detected if not specified)
+export SERVICE_NAME="my-service"
+export SERVICE_NAMESPACE="my-namespace" 
+export SERVICE_REGIONS="us-east-1,us-west-2"
+export PLATFORM="kubernetes"
+
+# Optional: LLM Configuration (for AI features)
+export LLM_PROVIDER="openai"
+export OPENAI_API_KEY="sk-your-openai-key"
+
+# Optional: Slack Configuration
+export SLACK_BOT_TOKEN="xoxb-your-token"
+export SLACK_SIGNING_SECRET="your-secret"
 ```
 
 **📝 Configuration Examples:**
 
 **For Personal Fork:**
-```yaml
-github:
-  token: "ghp_1234567890abcdefghijklmnopqrstuvwxyz123"
-  repo: "john-doe/automated-release-rc"  
-  api_url: "https://api.github.com"
+```bash
+export GITHUB_TOKEN="ghp_1234567890abcdefghijklmnopqrstuvwxyz123"
+export GITHUB_REPO="john-doe/automated-release-rc"
 ```
 
 **For Organization Repository:**
-```yaml
-github:
-  token: "ghp_1234567890abcdefghijklmnopqrstuvwxyz123"
-  repo: "my-company/automated-release-rc"
-  api_url: "https://api.github.com"
+```bash
+export GITHUB_TOKEN="ghp_1234567890abcdefghijklmnopqrstuvwxyz123"
+export GITHUB_REPO="my-company/automated-release-rc"
 ```
 
 **For GitHub Enterprise Server:**
-```yaml
-github:
-  token: "ghp_enterprise_token_here"
-  repo: "my-org/automated-release-rc"
-  api_url: "https://github.company.com/api/v3"  # Note the /api/v3 suffix
+```bash
+export GITHUB_TOKEN="ghp_enterprise_token_here"
+export GITHUB_REPO="my-org/automated-release-rc"
+export GITHUB_API_URL="https://github.company.com/api/v3"  # Note the /api/v3 suffix
 ```
 
-### **2.3 Verify Token Setup**
+### **2.3 Verify Environment Setup (v4.0)**
 
-Test your configuration before proceeding:
+Test your environment configuration before proceeding:
 
 ```bash
-# Test configuration loading
+# Load your environment
+source ~/.rc_env_checkout.sh
+
+# Verify environment variables are set
+echo "✅ GitHub Token: ${GITHUB_TOKEN:0:8}..."
+echo "✅ GitHub Repo: $GITHUB_REPO"
+
+# Test configuration loading with environment
 python -c "
-import sys
-sys.path.insert(0, 'src')
-from config.config import load_config
+from src.config.config import load_config
 config = load_config()
 print(f'✅ Config loaded: {config.github.repo}')
-print(f'🔑 Token format: {config.github.token[:8]}...')
+print(f'🔑 Token injected from environment')
 "
 
 # Test GitHub API access
 python -c "
-import sys
-sys.path.insert(0, 'src')
-from github.fetch_prs import test_github_connection
-test_github_connection()
+from src.github_integration.fetch_prs import GitHubClient
+from src.config.config import load_config
+config = load_config()
+client = GitHubClient(config.github)
+print('✅ GitHub API connection successful')
 "
 ```
 
 **Expected Output:**
 ```
+✅ GitHub Token: ghp_1234...
+✅ GitHub Repo: your-username/automated-release-rc
 ✅ Config loaded: your-username/automated-release-rc
-🔑 Token format: ghp_1234...
+🔑 Token injected from environment
 ✅ GitHub API connection successful
-✅ Repository access confirmed
 ```
 
 **🚨 Common Issues & Solutions:**
@@ -185,16 +218,32 @@ test_github_connection()
 
 ## ✅ **Step 3: Test Your Setup (2 minutes)**
 
-### **3.1 Test Configuration**
+### **3.1 Test Configuration (v4.0)**
 ```bash
-# Test configuration loading
+# Load environment first
+source ~/.rc_env_checkout.sh
+
+# Test configuration loading with environment variables
 python -c "from src.config.config import load_config; config = load_config(); print('✅ Config loads successfully')"
+
+# Test v4.0 specific features
+python tests/test_v4_features.py
 
 # Test critical PR counting functionality (very important)
 python tests/test_pr_counts.py
 
+# Run all tests (36 tests)
+python -m pytest tests/ -v
+
 # Test CLI help
 python -m src.cli.run_release_agent --help
+```
+
+**🎯 v4.0 Test Results Expected:**
+```
+✅ All 36 tests passed
+✅ 6 v4.0 feature tests passed (version validation, environment config, etc.)
+✅ 30 legacy tests passed
 ```
 
 ### **3.2 Quick Test Run**

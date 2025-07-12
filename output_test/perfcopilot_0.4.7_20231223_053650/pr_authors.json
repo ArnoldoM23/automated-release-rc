@@ -1,0 +1,138 @@
+{
+  "generation_timestamp": "2025-07-12T05:37:19.793127",
+  "total_prs": 21,
+  "authors": {
+    "ArnoldoM23": {
+      "name": "ArnoldoM23",
+      "prs": [
+        {
+          "number": 1,
+          "title": "Feature/GitHub actions auto tag",
+          "url": "https://github.com/ArnoldoM23/PerfCopilot/pull/1",
+          "merged_at": "2025-03-31T10:19:32+00:00"
+        },
+        {
+          "number": 2,
+          "title": "Feature/GitHub actions auto tag",
+          "url": "https://github.com/ArnoldoM23/PerfCopilot/pull/2",
+          "merged_at": "2025-03-31T19:08:49+00:00"
+        },
+        {
+          "number": 3,
+          "title": "Feature/GitHub actions auto tag",
+          "url": "https://github.com/ArnoldoM23/PerfCopilot/pull/3",
+          "merged_at": "2025-03-31T19:58:41+00:00"
+        },
+        {
+          "number": 4,
+          "title": "Feature/Remove file operations from analyzer and add fallback methods",
+          "url": "https://github.com/ArnoldoM23/PerfCopilot/pull/4",
+          "merged_at": "2025-03-31T20:45:33+00:00"
+        },
+        {
+          "number": 5,
+          "title": "Feature/Remove all manual code parsing and JSON extraction for analysis",
+          "url": "https://github.com/ArnoldoM23/PerfCopilot/pull/5",
+          "merged_at": "2025-03-31T21:09:14+00:00"
+        },
+        {
+          "number": 6,
+          "title": "Feature/Use direct VS Code commands to interact with Copilot",
+          "url": "https://github.com/ArnoldoM23/PerfCopilot/pull/6",
+          "merged_at": "2025-03-31T23:07:07+00:00"
+        },
+        {
+          "number": 7,
+          "title": "Feature/test",
+          "url": "https://github.com/ArnoldoM23/PerfCopilot/pull/7",
+          "merged_at": "2025-04-02T02:29:15+00:00"
+        },
+        {
+          "number": 8,
+          "title": "Full working version with updated read me",
+          "url": "https://github.com/ArnoldoM23/PerfCopilot/pull/8",
+          "merged_at": "2025-04-03T04:21:54+00:00"
+        },
+        {
+          "number": 9,
+          "title": "fully working chat participant",
+          "url": "https://github.com/ArnoldoM23/PerfCopilot/pull/9",
+          "merged_at": "2025-04-03T08:03:36+00:00"
+        },
+        {
+          "number": 10,
+          "title": "add test ci job for run test for pr merge",
+          "url": "https://github.com/ArnoldoM23/PerfCopilot/pull/10",
+          "merged_at": "2025-04-03T08:28:15+00:00"
+        },
+        {
+          "number": 11,
+          "title": "update prompt to give all three functions and winner",
+          "url": "https://github.com/ArnoldoM23/PerfCopilot/pull/11",
+          "merged_at": "2025-04-03T09:36:41+00:00"
+        },
+        {
+          "number": 12,
+          "title": "code cleanup: clean up dead code",
+          "url": "https://github.com/ArnoldoM23/PerfCopilot/pull/12",
+          "merged_at": "2025-04-03T09:48:08+00:00"
+        },
+        {
+          "number": 13,
+          "title": "Version 4",
+          "url": "https://github.com/ArnoldoM23/PerfCopilot/pull/13",
+          "merged_at": "2025-04-10T07:49:56+00:00"
+        },
+        {
+          "number": 14,
+          "title": "Stable version with all test passing",
+          "url": "https://github.com/ArnoldoM23/PerfCopilot/pull/14",
+          "merged_at": "2025-04-12T02:32:59+00:00"
+        },
+        {
+          "number": 15,
+          "title": "Working version with working test.",
+          "url": "https://github.com/ArnoldoM23/PerfCopilot/pull/15",
+          "merged_at": "2025-04-12T06:09:53+00:00"
+        },
+        {
+          "number": 16,
+          "title": "update auto tag work flow",
+          "url": "https://github.com/ArnoldoM23/PerfCopilot/pull/16",
+          "merged_at": "2025-04-12T06:39:15+00:00"
+        },
+        {
+          "number": 17,
+          "title": "update contribution md",
+          "url": "https://github.com/ArnoldoM23/PerfCopilot/pull/17",
+          "merged_at": "2025-04-12T07:00:57+00:00"
+        },
+        {
+          "number": 18,
+          "title": "update auto tag workflow",
+          "url": "https://github.com/ArnoldoM23/PerfCopilot/pull/18",
+          "merged_at": "2025-04-12T07:38:32+00:00"
+        },
+        {
+          "number": 19,
+          "title": "update auto-tag workflow",
+          "url": "https://github.com/ArnoldoM23/PerfCopilot/pull/19",
+          "merged_at": "2025-04-12T07:46:31+00:00"
+        },
+        {
+          "number": 20,
+          "title": "try to fix autogen again",
+          "url": "https://github.com/ArnoldoM23/PerfCopilot/pull/20",
+          "merged_at": "2025-04-12T07:55:42+00:00"
+        },
+        {
+          "number": 22,
+          "title": "fix to a stable version running benny suites with real OPS",
+          "url": "https://github.com/ArnoldoM23/PerfCopilot/pull/22",
+          "merged_at": "2025-04-16T10:17:51+00:00"
+        }
+      ],
+      "total_prs": 21
+    }
+  }
+}
