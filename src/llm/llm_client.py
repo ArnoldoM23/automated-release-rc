@@ -41,10 +41,9 @@ class LLMClient:
         """Initialize OpenAI client."""
         try:
             import openai
-            api_key = self.config.get("api_key") or os.getenv("OPENAI_API_KEY")
+            api_key = self.config.get("openai_api_key") or self.config.get("api_key") or os.getenv("OPENAI_API_KEY")
             if api_key:
-                openai.api_key = api_key
-                self._openai_client = openai
+                self._openai_client = openai.OpenAI(api_key=api_key)
             else:
                 logger.warning("OpenAI API key not found")
                 self._openai_client = None
@@ -56,7 +55,7 @@ class LLMClient:
         """Initialize Anthropic client."""
         try:
             import anthropic
-            api_key = self.config.get("api_key") or os.getenv("ANTHROPIC_API_KEY")
+            api_key = self.config.get("anthropic_api_key") or self.config.get("api_key") or os.getenv("ANTHROPIC_API_KEY")
             if api_key:
                 self._anthropic_client = anthropic.Anthropic(api_key=api_key)
             else:
@@ -98,7 +97,7 @@ class LLMClient:
         if not self._openai_client:
             raise Exception("OpenAI client not initialized")
         
-        response = self._openai_client.ChatCompletion.create(
+        response = self._openai_client.chat.completions.create(
             model=self.model,
             messages=[{"role": "user", "content": prompt}],
             max_tokens=max_tokens,
