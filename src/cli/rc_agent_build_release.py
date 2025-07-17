@@ -70,29 +70,20 @@ def get_release_inputs():
         github_client = None
         config = None
 
-    # Get current user info for RC field - use GitHub username from config
-    github_username = None
+    # Get current user info for RC field (not repo owner)
     rc_display_name = os.getenv("USER", "")  # Fallback to OS user
     
-    # Extract GitHub username from repository configuration
-    if config and hasattr(config, 'github') and config.github.repo:
+    # Extract username from repo owner for RC field
+    if github_client and config:
         try:
-            # Extract owner from repo format "owner/repo"
-            repo_parts = config.github.repo.split('/')
-            if len(repo_parts) == 2:
-                github_username = repo_parts[0]
+            if hasattr(config, 'github') and config.github.repo:
+                repo_parts = config.github.repo.split('/')
+                if len(repo_parts) == 2:
+                    github_username = repo_parts[0]
+                    enhanced_name = github_client.get_user_display_name(github_username)
+                    rc_display_name = enhanced_name
         except Exception:
-            pass
-    
-    # Try to get enhanced display name from GitHub
-    if github_client and github_username:
-        try:
-            enhanced_name = github_client.get_user_display_name(github_username)
-            rc_display_name = enhanced_name
-        except Exception as e:
-            print(f"⚠️ Could not fetch GitHub user details: {e}")
-            # Fallback to @username format if GitHub API fails
-            rc_display_name = f"@{github_username}"
+            rc_display_name = f"@{os.getenv('USER', 'unknown')}"
 
     # Basic release info
     rc = questionary.text(

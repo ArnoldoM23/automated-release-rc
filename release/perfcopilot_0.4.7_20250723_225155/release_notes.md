@@ -1,6 +1,6 @@
 # Release Notes - perfcopilot 0.4.7
 
-**Release Date:** 2023-11-26  
+**Release Date:** 2025-07-24  
 **Release Coordinator:** Arnoldo Munoz (@ArnoldoM23)  
 **Release Manager:** Charlie  
 **Release Type:** Standard
