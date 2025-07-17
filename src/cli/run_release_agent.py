@@ -193,8 +193,18 @@ def trigger_github_workflow(config_data):
         print("❌ GITHUB_TOKEN environment variable not set.")
         sys.exit(1)
 
-    repo = "ArnoldoM23/automated-release-rc"
-    api_url = f"https://api.github.com/repos/{repo}/dispatches"
+    # Use configured repository and API URL instead of hardcoded values
+    try:
+        config = load_config()
+        repo = config.github.repo if config.github.repo else os.getenv("GITHUB_REPO", "ArnoldoM23/automated-release-rc")
+        base_api_url = config.github.api_url if config.github.api_url else "https://api.github.com"
+    except Exception:
+        # Fallback to environment variables
+        repo = os.getenv("GITHUB_REPO", "ArnoldoM23/automated-release-rc")
+        base_api_url = os.getenv("GITHUB_API_URL", "https://api.github.com")
+
+    api_url = f"{base_api_url}/repos/{repo}/dispatches"
+    print(f"🔍 Using API URL: {api_url}")
 
     headers = {
         "Accept": "application/vnd.github+json",
