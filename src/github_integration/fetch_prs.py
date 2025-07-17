@@ -26,19 +26,29 @@ class GitHubClient:
         self.config = config
         self.logger = get_logger(__name__)
         
-        # Initialize PyGithub client
-        if config.api_url != "https://api.github.com":
+        # Initialize PyGithub client with appropriate base_url for enterprise
+        if config.api_url and config.api_url != "https://api.github.com":
             # GitHub Enterprise
+            self.logger.info(f"Initializing GitHub Enterprise client for {config.api_url}")
             self.github = Github(
                 login_or_token=config.token,
-                base_url=config.api_url
+                base_url=config.api_url,
+                timeout=15
             )
         else:
             # GitHub.com
-            self.github = Github(login_or_token=config.token)
+            self.logger.info("Initializing GitHub.com client")
+            self.github = Github(
+                login_or_token=config.token,
+                timeout=15
+            )
         
-        self.repo = self.github.get_repo(config.repo)
-        self.logger.info(f"Initialized GitHub client for {config.repo}")
+        try:
+            self.repo = self.github.get_repo(config.repo)
+            self.logger.info(f"Successfully initialized GitHub client for {config.repo}")
+        except Exception as e:
+            self.logger.error(f"Failed to initialize GitHub client for {config.repo}: {e}")
+            raise
     
     def fetch_prs_between_refs(self, old_ref: str, new_ref: str) -> List[PullRequest]:
         """

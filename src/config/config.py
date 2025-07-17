@@ -498,11 +498,15 @@ def load_config(config_path: Optional[Union[str, Path]] = None, allow_missing_to
     processed_config = substitute_env_vars(raw_config)
     
     # v4.0 Enhancement: Inject environment variables for secrets
-    # GitHub Configuration
+    # GitHub Configuration with Enterprise Support
     if 'github' not in processed_config:
         processed_config['github'] = {}
     processed_config['github']['token'] = os.getenv('GITHUB_TOKEN', 'dummy-token-for-testing' if allow_missing_token else '')
     processed_config['github']['repo'] = os.getenv('GITHUB_REPO', 'ArnoldoM23/PerfCopilot')
+    
+    # Use configured API URL or default to public GitHub
+    github_api_url = os.getenv('GITHUB_API_URL', 'https://api.github.com')
+    processed_config['github']['api_url'] = github_api_url
     
     # Slack Configuration
     if 'slack' not in processed_config:
