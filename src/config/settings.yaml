@@ -16,9 +16,9 @@ github:
   
 # LLM Configuration - System settings only (secrets in environment)
 llm:
-  provider: "walmart_sandbox"          # walmart_sandbox, openai, anthropic
-  model: "gpt-4o-mini"
-  enabled: false                      # v4.0: Disabled by default (Walmart internal services)
+  provider: "openai"                  # walmart_sandbox, openai, anthropic
+  model: "chatgpt-4o-latest"
+  enabled: true                       # v4.0: Enabled for AI-powered Section 8 summaries
   fallback_enabled: true              # Use existing logic if LLM fails
   cache_duration: 3600                # Cache responses to reduce API usage
   max_tokens: 2000

@@ -120,6 +120,11 @@ class LLMConfig(BaseModel):
     temperature: float = Field(default=0.1, description="Temperature for response generation")
     require_llm_for_crq: bool = Field(default=False, description="Require LLM for CRQ generation")
     cache_summaries: bool = Field(default=True, description="Cache summaries to reduce API calls")
+    
+    # v4.0 Multi-provider API key support
+    openai_api_key: Optional[str] = Field(None, description="OpenAI API key")
+    anthropic_api_key: Optional[str] = Field(None, description="Anthropic API key") 
+    walmart_api_key: Optional[str] = Field(None, description="Walmart LLM API key")
 
     @field_validator('provider')
     @classmethod
@@ -511,6 +516,11 @@ def load_config(config_path: Optional[Union[str, Path]] = None, allow_missing_to
         processed_config['llm'] = {}
     processed_config['llm']['api_key'] = os.getenv('WMT_LLM_API_KEY', 'dummy-llm-key' if allow_missing_token else '')
     processed_config['llm']['gateway_url'] = os.getenv('WMT_LLM_API_URL', 'https://llm-internal.walmart.com/gateway')
+    
+    # Store all API keys for multi-provider support (v4.0 enhancement)
+    processed_config['llm']['openai_api_key'] = os.getenv('OPENAI_API_KEY', 'dummy-openai-key' if allow_missing_token else 'sk-missing-key')
+    processed_config['llm']['anthropic_api_key'] = os.getenv('ANTHROPIC_API_KEY', 'dummy-anthropic-key' if allow_missing_token else '')
+    processed_config['llm']['walmart_api_key'] = os.getenv('WMT_LLM_API_KEY', 'dummy-llm-key' if allow_missing_token else '')
     
     # AI Configuration (Legacy)
     if 'ai' not in processed_config:
