@@ -70,19 +70,21 @@ def get_release_inputs():
         github_client = None
         config = None
 
-    # Get current user info for RC field (not repo owner)
+    # Get current user info for RC field (authenicated user, not repo owner)
     rc_display_name = os.getenv("USER", "")  # Fallback to OS user
     
     # Extract username from repo owner for RC field
     if github_client and config:
         try:
-            if hasattr(config, 'github') and config.github.repo:
-                repo_parts = config.github.repo.split('/')
-                if len(repo_parts) == 2:
-                    github_username = repo_parts[0]
-                    enhanced_name = github_client.get_user_display_name(github_username)
-                    rc_display_name = enhanced_name
+            # Get the current authenticated user instead of repo owner
+            print("🔍 Fetching authenticated user from GitHub API...")
+            authenticated_user = github_client.github.get_user()
+            print(f"🔍 Got user: login='{authenticated_user.login}', name='{authenticated_user.name}'")
+            enhanced_name = github_client._format_user_display_name(authenticated_user)
+            print(f"🔍 Formatted name: '{enhanced_name}'")
+            rc_display_name = enhanced_name
         except Exception:
+            print(f"⚠️ Error getting authenticated user: {e}")
             rc_display_name = f"@{os.getenv('USER', 'unknown')}"
 
     # Basic release info
